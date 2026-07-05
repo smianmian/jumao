@@ -24,6 +24,10 @@ Jumao is not a magic "generate my app" button. It is a product folder that keeps
 - Release proof checklist: prevents fake completion.
 - AI task packet: can be handed to an AI coding agent.
 
+## Copyable prompts
+
+Common handoff, implementation, drift-check, and completion-proof prompts live in [AI Agent Prompts](prompts.md).
+
 ## How to know AI is drifting
 
 Ask three questions:

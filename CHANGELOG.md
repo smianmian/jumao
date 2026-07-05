@@ -8,3 +8,4 @@
 - Added a complete `examples/ai-note-helper` workspace and generated task packet.
 - Added tests and local release checks.
 - Added bilingual contribution guidance, publish checklists, and GitHub issue/PR templates.
+- Added bilingual AI-agent prompts and security policy.

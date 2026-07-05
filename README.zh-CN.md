@@ -123,6 +123,8 @@ proof/
 
 把 `AGENTS.md` 的规则放进项目规则，把 `jumao-task-pack.md` 放进上下文。每次让 Cursor 做事前，先问它“这次改动对应哪个首版目标”。
 
+更多可直接复制的提示词见 [AI Agent 提示词](docs/prompts.zh-CN.md)。
+
 ## 完整示例
 
 看 [examples/ai-note-helper](examples/ai-note-helper)。这是一个填好的“AI 笔记助手”示例，可以直接运行：
@@ -169,7 +171,7 @@ git status --short
 
 只有在工作区干净、检查通过、包内容符合预期后，再创建远程仓库并 push。创建 GitHub 仓库、push、发布 npm 都是外部动作，建议先人工确认。
 
-更完整的发布步骤见 [发布清单](docs/publish-checklist.zh-CN.md)。想参与改进请先看 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+更完整的发布步骤见 [发布清单](docs/publish-checklist.zh-CN.md)。想参与改进请先看 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)，安全问题见 [SECURITY.zh-CN.md](SECURITY.zh-CN.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 常见问题
 

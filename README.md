@@ -123,6 +123,8 @@ This repo includes [CLAUDE.md](CLAUDE.md). Ask Claude Code to read `AGENTS.md` a
 
 Put the `AGENTS.md` rules into your project rules and keep `jumao-task-pack.md` in context. Before each edit, ask Cursor which first-version goal the change serves.
 
+For copyable prompts, see [AI Agent Prompts](docs/prompts.md).
+
 ## Complete example
 
 See [examples/ai-note-helper](examples/ai-note-helper). It is a filled example workspace for an AI note helper:
@@ -170,7 +172,7 @@ git status --short
 
 Create the remote repo, push, or publish only after the working tree is clean, checks pass, and the package contents look right. GitHub repo creation, push, and npm publish are external actions, so confirm them first.
 
-See the full [publish checklist](docs/publish-checklist.md). To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
+See the full [publish checklist](docs/publish-checklist.md). To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting is covered in [SECURITY.md](SECURITY.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
 
 ## FAQ
 
