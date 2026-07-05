@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.env.*
+coverage/
+dist/
+node_modules/
+tmp/
+*.log
+jumao-task-pack.md
+!examples/**/jumao-task-pack.md

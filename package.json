@@ -1,0 +1,27 @@
+{
+  "name": "jumao",
+  "version": "0.1.0",
+  "description": "橘猫 - AI Product Launch Playbook for non-technical builders",
+  "type": "module",
+  "bin": {
+    "jumao": "./bin/jumao.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "npm test && node bin/jumao.js check examples/ai-note-helper && node bin/jumao.js pack examples/ai-note-helper"
+  },
+  "keywords": [
+    "ai",
+    "product",
+    "playbook",
+    "codex",
+    "claude",
+    "vibe-coding",
+    "jumao"
+  ],
+  "author": "Jumao contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
