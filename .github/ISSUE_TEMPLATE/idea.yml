@@ -1,0 +1,26 @@
+name: Idea or improvement / 想法或改进
+description: Suggest a way to make Jumao clearer or more useful. 提议如何让橘猫更清楚、更有用。
+title: "[Idea]: "
+labels: ["idea"]
+body:
+  - type: textarea
+    id: user
+    attributes:
+      label: Who is this for? / 这是给谁用的？
+      description: Describe the non-technical builder or workflow this helps. 请描述它帮助哪类非技术用户或工作流。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should improve? / 想改进什么？
+      description: Keep the suggestion plain and concrete. 请说得普通、具体。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: What should stay out of scope? / 什么不该加？
+      description: Name anything this idea should not add. 请写清楚这个想法不应该扩大到哪里。
+    validations:
+      required: false

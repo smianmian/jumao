@@ -169,6 +169,8 @@ git status --short
 
 只有在工作区干净、检查通过、包内容符合预期后，再创建远程仓库并 push。创建 GitHub 仓库、push、发布 npm 都是外部动作，建议先人工确认。
 
+更完整的发布步骤见 [发布清单](docs/publish-checklist.zh-CN.md)。想参与改进请先看 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+
 ## 常见问题
 
 ### 橘猫会调用 OpenAI、Claude 或其他模型吗？

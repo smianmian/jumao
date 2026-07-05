@@ -170,6 +170,8 @@ git status --short
 
 Create the remote repo, push, or publish only after the working tree is clean, checks pass, and the package contents look right. GitHub repo creation, push, and npm publish are external actions, so confirm them first.
 
+See the full [publish checklist](docs/publish-checklist.md). To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
+
 ## FAQ
 
 ### Does Jumao call OpenAI, Claude, or other models?

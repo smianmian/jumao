@@ -1,0 +1,36 @@
+name: Bug report / 问题反馈
+description: Report something that is broken or confusing. 反馈损坏或让人困惑的地方。
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened? / 发生了什么？
+      description: Describe the problem in plain language. 请用普通话描述问题。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 怎么复现？
+      description: What did you run or click before the problem happened? 出问题前你运行或点击了什么？
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect? / 你原本期待什么？
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / 证据
+      description: Paste command output, screenshots, or file paths if available. 可以贴命令输出、截图或文件路径。
+    validations:
+      required: false
