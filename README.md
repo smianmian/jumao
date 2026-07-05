@@ -132,12 +132,43 @@ node bin/jumao.js check examples/ai-note-helper
 node bin/jumao.js pack examples/ai-note-helper
 ```
 
+The generated task packet looks like this:
+
+```text
+# 橘猫 AI 任务包
+
+## product/product-brief.zh-CN.md
+
+The first version proves one thing: after the user enters a messy note,
+they can get a copyable title, summary, and three next actions.
+
+## product/scope-gate.zh-CN.md
+
+Explicitly out of scope: login, payments, team collaboration, cloud sync,
+and automatic publishing. Actions that affect users, production data,
+payments, launch, or external accounts need human confirmation.
+```
+
+See the full output in [examples/ai-note-helper/jumao-task-pack.md](examples/ai-note-helper/jumao-task-pack.md).
+
 ## Principles
 
 - Let AI ask first, then let AI code.
 - No proof, no "done".
 - Non-technical builders can ship products, but AI must not guess real-world risk.
 - Any action that affects users, payments, launch, review, or production data needs human confirmation.
+
+## Maintainer release check
+
+Before publishing to GitHub or npm, run:
+
+```bash
+npm run check
+npm pack --dry-run
+git status --short
+```
+
+Create the remote repo, push, or publish only after the working tree is clean, checks pass, and the package contents look right. GitHub repo creation, push, and npm publish are external actions, so confirm them first.
 
 ## FAQ
 

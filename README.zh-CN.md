@@ -132,12 +132,42 @@ node bin/jumao.js check examples/ai-note-helper
 node bin/jumao.js pack examples/ai-note-helper
 ```
 
+示例任务包会长这样：
+
+```text
+# 橘猫 AI 任务包
+
+## product/product-brief.zh-CN.md
+
+首版只证明一件事：用户输入一段混乱笔记后，
+能得到一个可复制的标题、一段摘要和三条下一步行动。
+
+## product/scope-gate.zh-CN.md
+
+首版明确不做：登录、付费、团队协作、云同步、自动发布。
+涉及真实用户、生产数据、付费、上线或外部账号的动作，必须人工确认。
+```
+
+完整输出在 [examples/ai-note-helper/jumao-task-pack.md](examples/ai-note-helper/jumao-task-pack.md)。
+
 ## 重要原则
 
 - 先让 AI 问清楚，再让 AI 写代码。
 - 没有证据，不要说完成。
 - 不懂技术也可以做产品，但不能把真实世界风险交给 AI 猜。
 - 任何会影响用户、付费、上线、审核、生产数据的动作，都要人工确认。
+
+## 维护者发布前检查
+
+发布到 GitHub 或 npm 前，先在本地跑：
+
+```bash
+npm run check
+npm pack --dry-run
+git status --short
+```
+
+只有在工作区干净、检查通过、包内容符合预期后，再创建远程仓库并 push。创建 GitHub 仓库、push、发布 npm 都是外部动作，建议先人工确认。
 
 ## 常见问题
 
