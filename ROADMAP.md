@@ -1,10 +1,12 @@
 # Roadmap
 
-Jumao grows by making the existing workflow clearer and safer before adding new surfaces.
+Jumao grows by making the existing workflow clearer and safer before adding
+new surfaces.
 
 ## v0.1.x
 
-- Keep the core flow stable: `new -> interview -> check --strict -> audit -> pack --target`.
+- Keep the core flow stable:
+  `new -> interview -> check --strict -> audit -> pack --target`.
 - Improve plain-language prompts for non-technical builders.
 - Add more example workspaces only when they teach a different product risk.
 - Tighten strict checks when real users find confusing gaps.

@@ -11,7 +11,8 @@ scope, data, and proof clearly.
 - Keep language clear enough for someone who does not write code every day.
 - Preserve the core flow: idea, scope, screen states, data safety, proof, task packet.
 - Do not add direct AI API calls to the CLI.
-- Do not add features that require API keys, cloud accounts, payments, or hosted services by default.
+- Do not add features that require API keys, cloud accounts, payments, or hosted
+  services by default.
 - Do not claim launch, review, deployment, or completion without evidence.
 - Keep Chinese and English docs in sync when changing user-facing guidance.
 

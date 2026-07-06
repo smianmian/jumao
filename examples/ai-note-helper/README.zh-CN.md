@@ -11,7 +11,8 @@ node bin/jumao.js audit examples/ai-note-helper
 node bin/jumao.js pack examples/ai-note-helper --target codex
 ```
 
-示例目标：用户输入一段混乱想法后，得到一个标题、一段摘要和三条下一步行动。
+示例目标：用户输入一段混乱想法后，得到一个标题、
+一段摘要和三条下一步行动。
 
 `answers.json` 会被根目录 README 的 Quickstart 用来通过 `jumao interview`
 填充新工作区。

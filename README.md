@@ -51,9 +51,12 @@ new -> interview -> check --strict -> audit -> pack --target codex|claude|cursor
 ## Who It Is For
 
 - People with an app, website, SaaS, AI tool, or small product idea.
-- Builders who do not code much but use Codex, Claude Code, Cursor, or similar tools.
-- Teams that want AI coding work to start from a product boundary instead of a loose chat prompt.
-- Maintainers who want every round of AI work to leave tests, screenshots, logs, or human review notes.
+- Builders who do not code much but use Codex, Claude Code, Cursor, or similar
+  tools.
+- Teams that want AI coding work to start from a product boundary instead of a
+  loose chat prompt.
+- Maintainers who want every round of AI work to leave tests, screenshots, logs,
+  or human review notes.
 
 ## What It Helps Prevent
 
@@ -65,7 +68,8 @@ AI coding work often drifts because the tool is missing product context.
 - Empty, error, loading, success, and permission states are missing.
 - Data collection and deletion rules are vague.
 - The AI says work is done without proof.
-- A coding tool touches publishing, production data, payments, or remote repositories too early.
+- A coding tool touches publishing, production data, payments, or remote
+  repositories too early.
 
 Jumao turns those risks into files, checks, reports, and task packs.
 
@@ -159,7 +163,8 @@ project structure, and avoid new architecture unless asked.
 
 ## Complete Example
 
-See [examples/ai-note-helper](examples/ai-note-helper). It is a filled workspace for a small AI note helper.
+See [examples/ai-note-helper](examples/ai-note-helper). It is a filled workspace
+for a small AI note helper.
 
 ```bash
 node bin/jumao.js check examples/ai-note-helper --strict
@@ -199,11 +204,13 @@ are external release actions. Do them only after a human confirms.
 
 ### Does Jumao call OpenAI, Claude, or other models?
 
-No. Jumao only reads and writes local files. It does not call model APIs, read API keys, or create model costs.
+No. Jumao only reads and writes local files. It does not call model APIs, read
+API keys, or create model costs.
 
 ### Can I use it if I cannot code?
 
-Yes. Jumao is designed to help you explain the product clearly before asking an AI coding tool to continue.
+Yes. Jumao is designed to help you explain the product clearly before asking an
+AI coding tool to continue.
 
 ### Does it generate a full app?
 
