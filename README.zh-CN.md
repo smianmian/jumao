@@ -59,6 +59,8 @@ jumao check [dir]
 jumao check [dir] --strict
 jumao audit [dir]
 jumao audit [dir] --write
+jumao interview [dir]
+jumao interview [dir] --answers answers.json
 jumao pack [dir]
 ```
 
@@ -76,6 +78,8 @@ node bin/jumao.js new "我的产品" --dir ./work/my-product
 | `check --strict` | 门禁：拦住占位、泛话和核心结构缺口。 |
 | `audit` | 诊断缺口、说明影响，并给出下一步安全 AI 任务。 |
 | `audit --write` | 把诊断写入 `tasks/audit-report.md`。 |
+| `interview` | 通过问答补齐核心产品文件。 |
+| `interview --answers` | 用 `answers.json` 非交互生成；加 `--force` 会覆盖已有核心文件。 |
 | `pack` | 打包成可以交给 AI 编程工具的 `jumao-task-pack.md`。 |
 
 ## 生成出来长什么样

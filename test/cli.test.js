@@ -100,6 +100,60 @@ function writeFilledCompletionProof(workspace) {
   });
 }
 
+function minimalAnswers(overrides = {}) {
+  return {
+    primaryUser: '第一次做小工具但不会写代码的独立开发者',
+    firstVersionGoal: '用户能在写代码前把产品目标和首版范围讲清楚',
+    userCanDo: '创建项目工作区、填写产品边界、生成给 AI 编程工具的任务包',
+    successEvidence: '生成的任务包能被 Codex 读取，并且不会要求 AI 自己猜产品范围',
+    cannotPromise: '不能承诺一键生成完整 App',
+    cannotCollect: '首版不收集用户账号、手机号、支付信息、隐私数据',
+    humanConfirmActions: [
+      '发布 npm 前必须人工确认',
+      'push 远程仓库前必须人工确认',
+      '删除用户文件前必须人工确认'
+    ],
+    mustDo: [
+      '创建本地产品工作区',
+      '检查核心产品文件是否填写',
+      '打包给 AI 编程工具读取的任务上下文'
+    ],
+    wontDo: [
+      '不调用任何模型 API',
+      '不自动发布 npm',
+      '不自动 push 远程仓库'
+    ],
+    aiMustNotAdd: [
+      '不要自行新增 Web UI',
+      '不要自行新增登录系统',
+      '不要自行新增云服务'
+    ],
+    mainScreen: {
+      name: 'CLI 新建项目',
+      userGoal: '创建一个产品工作区',
+      loading: '显示正在生成文件',
+      empty: '提示当前目录为空可继续创建',
+      error: '提示目录不可写或文件冲突',
+      success: '显示生成路径和下一步命令',
+      permissionDenied: '不涉及'
+    },
+    dataSafety: {
+      collects: '首版不收集用户数据',
+      doesNotCollect: '不收集手机号、身份证、定位、通讯录、支付信息',
+      thirdParties: '首版不使用第三方服务',
+      deletion: '用户可以删除本地工作区文件，Jumao 不保留云端数据',
+      retention: '删除后无保留数据'
+    },
+    ...overrides
+  };
+}
+
+function writeAnswersFile(answers = minimalAnswers()) {
+  const answersPath = path.join(tempDir(), 'answers.json');
+  fs.writeFileSync(answersPath, JSON.stringify(answers, null, 2), 'utf8');
+  return answersPath;
+}
+
 test('prints help', () => {
   const result = spawnSync(process.execPath, [cli, '--help'], { encoding: 'utf8' });
   assert.equal(result.status, 0);
@@ -283,6 +337,66 @@ test('audit reports planning-ready workspace with empty completion proof warning
   assert.doesNotMatch(audited.stdout, /\[error\]/);
   assert.match(audited.stdout, /\[warning\] proof\/release-proof\.zh-CN\.md/);
   assert.match(audited.stdout, /completion proof is not filled yet/);
+});
+
+test('interview answers write the four core product files', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeAnswersFile();
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  assert.ok(fs.existsSync(path.join(workspace, 'product', 'product-brief.zh-CN.md')));
+  assert.ok(fs.existsSync(path.join(workspace, 'product', 'scope-gate.zh-CN.md')));
+  assert.ok(fs.existsSync(path.join(workspace, 'product', 'screen-states.zh-CN.md')));
+  assert.ok(fs.existsSync(path.join(workspace, 'product', 'data-safety.zh-CN.md')));
+  assert.match(fs.readFileSync(path.join(workspace, 'product', 'product-brief.zh-CN.md'), 'utf8'), /第一次做小工具/);
+});
+
+test('interview output passes strict check with completion proof warning', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeAnswersFile();
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+  const checked = spawnSync(process.execPath, [cli, 'check', workspace, '--strict'], { encoding: 'utf8' });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+  assert.match(checked.stdout, /Jumao strict check passed/);
+  assert.match(checked.stdout, /Warnings:/);
+  assert.match(checked.stdout, /completion proof is not filled yet/);
+});
+
+test('interview refuses to overwrite filled core files without force', () => {
+  const workspace = createProductWorkspace();
+  writeMinimalValidCore(workspace);
+  const answersPath = writeAnswersFile();
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 1);
+  assert.match(interviewed.stderr, /--force/);
+});
+
+test('interview force overwrites filled core files', () => {
+  const workspace = createProductWorkspace();
+  writeMinimalValidCore(workspace);
+  const answersPath = writeAnswersFile(minimalAnswers({ primaryUser: '正在用 AI 落地第一个产品的创作者' }));
+
+  const interviewed = spawnSync(
+    process.execPath,
+    [cli, 'interview', workspace, '--answers', answersPath, '--force'],
+    { encoding: 'utf8' }
+  );
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  assert.match(fs.readFileSync(path.join(workspace, 'product', 'product-brief.zh-CN.md'), 'utf8'), /正在用 AI/);
 });
 
 test('initializes a ready-to-fill workspace', () => {

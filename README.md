@@ -61,6 +61,8 @@ jumao check [dir]
 jumao check [dir] --strict
 jumao audit [dir]
 jumao audit [dir] --write
+jumao interview [dir]
+jumao interview [dir] --answers answers.json
 jumao pack [dir]
 ```
 
@@ -78,6 +80,8 @@ node bin/jumao.js new "My Product" --dir ./work/my-product
 | `check --strict` | Gate: fail on placeholders, filler text, and missing core structure. |
 | `audit` | Diagnose gaps, why they matter, and the next safe AI task. |
 | `audit --write` | Write the diagnosis to `tasks/audit-report.md`. |
+| `interview` | Ask questions and fill the core product files. |
+| `interview --answers` | Generate non-interactively from `answers.json`; add `--force` to overwrite existing core files. |
 | `pack` | Build `jumao-task-pack.md` for an AI coding tool. |
 
 ## Generated workspace

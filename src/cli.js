@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { auditWorkspace } from './core/audit.js';
+import { collectInterviewAnswers, readAnswersFile, runInterview } from './core/interview.js';
 import { missingRequiredFiles, requiredProductFiles, validateStrictWorkspace } from './core/strict-check.js';
 
 const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
@@ -30,6 +31,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'new') return newCommand(args, io);
   if (command === 'check') return checkCommand(args, io);
   if (command === 'audit') return auditCommand(args, io);
+  if (command === 'interview') return interviewCommand(args, io);
   if (command === 'pack') return packCommand(args, io);
 
   io.stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
@@ -45,6 +47,7 @@ function helpText() {
     '  jumao new <product-name> --dir [dir]',
     '  jumao check [dir] [--strict]',
     '  jumao audit [dir] [--write]',
+    '  jumao interview [dir] [--answers file] [--force]',
     '  jumao pack [dir]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
@@ -161,6 +164,23 @@ function auditCommand(args, io) {
   return 0;
 }
 
+async function interviewCommand(args, io) {
+  const { targetDir, answersFile, force } = parseInterviewArgs(args);
+  const answers = answersFile
+    ? readAnswersFile(answersFile)
+    : await collectInterviewAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+  const result = runInterview(targetDir, answers, { force });
+
+  if (!result.ok) {
+    io.stderr.write(`${result.message}\n`);
+    return 1;
+  }
+
+  io.stdout.write(`Jumao interview wrote core product files in ${targetDir}\n`);
+  for (const file of result.writtenFiles) io.stdout.write(`- ${file}\n`);
+  return writeStrictGateResult(targetDir, result.strictResult, io);
+}
+
 function packCommand(args, io) {
   const targetDir = path.resolve(args[0] || '.');
   const sections = [];
@@ -232,6 +252,44 @@ function parseAuditArgs(args) {
     targetDir: path.resolve(positional[0] || '.'),
     write
   };
+}
+
+function parseInterviewArgs(args) {
+  let target;
+  let answersFile;
+  let force = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--force') {
+      force = true;
+    } else if (arg === '--answers') {
+      answersFile = path.resolve(args[index + 1]);
+      index += 1;
+    } else if (!target) {
+      target = arg;
+    }
+  }
+
+  return {
+    targetDir: path.resolve(target || '.'),
+    answersFile,
+    force
+  };
+}
+
+function writeStrictGateResult(targetDir, result, io) {
+  if (result.errors.length === 0) {
+    io.stdout.write(`Jumao strict check passed for ${targetDir}\n`);
+    writeWarnings(result.warnings, io);
+    return 0;
+  }
+
+  io.stdout.write(`Jumao strict check found gaps in ${targetDir}:\n\n`);
+  io.stdout.write('Errors:\n');
+  for (const error of result.errors) io.stdout.write(`- ${error}\n`);
+  writeWarnings(result.warnings, io);
+  return 1;
 }
 
 function writeWarnings(warnings, io) {
