@@ -43,7 +43,7 @@ test('initializes a ready-to-fill workspace', () => {
   assert.equal(checked.status, 0, checked.stdout + checked.stderr);
 });
 
-test('packs product context for an AI agent', () => {
+test('packs product context for an AI coding tool', () => {
   const dir = tempDir();
   const workspace = path.join(dir, 'packet');
   spawnSync(process.execPath, [cli, 'new', 'AI Note', '--dir', workspace], { encoding: 'utf8' });

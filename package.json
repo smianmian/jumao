@@ -1,7 +1,7 @@
 {
   "name": "jumao",
   "version": "0.1.0",
-  "description": "橘猫 - AI Product Launch Playbook for non-technical builders",
+  "description": "橘猫 - product workspace for AI-assisted builders",
   "type": "module",
   "bin": {
     "jumao": "./bin/jumao.js"

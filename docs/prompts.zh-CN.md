@@ -1,6 +1,6 @@
-# AI Agent 提示词
+# AI 提示词
 
-这些提示词适合复制给 Codex、Claude Code、Cursor 或其他 AI 编程工具。先让 AI 读橘猫任务包，再让它动代码。
+这些话可以直接复制给 Codex、Claude Code、Cursor 或其他 AI 编程工具。建议先让它读橘猫任务包，再开始改代码。
 
 ## 第一次交给 AI
 
@@ -62,7 +62,6 @@
 ## 交给 Codex 的推荐开场
 
 ```text
-你现在是橘猫项目落地助手。
 请先读 AGENTS.md 和 jumao-task-pack.md。
 先总结目标、边界、风险和下一步计划，不要直接改代码。
 ```

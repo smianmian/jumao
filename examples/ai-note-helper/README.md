@@ -1,6 +1,6 @@
 # AI Note Helper
 
-This is a filled Jumao example workspace. It shows how a non-technical builder can turn a small app idea into an AI-ready task packet.
+This is a filled Jumao example. It shows how a small app idea becomes a product brief, first-version scope, screen states, data notes, and a task packet.
 
 Run the example check:
 

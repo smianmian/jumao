@@ -1,6 +1,6 @@
-# AI Agent Prompts
+# AI Prompts
 
-Use these prompts with Codex, Claude Code, Cursor, or another AI coding tool. Ask the AI to read the Jumao task packet before it edits code.
+Use these prompts with Codex, Claude Code, Cursor, or another AI coding tool. Ask it to read the Jumao task packet before it edits code.
 
 ## First handoff
 
@@ -62,7 +62,6 @@ Do not mark anything done without proof.
 ## Recommended Codex opener
 
 ```text
-You are the Jumao product launch assistant.
 Read AGENTS.md and jumao-task-pack.md first.
 Summarize the goal, scope, risks, and next plan before editing code.
 ```

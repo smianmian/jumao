@@ -7,7 +7,7 @@
 - Display the organized result.
 - Let the user copy the organized result.
 - Store recent notes and results locally so the user can return to them.
-- Show a plain-language error when the AI request fails.
+- If organization fails, explain what happened and keep the original note.
 
 ## Explicitly out of scope
 
@@ -27,7 +27,7 @@
 - Settings page for a user-provided API key.
 - Team sharing.
 
-## AI must not add by itself
+## Do not let AI add by itself
 
 - Do not add login.
 - Do not connect real payments.

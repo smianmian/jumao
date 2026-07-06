@@ -2,7 +2,7 @@
 
 ## What changed
 
-- Filled a complete Jumao example workspace.
+- Filled a complete Jumao example.
 - Kept the first version focused on note input, AI organization, result display, copy, and local history.
 - Marked login, payments, team collaboration, cloud sync, and automatic publishing as out of scope.
 
@@ -30,4 +30,4 @@
 ## Next step
 
 - Run `jumao check` and `jumao pack`.
-- Give the generated `jumao-task-pack.md` to an AI agent and ask it to summarize the goal, gaps, and next safe action first.
+- Give the generated `jumao-task-pack.md` to an AI coding tool and ask it to summarize the goal, gaps, and next safe action first.

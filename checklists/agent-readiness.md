@@ -1,4 +1,4 @@
-# AI Agent Readiness
+# AI Readiness
 
 - [ ] Product brief read.
 - [ ] First-version scope read.

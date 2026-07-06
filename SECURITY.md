@@ -1,6 +1,6 @@
 # Security Policy
 
-Jumao is a local CLI and documentation toolkit. It does not call AI APIs, read API keys, store secrets, or connect to hosted services by default.
+Jumao runs locally and mainly creates docs and task packets. By default, it does not call AI APIs, read API keys, store secrets, or connect to hosted services.
 
 ## Supported versions
 
@@ -25,7 +25,7 @@ Security-sensitive issues include:
 
 - Accidental reading or writing of API keys, tokens, or `.env` files.
 - CLI behavior that sends data to a network service without explicit user action.
-- Generated guidance that tells AI agents to touch production data, payments, launches, reviews, or external accounts without confirmation.
+- Generated guidance that tells an AI coding tool to touch production data, payments, launches, reviews, or external accounts without confirmation.
 - Package contents that accidentally include secrets or private project files.
 
 ## Out of scope

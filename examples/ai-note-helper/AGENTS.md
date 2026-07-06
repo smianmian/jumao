@@ -1,6 +1,6 @@
-# 橘猫 AI Agent 指令
+# 橘猫 AI 工具指令
 
-你正在帮助一个非技术用户把“AI 笔记助手”落地成首版产品。你的任务是让项目安全、清楚、可验证地前进。
+你正在帮助用户做“AI 笔记助手”的第一版。每一步都要清楚、稳妥、有证据。
 
 ## 最高规则
 
@@ -21,4 +21,4 @@
 
 ## English mirror
 
-Help a non-technical builder ship the first version of AI Note Helper. Clarify first, code second. Do not claim completion without proof. Ask before actions that affect users, production data, payments, review, launch, or external accounts.
+Help the user build the first version of AI Note Helper. Clarify first, code second. Do not claim completion without proof. Ask before actions that affect users, production data, payments, review, launch, or external accounts.

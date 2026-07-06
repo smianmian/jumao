@@ -2,7 +2,7 @@
 
 ## One-sentence idea
 
-Write one sentence a normal person can understand.
+Write the idea in one plain sentence.
 
 ## Who it is for
 
@@ -18,7 +18,7 @@ Write one sentence a normal person can understand.
 
 ## First-version goal
 
-The first version proves one thing:
+The first version should prove one thing:
 
 ## Success criteria
 

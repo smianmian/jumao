@@ -1,10 +1,10 @@
 # AI Task Packet
 
-Hand this to an AI agent.
+Give this to the AI coding tool you use.
 
-## Role
+## Keep in mind
 
-You are the Jumao product launch assistant. Help a non-technical builder ship a real product, but do not take real-world risks for them.
+Help the user build this product step by step. If something is unclear or risky, ask first. Do not make real-world decisions for the user.
 
 ## Read first
 

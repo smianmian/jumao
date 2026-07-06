@@ -12,7 +12,7 @@
 
 -
 
-## AI must not add by itself
+## Do not let AI add by itself
 
 -
 

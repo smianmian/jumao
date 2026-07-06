@@ -30,7 +30,7 @@ Summarize the product goal, first-version scope, gaps, and next smallest safe ac
 ## Who it is for
 
 - You have an app, website, SaaS, AI tool, or small product idea.
-- You cannot code, or can only code a little, but want AI to help you ship for real.
+- You cannot code, or can only code a little, but want AI to help you keep moving.
 - You do not want AI to expand scope, edit risky systems, or pretend work is done.
 - You want every step to have proof: tests, screenshots, logs, or human review.
 
@@ -67,7 +67,7 @@ node bin/jumao.js new "My Product" --dir ./work/my-product
 | `init` | Put Jumao docs, templates, and a fillable product skeleton into a directory. |
 | `new` | Create a product launch workspace. |
 | `check` | Verify required files exist. |
-| `pack` | Build `jumao-task-pack.md` for an AI agent. |
+| `pack` | Build `jumao-task-pack.md` for an AI coding tool. |
 
 ## Generated workspace
 
@@ -103,7 +103,7 @@ proof/
 5. Fill `data-safety` so AI understands data boundaries.
 6. Run `jumao check`.
 7. Run `jumao pack`.
-8. Give the packet to Codex, Claude Code, Cursor, or another AI agent.
+8. Give the packet to Codex, Claude Code, Cursor, or another AI coding tool.
 9. After each round, record tests, screenshots, logs, or human review in `proof/release-proof.md`.
 
 ## Working with Codex, Claude, and Cursor
@@ -125,7 +125,7 @@ This repo includes [CLAUDE.md](CLAUDE.md). Ask Claude Code to read `AGENTS.md` a
 
 Put the `AGENTS.md` rules into your project rules and keep `jumao-task-pack.md` in context. Before each edit, ask Cursor which first-version goal the change serves.
 
-For copyable prompts, see [AI Agent Prompts](docs/prompts.md).
+For copyable prompts, see [AI Prompts](docs/prompts.md).
 
 ## Complete example
 
@@ -159,7 +159,7 @@ See the full output in [examples/ai-note-helper/jumao-task-pack.md](examples/ai-
 
 - Let AI ask first, then let AI code.
 - No proof, no "done".
-- Non-technical builders can ship products, but AI must not guess real-world risk.
+- You can build without knowing every technical detail, but AI must not guess about users, money, or launches.
 - Any action that affects users, payments, launch, review, or production data needs human confirmation.
 
 ## Maintainer release check
@@ -184,11 +184,11 @@ No. Jumao only creates local files. It does not call model APIs, read API keys, 
 
 ### Can I use it if I cannot code?
 
-Yes. Jumao exists to help non-technical builders explain the product clearly before asking an AI agent to execute.
+Yes. Jumao helps you explain the product clearly before asking an AI coding tool to continue.
 
 ### Does it generate a full app?
 
-No, and it should not promise that. Jumao prepares the product context and execution guardrails so AI agents can build more safely.
+No, and it should not promise that. Jumao prepares the product context, boundaries, and proof so AI coding tools have a clearer starting point.
 
 ### Why does it care about proof?
 

@@ -67,7 +67,7 @@ node bin/jumao.js new "我的产品" --dir ./work/my-product
 | `init` | 在一个目录里放入橘猫文档、模板、产品骨架。 |
 | `new` | 为一个产品生成独立工作区。 |
 | `check` | 检查关键文件是否齐全。 |
-| `pack` | 打包成可以交给 AI agent 的 `jumao-task-pack.md`。 |
+| `pack` | 打包成可以交给 AI 编程工具的 `jumao-task-pack.md`。 |
 
 ## 生成出来长什么样
 
@@ -92,7 +92,7 @@ proof/
   release-proof.md
 ```
 
-`jumao pack` 会生成一个 AI 任务包，里面会合并产品简报、首版边界、页面状态、数据安全和完成证据。AI agent 读完后，就不容易一上来写偏。
+`jumao pack` 会生成一个 AI 任务包，里面会合并产品简报、首版边界、页面状态、数据安全和完成证据。AI 编程工具读完后，就不容易一上来写偏。
 
 ## 推荐工作流
 
@@ -103,7 +103,7 @@ proof/
 5. 填 `data-safety`，说明收什么数据、放哪里、怎么删。
 6. 用 `jumao check` 检查文件是否齐。
 7. 用 `jumao pack` 生成任务包。
-8. 把任务包交给 Codex、Claude Code、Cursor 或其他 AI agent。
+8. 把任务包交给 Codex、Claude Code、Cursor 或其他 AI 编程工具。
 9. 每轮完成后，把测试、截图、日志或人工验收写进 `proof/release-proof.zh-CN.md`。
 
 ## 和 Codex / Claude / Cursor 怎么配合
@@ -125,7 +125,7 @@ proof/
 
 把 `AGENTS.md` 的规则放进项目规则，把 `jumao-task-pack.md` 放进上下文。每次让 Cursor 做事前，先问它“这次改动对应哪个首版目标”。
 
-更多可直接复制的提示词见 [AI Agent 提示词](docs/prompts.zh-CN.md)。
+更多可直接复制的提示词见 [AI 提示词](docs/prompts.zh-CN.md)。
 
 ## 完整示例
 
@@ -158,7 +158,7 @@ node bin/jumao.js pack examples/ai-note-helper
 
 - 先让 AI 问清楚，再让 AI 写代码。
 - 没有证据，不要说完成。
-- 不懂技术也可以做产品，但不能把真实世界风险交给 AI 猜。
+- 不懂技术也可以做产品，但涉及真实用户、钱和上线的事不能让 AI 猜。
 - 任何会影响用户、付费、上线、审核、生产数据的动作，都要人工确认。
 
 ## 维护者发布前检查
@@ -183,11 +183,11 @@ git status --short
 
 ### 我不会代码也能用吗？
 
-可以。橘猫的第一目标就是让非技术用户把想法讲清楚，再交给 AI agent 执行。
+可以。橘猫的第一目标就是帮你把想法讲清楚，再交给 AI 编程工具继续做。
 
 ### 它能直接生成一个完整 App 吗？
 
-不能，也不应该承诺。橘猫负责把需求、边界、状态、数据、安全和证据整理清楚，让 AI 更容易真实落地。
+不能，也不应该承诺。橘猫负责把需求、边界、状态、数据、安全和证据整理清楚，让 AI 编程工具少走弯路。
 
 ### 为什么一直强调“证据”？
 

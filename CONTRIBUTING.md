@@ -1,12 +1,12 @@
 # Contributing to Jumao
 
-Thanks for helping make Jumao more useful for non-technical builders.
+Thanks for helping make Jumao easier to use.
 
-Jumao is not a code-generation promise. It is a plain-language framework that helps people turn product ideas into clear AI-agent tasks, with scope, safety, and proof.
+Jumao is for people who may not code much but still want to turn an idea into a real product. Good changes should make it easier for them to describe the idea, scope, data, and proof clearly.
 
 ## What good contributions look like
 
-- Keep language simple enough for a non-technical user.
+- Keep language clear enough for someone who does not write code every day.
 - Preserve the core flow: idea, scope, screen states, data safety, proof, task packet.
 - Do not add direct AI API calls to the CLI.
 - Do not add features that require API keys, cloud accounts, payments, or hosted services by default.
@@ -26,7 +26,7 @@ git status --short
 In the pull request, include:
 
 - What changed.
-- Why it helps non-technical builders.
+- Why it helps regular users.
 - What was not changed.
 - Verification evidence.
 

@@ -5,7 +5,7 @@
 | Data | Source | Why needed | Where stored | Who can see it | How to delete | Shared with third parties |
 | --- | --- | --- | --- | --- | --- | --- |
 | Raw note text | User input | Generate organized result | First version local device | User | Delete local note | Example does not auto-send real data |
-| Generated title, summary, and actions | AI output | Show copyable result and history | First version local device | User | Delete local note | Example does not auto-send real data |
+| Generated title, summary, and actions | Organized result | Show copyable result and history | First version local device | User | Delete local note | Example does not auto-send real data |
 | Created and updated timestamps | App generated | Sorting and history | First version local device | User | Delete local note | No |
 | Local record ID | App generated | Find the matching note | First version local device | User | Delete local note | No |
 
@@ -22,7 +22,7 @@
 
 | Service | Purpose | Data it receives | Exit plan |
 | --- | --- | --- | --- |
-| No real model service connected | Example stage only describes product needs | No real user data | Validate flow with local fake data or mocked responses |
+| No real model service connected | Example stage only describes product needs | No real user data | Validate the flow with local fake data |
 | User-chosen AI service later | Future note organization | Only text confirmed by the user | Keep local mode or allow AI organization to be turned off |
 
 ## Deletion and export

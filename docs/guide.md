@@ -1,6 +1,8 @@
 # Jumao Guide
 
-Jumao is not a magic "generate my app" button. It is a product folder that keeps you and your AI agent honest.
+Jumao helps you sort out the product before you ask AI to code.
+
+You do not need to understand the technical parts first. Start by writing down the audience, first-version scope, screen states, data notes, and proof you expect. That gives your AI coding tool a clearer place to start.
 
 ## What you need
 
@@ -22,15 +24,15 @@ Jumao is not a magic "generate my app" button. It is a product folder that keeps
 - Screen states: prevents happy-path-only UI.
 - Data safety checklist: prevents careless data collection.
 - Release proof checklist: prevents fake completion.
-- AI task packet: can be handed to an AI coding agent.
+- AI task packet: can be handed to an AI coding tool.
 
 ## Copyable prompts
 
-Common handoff, implementation, drift-check, and completion-proof prompts live in [AI Agent Prompts](prompts.md).
+Common handoff, implementation, drift-check, and completion-proof prompts live in [AI Prompts](prompts.md).
 
 ## How to know AI is drifting
 
-Ask three questions:
+After each change, ask three questions:
 
 1. Which user goal does this change serve?
 2. What proof shows it is done?
