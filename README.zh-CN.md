@@ -62,6 +62,9 @@ jumao audit [dir] --write
 jumao interview [dir]
 jumao interview [dir] --answers answers.json
 jumao pack [dir]
+jumao pack [dir] --target codex
+jumao pack [dir] --target claude
+jumao pack [dir] --target cursor
 ```
 
 没有全局安装时，也可以直接用：
@@ -81,6 +84,7 @@ node bin/jumao.js new "我的产品" --dir ./work/my-product
 | `interview` | 通过问答补齐核心产品文件。 |
 | `interview --answers` | 用 `answers.json` 非交互生成；加 `--force` 会覆盖已有核心文件。 |
 | `pack` | 打包成可以交给 AI 编程工具的 `jumao-task-pack.md`。 |
+| `pack --target` | strict 门禁通过后，生成 Codex、Claude 或 Cursor 任务包。 |
 
 ## 生成出来长什么样
 

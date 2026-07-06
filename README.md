@@ -64,6 +64,9 @@ jumao audit [dir] --write
 jumao interview [dir]
 jumao interview [dir] --answers answers.json
 jumao pack [dir]
+jumao pack [dir] --target codex
+jumao pack [dir] --target claude
+jumao pack [dir] --target cursor
 ```
 
 Without global install, use:
@@ -83,6 +86,7 @@ node bin/jumao.js new "My Product" --dir ./work/my-product
 | `interview` | Ask questions and fill the core product files. |
 | `interview --answers` | Generate non-interactively from `answers.json`; add `--force` to overwrite existing core files. |
 | `pack` | Build `jumao-task-pack.md` for an AI coding tool. |
+| `pack --target` | Build a Codex, Claude, or Cursor task pack after the strict gate passes. |
 
 ## Generated workspace
 

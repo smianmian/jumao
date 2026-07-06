@@ -154,6 +154,16 @@ function writeAnswersFile(answers = minimalAnswers()) {
   return answersPath;
 }
 
+function createInterviewedWorkspace() {
+  const workspace = createProductWorkspace();
+  const answersPath = writeAnswersFile();
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  return workspace;
+}
+
 test('prints help', () => {
   const result = spawnSync(process.execPath, [cli, '--help'], { encoding: 'utf8' });
   assert.equal(result.status, 0);
@@ -422,6 +432,88 @@ test('packs product context for an AI coding tool', () => {
   const taskPack = fs.readFileSync(path.join(workspace, 'jumao-task-pack.md'), 'utf8');
   assert.match(taskPack, /橘猫 AI 任务包/);
   assert.match(taskPack, /product-brief/);
+});
+
+test('pack target codex writes a Codex task pack', () => {
+  const workspace = createInterviewedWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+  const taskPackPath = path.join(workspace, 'tasks', 'codex-task-pack.md');
+  const taskPack = fs.readFileSync(taskPackPath, 'utf8');
+
+  assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+  assert.match(packed.stdout, /codex-task-pack\.md/);
+  assert.match(taskPack, /## Product brief/);
+  assert.match(taskPack, /## Scope gate/);
+  assert.match(taskPack, /## Screen states/);
+  assert.match(taskPack, /## Data safety/);
+  assert.match(taskPack, /## Release proof status/);
+  assert.match(taskPack, /## AI execution rules/);
+  assert.match(taskPack, /## First safe task/);
+  assert.match(taskPack, /## Do not do yet/);
+  assert.match(taskPack, /Read AGENTS\.md first/);
+});
+
+test('pack target claude writes a Claude task pack', () => {
+  const workspace = createInterviewedWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'claude'], { encoding: 'utf8' });
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'claude-task-pack.md'), 'utf8');
+
+  assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+  assert.match(taskPack, /Read CLAUDE\.md first/);
+  assert.match(taskPack, /Explain assumptions before large changes/);
+});
+
+test('pack target cursor writes a Cursor task pack', () => {
+  const workspace = createInterviewedWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'cursor'], { encoding: 'utf8' });
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'cursor-task-pack.md'), 'utf8');
+
+  assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+  assert.match(taskPack, /Keep edits small/);
+  assert.match(taskPack, /Prefer existing project structure/);
+});
+
+test('pack target fails when strict gate has errors', () => {
+  const workspace = createProductWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+
+  assert.equal(packed.status, 1);
+  assert.match(packed.stderr, /strict gate failed/);
+  assert.match(packed.stderr, /jumao audit/);
+  assert.match(packed.stderr, /jumao interview/);
+  assert.ok(!fs.existsSync(path.join(workspace, 'tasks', 'codex-task-pack.md')));
+});
+
+test('pack target passes after interview answers', () => {
+  const workspace = createInterviewedWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+
+  assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+  assert.ok(fs.existsSync(path.join(workspace, 'tasks', 'codex-task-pack.md')));
+});
+
+test('release proof warning does not block target pack', () => {
+  const workspace = createInterviewedWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-task-pack.md'), 'utf8');
+
+  assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+  assert.match(taskPack, /completion proof is not filled yet/);
+});
+
+test('pack target rejects an unknown target', () => {
+  const workspace = createInterviewedWorkspace();
+
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'unknown'], { encoding: 'utf8' });
+
+  assert.equal(packed.status, 1);
+  assert.match(packed.stderr, /Unknown pack target/);
 });
 
 test('check reports missing files', () => {

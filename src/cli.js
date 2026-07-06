@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { auditWorkspace } from './core/audit.js';
 import { collectInterviewAnswers, readAnswersFile, runInterview } from './core/interview.js';
-import { missingRequiredFiles, requiredProductFiles, validateStrictWorkspace } from './core/strict-check.js';
+import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
+import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
 
 const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
 
@@ -48,7 +49,7 @@ function helpText() {
     '  jumao check [dir] [--strict]',
     '  jumao audit [dir] [--write]',
     '  jumao interview [dir] [--answers file] [--force]',
-    '  jumao pack [dir]',
+    '  jumao pack [dir] [--target codex|claude|cursor]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
   ].join('\n') + '\n';
@@ -182,30 +183,17 @@ async function interviewCommand(args, io) {
 }
 
 function packCommand(args, io) {
-  const targetDir = path.resolve(args[0] || '.');
-  const sections = [];
-  for (const file of requiredProductFiles.filter((item) => item.endsWith('.md'))) {
-    const fullPath = path.join(targetDir, file);
-    if (fs.existsSync(fullPath)) {
-      sections.push(`\n\n## ${file}\n\n${fs.readFileSync(fullPath, 'utf8').trim()}`);
-    }
-  }
+  const { targetDir, target } = parsePackArgs(args);
+  const result = target
+    ? packTargetWorkspace(targetDir, target)
+    : packDefaultWorkspace(targetDir);
 
-  if (sections.length === 0) {
-    io.stderr.write('No product files found. Run jumao new first.\n');
+  if (!result.ok) {
+    io.stderr.write(`${result.message}\n`);
     return 1;
   }
 
-  const outputPath = path.join(targetDir, 'jumao-task-pack.md');
-  const taskPack = [
-    '# 橘猫 AI 任务包',
-    '',
-    '把这份文件交给你的 AI 编程工具。先让它总结目标、缺口和下一步安全动作。',
-    sections.join('')
-  ].join('\n') + '\n';
-
-  fs.writeFileSync(outputPath, taskPack, 'utf8');
-  io.stdout.write(`Wrote ${outputPath}\n`);
+  io.stdout.write(`Wrote ${result.outputPath}\n`);
   return 0;
 }
 
@@ -275,6 +263,26 @@ function parseInterviewArgs(args) {
     targetDir: path.resolve(target || '.'),
     answersFile,
     force
+  };
+}
+
+function parsePackArgs(args) {
+  let targetDir;
+  let target;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--target') {
+      target = args[index + 1];
+      index += 1;
+    } else if (!targetDir) {
+      targetDir = arg;
+    }
+  }
+
+  return {
+    targetDir: path.resolve(targetDir || '.'),
+    target
   };
 }
 
