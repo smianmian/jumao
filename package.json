@@ -6,6 +6,20 @@
   "bin": {
     "jumao": "./bin/jumao.js"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/",
+    "examples/ai-note-helper/",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "ROADMAP.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
   "scripts": {
     "test": "node --test",
     "check": "npm test && node bin/jumao.js check examples/ai-note-helper && node bin/jumao.js pack examples/ai-note-helper"
