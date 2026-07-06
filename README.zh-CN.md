@@ -2,9 +2,12 @@
 
 橘猫是给不太会写代码的人用的产品项目夹。
 
-如果你有一个 App、网站或小工具的想法，先别急着让 AI 写代码。橘猫会带你把几件事写清楚：给谁用，第一版做什么，不做什么，页面出错怎么办，会碰哪些数据，怎么证明真的做完。
+如果你有一个 App、网站或小工具的想法，先别急着让 AI 写代码。
+橘猫会带你把几件事写清楚：给谁用，第一版做什么，不做什么，
+页面出错怎么办，会碰哪些数据，怎么证明真的做完。
 
-它本身不调用模型，也不碰你的 API Key。填好后，你会得到一份任务包，可以交给 Codex、Claude Code、Cursor、Gemini CLI 或任何你信任的 AI 编程工具。
+它本身不调用模型，也不碰你的 API Key。填好后，你会得到一份任务包，
+可以交给 Codex、Claude Code、Cursor、Gemini CLI 或任何你信任的 AI 编程工具。
 
 English version: [README.md](README.md)
 
@@ -92,7 +95,8 @@ proof/
   release-proof.md
 ```
 
-`jumao pack` 会生成一个 AI 任务包，里面会合并产品简报、首版边界、页面状态、数据安全和完成证据。AI 编程工具读完后，就不容易一上来写偏。
+`jumao pack` 会生成一个 AI 任务包，里面会合并产品简报、首版边界、
+页面状态、数据安全和完成证据。AI 编程工具读完后，就不容易一上来写偏。
 
 ## 推荐工作流
 
@@ -171,9 +175,13 @@ npm pack --dry-run
 git status --short
 ```
 
-只有在工作区干净、检查通过、包内容符合预期后，再创建远程仓库并 push。创建 GitHub 仓库、push、发布 npm 都是外部动作，建议先人工确认。
+只有在工作区干净、检查通过、包内容符合预期后，再创建远程仓库并 push。
+创建 GitHub 仓库、push、发布 npm 都是外部动作，建议先人工确认。
 
-更完整的发布步骤见 [发布清单](docs/publish-checklist.zh-CN.md)。想参与改进请先看 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)，安全问题见 [SECURITY.zh-CN.md](SECURITY.zh-CN.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+更完整的发布步骤见 [发布清单](docs/publish-checklist.zh-CN.md)。
+想参与改进请先看 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)，
+安全问题见 [SECURITY.zh-CN.md](SECURITY.zh-CN.md)，版本变化见
+[CHANGELOG.md](CHANGELOG.md)。
 
 ## 常见问题
 

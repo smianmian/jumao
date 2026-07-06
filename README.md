@@ -2,9 +2,14 @@
 
 Jumao is a product workspace for people who have an app, website, or small tool idea and want help from AI.
 
-Before asking AI to code, Jumao helps you write down the practical parts: who it is for, what the first version should include, what should stay out, what happens when a screen is empty or broken, what data is involved, and what proof shows the work is actually done.
+Before asking AI to code, Jumao helps you write down the practical parts:
+who it is for, what the first version should include, what should stay out,
+what happens when a screen is empty or broken, what data is involved, and
+what proof shows the work is actually done.
 
-Jumao does not call model APIs or touch your API keys. After you fill the files, you get a task packet you can give to Codex, Claude Code, Cursor, Gemini CLI, or any AI coding tool you trust.
+Jumao does not call model APIs or touch your API keys. After you fill the
+files, you get a task packet you can give to Codex, Claude Code, Cursor,
+Gemini CLI, or any AI coding tool you trust.
 
 中文版本: [README.zh-CN.md](README.zh-CN.md)
 
@@ -172,9 +177,13 @@ npm pack --dry-run
 git status --short
 ```
 
-Create the remote repo, push, or publish only after the working tree is clean, checks pass, and the package contents look right. GitHub repo creation, push, and npm publish are external actions, so confirm them first.
+Create the remote repo, push, or publish only after the working tree is clean,
+checks pass, and the package contents look right. GitHub repo creation, push,
+and npm publish are external actions, so confirm them first.
 
-See the full [publish checklist](docs/publish-checklist.md). To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting is covered in [SECURITY.md](SECURITY.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
+See the full [publish checklist](docs/publish-checklist.md). To contribute,
+read [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting is covered in
+[SECURITY.md](SECURITY.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
 
 ## FAQ
 
