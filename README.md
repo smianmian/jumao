@@ -1,51 +1,77 @@
 # Jumao
 
-Jumao is a product workspace for people who have an app, website, or small tool idea and want help from AI.
+Jumao is an agent-ready project governance CLI for AI coding tools.
 
-Before asking AI to code, Jumao helps you write down the practical parts: who it is for, what the first version should include, what should stay out, what happens when a screen is empty or broken, what data is involved, and what proof shows the work is actually done.
+It helps builders avoid handing a vague idea directly to Codex, Claude, or Cursor
+and then watching the AI write code in the wrong direction. Jumao turns product
+intent, first-version boundaries, screen states, data safety, handoff rules, and
+completion proof into files that an AI coding tool can read before it edits code.
 
-Jumao does not call model APIs or touch your API keys. After you fill the files, you get a task packet you can give to Codex, Claude Code, Cursor, Gemini CLI, or any AI coding tool you trust.
+Jumao does not call model APIs, does not require API keys, does not write your
+app code by itself, does not publish to npm, and does not push to remote
+repositories.
 
 中文版本: [README.zh-CN.md](README.zh-CN.md)
 
-## 3-minute start
+## 5-minute Quickstart
+
+Run this from the repo root:
 
 ```bash
-git clone <your-fork-or-this-repo> jumao
-cd jumao
-npm install
-
-node bin/jumao.js new "AI Travel Helper" --dir ./work/ai-travel-helper
-node bin/jumao.js check ./work/ai-travel-helper
-node bin/jumao.js pack ./work/ai-travel-helper
+node bin/jumao.js new "AI Note" --dir ./tmp/ai-note
+node bin/jumao.js interview ./tmp/ai-note --answers ./examples/ai-note-helper/answers.json
+node bin/jumao.js check ./tmp/ai-note --strict
+node bin/jumao.js audit ./tmp/ai-note --write
+node bin/jumao.js pack ./tmp/ai-note --target codex
 ```
 
-Then give `./work/ai-travel-helper/jumao-task-pack.md` to your AI coding tool and start with:
+The result is a workspace in `./tmp/ai-note` and a Codex-ready task pack at:
 
 ```text
-Please read this Jumao AI task packet first. Do not code yet.
-Summarize the product goal, first-version scope, gaps, and next smallest safe action.
+./tmp/ai-note/tasks/codex-task-pack.md
 ```
 
-## Who it is for
+Give that task pack to your AI coding tool and ask it to summarize the product
+goal, first-version scope, risks, and next smallest safe task before editing code.
 
-- You have an app, website, SaaS, AI tool, or small product idea.
-- You cannot code, or can only code a little, but want AI to help you keep moving.
-- You do not want AI to expand scope, edit risky systems, or pretend work is done.
-- You want every step to have proof: tests, screenshots, logs, or human review.
+## Core Flow
 
-## What it fixes
+```text
+new -> interview -> check --strict -> audit -> pack --target codex|claude|cursor
+```
 
-AI coding projects often go sideways at the start. The idea is still loose, the boundaries are fuzzy, and the AI does not know what it may or may not touch.
+| Step | What it proves |
+| --- | --- |
+| `new` | The product workspace exists. |
+| `interview` | The user can fill core product context without staring at blank Markdown. |
+| `check --strict` | The context is no longer empty, vague, or placeholder-heavy. |
+| `audit` | The user can see gaps, why they matter, and the next safe AI task. |
+| `pack --target` | Codex, Claude, or Cursor gets a scoped task pack with tool-specific rules. |
 
-- Who is the product for?
-- What is in the first version, and what is not?
-- What data can be collected, and what must be avoided?
-- What are the empty, error, loading, and permission states?
-- What counts as real completion?
-- Which actions affect users, bills, review, launch, or production data?
+## Who It Is For
 
-Jumao turns those questions into files a person can fill in, then packs them into context an AI coding tool can read.
+- People with an app, website, SaaS, AI tool, or small product idea.
+- Builders who do not code much but use Codex, Claude Code, Cursor, or similar
+  tools.
+- Teams that want AI coding work to start from a product boundary instead of a
+  loose chat prompt.
+- Maintainers who want every round of AI work to leave tests, screenshots, logs,
+  or human review notes.
+
+## What It Helps Prevent
+
+AI coding work often drifts because the tool is missing product context.
+
+- The user is unclear.
+- The first version is too broad.
+- Excluded features are not written down.
+- Empty, error, loading, success, and permission states are missing.
+- Data collection and deletion rules are vague.
+- The AI says work is done without proof.
+- A coding tool touches publishing, production data, payments, or remote
+  repositories too early.
+
+Jumao turns those risks into files, checks, reports, and task packs.
 
 ## Commands
 
@@ -53,25 +79,36 @@ Jumao turns those questions into files a person can fill in, then packs them int
 jumao init [dir]
 jumao new <product-name> --dir [dir]
 jumao check [dir]
+jumao check [dir] --strict
+jumao audit [dir]
+jumao audit [dir] --write
+jumao interview [dir]
+jumao interview [dir] --answers answers.json
+jumao interview [dir] --answers answers.json --force
 jumao pack [dir]
+jumao pack [dir] --target codex
+jumao pack [dir] --target claude
+jumao pack [dir] --target cursor
 ```
 
-Without global install, use:
-
-```bash
-node bin/jumao.js new "My Product" --dir ./work/my-product
-```
+Without global install, use `node bin/jumao.js ...` from this repo.
 
 | Command | Purpose |
 | --- | --- |
 | `init` | Put Jumao docs, templates, and a fillable product skeleton into a directory. |
-| `new` | Create a product launch workspace. |
+| `new` | Create a product workspace. |
 | `check` | Verify required files exist. |
-| `pack` | Build `jumao-task-pack.md` for an AI coding tool. |
+| `check --strict` | Gate: fail on placeholders, filler text, empty structures, and missing core product context. |
+| `audit` | Diagnose gaps, explain why they matter, and suggest the next safe AI task. |
+| `audit --write` | Write the diagnosis to `tasks/audit-report.md`. |
+| `interview` | Ask questions and fill the four core product files. |
+| `interview --answers` | Generate core files from JSON; add `--force` to overwrite filled files. |
+| `pack` | Build the legacy `jumao-task-pack.md`. |
+| `pack --target` | Build a Codex, Claude, or Cursor task pack after the strict gate passes. |
 
-## Generated workspace
+## Generated Workspace
 
-`jumao new "AI Travel Helper"` creates:
+`jumao new "AI Note"` creates:
 
 ```text
 AGENTS.md
@@ -92,107 +129,93 @@ proof/
   release-proof.md
 ```
 
-`jumao pack` creates one AI task packet containing the product brief, first-version scope, screen states, data safety notes, and proof file.
+`pack --target codex|claude|cursor` also creates a tool-specific file under `tasks/`.
 
-## Recommended workflow
-
-1. Run `jumao new`.
-2. Fill `product/product-brief.md`.
-3. Fill `product/scope-gate.md`.
-4. Fill `screen-states` so AI does not build only the happy path.
-5. Fill `data-safety` so AI understands data boundaries.
-6. Run `jumao check`.
-7. Run `jumao pack`.
-8. Give the packet to Codex, Claude Code, Cursor, or another AI coding tool.
-9. After each round, record tests, screenshots, logs, or human review in `proof/release-proof.md`.
-
-## Working with Codex, Claude, and Cursor
+## Working With AI Coding Tools
 
 ### Codex
 
-Paste `jumao-task-pack.md` into Codex and say:
-
-```text
-Do not edit code yet. Read the Jumao task packet and summarize the goal, gaps, risks, and next plan.
-Start implementation only after I confirm.
+```bash
+node bin/jumao.js pack ./tmp/ai-note --target codex
 ```
 
-### Claude Code
+The Codex pack reminds the tool to read `AGENTS.md`, keep edits scoped, run tests
+before reporting completion, and report changed / not changed / test result /
+remaining gaps.
 
-This repo includes [CLAUDE.md](CLAUDE.md). Ask Claude Code to read `AGENTS.md` and the `product/` files first.
+### Claude
+
+```bash
+node bin/jumao.js pack ./tmp/ai-note --target claude
+```
+
+The Claude pack reminds the tool to read `CLAUDE.md`, keep implementation
+scoped, and explain assumptions before large changes.
 
 ### Cursor
 
-Put the `AGENTS.md` rules into your project rules and keep `jumao-task-pack.md` in context. Before each edit, ask Cursor which first-version goal the change serves.
-
-For copyable prompts, see [AI Prompts](docs/prompts.md).
-
-## Complete example
-
-See [examples/ai-note-helper](examples/ai-note-helper). It is a filled example workspace for an AI note helper:
-
 ```bash
-node bin/jumao.js check examples/ai-note-helper
-node bin/jumao.js pack examples/ai-note-helper
+node bin/jumao.js pack ./tmp/ai-note --target cursor
 ```
 
-The generated task packet looks like this:
+The Cursor pack reminds the tool to keep edits small, prefer the existing
+project structure, and avoid new architecture unless asked.
 
-```text
-# 橘猫 AI 任务包
+## Complete Example
 
-## product/product-brief.zh-CN.md
-
-The first version proves one thing: after the user enters a messy note,
-they can get a copyable title, summary, and three next actions.
-
-## product/scope-gate.zh-CN.md
-
-Explicitly out of scope: login, payments, team collaboration, cloud sync,
-and automatic publishing. Actions that affect users, production data,
-payments, launch, or external accounts need human confirmation.
-```
-
-See the full output in [examples/ai-note-helper/jumao-task-pack.md](examples/ai-note-helper/jumao-task-pack.md).
-
-## Principles
-
-- Let AI ask first, then let AI code.
-- No proof, no "done".
-- You can build without knowing every technical detail, but AI must not guess about users, money, or launches.
-- Any action that affects users, payments, launch, review, or production data needs human confirmation.
-
-## Maintainer release check
-
-Before publishing to GitHub or npm, run:
+See [examples/ai-note-helper](examples/ai-note-helper). It is a filled workspace
+for a small AI note helper.
 
 ```bash
+node bin/jumao.js check examples/ai-note-helper --strict
+node bin/jumao.js audit examples/ai-note-helper
+node bin/jumao.js pack examples/ai-note-helper --target codex
+```
+
+The example answers file used in the quickstart lives at
+[examples/ai-note-helper/answers.json](examples/ai-note-helper/answers.json).
+
+## Release Candidate Checks
+
+For the v0.1.0 candidate, run:
+
+```bash
+node bin/jumao.js --help
+npm test
 npm run check
 npm pack --dry-run
 git status --short
 ```
 
-Create the remote repo, push, or publish only after the working tree is clean, checks pass, and the package contents look right. GitHub repo creation, push, and npm publish are external actions, so confirm them first.
+Publishing to GitHub, pushing a branch, publishing to npm, or creating a git tag
+are external release actions. Do them only after a human confirms.
 
-See the full [publish checklist](docs/publish-checklist.md). To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting is covered in [SECURITY.md](SECURITY.md). Release notes live in [CHANGELOG.md](CHANGELOG.md).
+## Project Files
+
+- [CHANGELOG.md](CHANGELOG.md): release notes.
+- [ROADMAP.md](ROADMAP.md): small, scoped next steps.
+- [CONTRIBUTING.md](CONTRIBUTING.md): contribution rules.
+- [SECURITY.md](SECURITY.md): security reporting.
+- [docs/guide.md](docs/guide.md): longer guide.
+- [docs/prompts.md](docs/prompts.md): copyable AI handoff prompts.
+- [docs/publish-checklist.md](docs/publish-checklist.md): publishing checklist.
 
 ## FAQ
 
 ### Does Jumao call OpenAI, Claude, or other models?
 
-No. Jumao only creates local files. It does not call model APIs, read API keys, or create model costs.
+No. Jumao only reads and writes local files. It does not call model APIs, read
+API keys, or create model costs.
 
 ### Can I use it if I cannot code?
 
-Yes. Jumao helps you explain the product clearly before asking an AI coding tool to continue.
+Yes. Jumao is designed to help you explain the product clearly before asking an
+AI coding tool to continue.
 
 ### Does it generate a full app?
 
-No, and it should not promise that. Jumao prepares the product context, boundaries, and proof so AI coding tools have a clearer starting point.
-
-### Why does it care about proof?
-
-AI can say "done" too early. Real projects need tests, screenshots, logs, review states, or human acceptance.
+No. Jumao prepares product context, boundaries, task handoff, and proof
+structure. A separate AI coding tool or developer still implements the product.
 
 ### Can I use it commercially?
 
