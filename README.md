@@ -1,8 +1,10 @@
 # Jumao
 
-Jumao is an AI product launch toolkit for non-technical builders.
+Jumao is a product workspace for people who have an app, website, or small tool idea and want help from AI.
 
-Think of it as a product workspace. It does not call model APIs and does not store API keys. Instead, it helps you organize your idea, scope, screen states, data safety, and completion proof into an AI-ready task packet. You can hand that packet to Codex, Claude Code, Cursor, Gemini CLI, or any AI coding agent you trust.
+Before asking AI to code, Jumao helps you write down the practical parts: who it is for, what the first version should include, what should stay out, what happens when a screen is empty or broken, what data is involved, and what proof shows the work is actually done.
+
+Jumao does not call model APIs or touch your API keys. After you fill the files, you get a task packet you can give to Codex, Claude Code, Cursor, Gemini CLI, or any AI coding tool you trust.
 
 中文版本: [README.zh-CN.md](README.zh-CN.md)
 
@@ -34,7 +36,7 @@ Summarize the product goal, first-version scope, gaps, and next smallest safe ac
 
 ## What it fixes
 
-AI coding often fails because the first prompt skips real product work:
+AI coding projects often go sideways at the start. The idea is still loose, the boundaries are fuzzy, and the AI does not know what it may or may not touch.
 
 - Who is the product for?
 - What is in the first version, and what is not?
@@ -43,7 +45,7 @@ AI coding often fails because the first prompt skips real product work:
 - What counts as real completion?
 - Which actions affect users, bills, review, launch, or production data?
 
-Jumao turns these questions into human-readable files and AI-ready task packets.
+Jumao turns those questions into files a person can fill in, then packs them into context an AI coding tool can read.
 
 ## Commands
 
