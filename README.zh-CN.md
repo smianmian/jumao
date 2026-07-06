@@ -2,7 +2,9 @@
 
 橘猫是一套面向 AI 编程工具的项目治理 CLI。
 
-它帮你在把想法交给 Codex、Claude 或 Cursor 之前，先把产品目标、首版边界、页面状态、数据安全、交付规则和完成证据整理成文件。这样 AI 开始写代码前，先知道该做什么、不能做什么、哪些动作必须停下来问人。
+它帮你在把想法交给 Codex、Claude 或 Cursor 之前，先把产品目标、
+首版边界、页面状态、数据安全、交付规则和完成证据整理成文件。
+这样 AI 开始写代码前，先知道该做什么、不能做什么、哪些动作必须停下来问人。
 
 橘猫不调用模型 API，不需要 API Key，不替你自动写完整 App，不发布 npm，不 push 远程仓库。
 
@@ -32,7 +34,8 @@ node bin/jumao.js pack ./tmp/ai-note --target codex
 ./tmp/ai-note/tasks/codex-task-pack.md
 ```
 
-把这份任务包交给 AI 编程工具时，先让它总结产品目标、首版范围、风险和下一步最小安全任务，再开始改代码。
+把这份任务包交给 AI 编程工具时，先让它总结产品目标、首版范围、
+风险和下一步最小安全任务，再开始改代码。
 
 ## 核心闭环
 
@@ -135,7 +138,8 @@ proof/
 node bin/jumao.js pack ./tmp/ai-note --target codex
 ```
 
-Codex 任务包会提醒它先读 `AGENTS.md`，只改请求范围内的文件，完成前跑测试，并汇报 changed / not changed / test result / remaining gaps。
+Codex 任务包会提醒它先读 `AGENTS.md`，只改请求范围内的文件，
+完成前跑测试，并汇报 changed / not changed / test result / remaining gaps。
 
 ### Claude
 
@@ -177,7 +181,8 @@ npm pack --dry-run
 git status --short
 ```
 
-创建 GitHub 仓库、push 分支、发布 npm、创建 git tag 都是外部发布动作，需要人工确认后再做。
+创建 GitHub 仓库、push 分支、发布 npm、创建 git tag 都是外部发布动作，
+需要人工确认后再做。
 
 ## 项目文件
 
@@ -201,7 +206,8 @@ git status --short
 
 ### 它能直接生成完整 App 吗？
 
-不能。橘猫负责整理产品上下文、边界、任务交接和完成证据。真正实现仍然需要 AI 编程工具或开发者继续完成。
+不能。橘猫负责整理产品上下文、边界、任务交接和完成证据。
+真正实现仍然需要 AI 编程工具或开发者继续完成。
 
 ### 可以商用吗？
 

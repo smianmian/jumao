@@ -2,7 +2,9 @@
 
 Thanks for helping make Jumao easier to use.
 
-Jumao is for people who may not code much but still want to turn an idea into a real product. Good changes should make it easier for them to describe the idea, scope, data, and proof clearly.
+Jumao is for people who may not code much but still want to turn an idea into a
+real product. Good changes should make it easier for them to describe the idea,
+scope, data, and proof clearly.
 
 ## What good contributions look like
 
@@ -39,4 +41,5 @@ In the pull request, include:
 - Prefer ordinary words over engineering jargon.
 - When a technical word is necessary, explain it once.
 - Avoid promising that Jumao can build a full product by itself.
-- Keep risky actions explicit: users, production data, payments, launch, review, and external accounts need human confirmation.
+- Keep risky actions explicit: users, production data, payments, launch, review,
+  and external accounts need human confirmation.
