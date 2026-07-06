@@ -1,7 +1,7 @@
 {
   "name": "jumao",
   "version": "0.1.0",
-  "description": "橘猫 - product workspace for AI-assisted builders",
+  "description": "Agent-ready project governance CLI for AI coding tools",
   "type": "module",
   "bin": {
     "jumao": "./bin/jumao.js"
@@ -19,6 +19,14 @@
     "vibe-coding",
     "jumao"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smianmian/jumao.git"
+  },
+  "bugs": {
+    "url": "https://github.com/smianmian/jumao/issues"
+  },
+  "homepage": "https://github.com/smianmian/jumao#readme",
   "author": "Jumao contributors",
   "license": "MIT",
   "engines": {

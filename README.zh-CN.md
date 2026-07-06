@@ -1,54 +1,73 @@
 # 橘猫
 
-橘猫是给不太会写代码的人用的产品项目夹。
+橘猫是一套面向 AI 编程工具的项目治理 CLI。
 
-如果你有一个 App、网站或小工具的想法，先别急着让 AI 写代码。
-橘猫会带你把几件事写清楚：给谁用，第一版做什么，不做什么，
-页面出错怎么办，会碰哪些数据，怎么证明真的做完。
+它帮你在把想法交给 Codex、Claude 或 Cursor 之前，先把产品目标、首版边界、页面状态、数据安全、交付规则和完成证据整理成文件。这样 AI 开始写代码前，先知道该做什么、不能做什么、哪些动作必须停下来问人。
 
-它本身不调用模型，也不碰你的 API Key。填好后，你会得到一份任务包，
-可以交给 Codex、Claude Code、Cursor、Gemini CLI 或任何你信任的 AI 编程工具。
+橘猫不调用模型 API，不需要 API Key，不替你自动写完整 App，不发布 npm，不 push 远程仓库。
 
 English version: [README.md](README.md)
 
-## 3 分钟上手
+## 5 分钟跑通
+
+在仓库根目录运行：
 
 ```bash
-git clone <your-fork-or-this-repo> jumao
-cd jumao
-npm install
-
-node bin/jumao.js new "AI 旅行助手" --dir ./work/ai-travel-helper
-node bin/jumao.js check ./work/ai-travel-helper
-node bin/jumao.js pack ./work/ai-travel-helper
+node bin/jumao.js new "AI Note" --dir ./tmp/ai-note
+node bin/jumao.js interview ./tmp/ai-note --answers ./examples/ai-note-helper/answers.json
+node bin/jumao.js check ./tmp/ai-note --strict
+node bin/jumao.js audit ./tmp/ai-note --write
+node bin/jumao.js pack ./tmp/ai-note --target codex
 ```
 
-然后把 `./work/ai-travel-helper/jumao-task-pack.md` 丢给你的 AI 编程工具，开场可以这样说：
+跑完后，你会得到一个产品工作区：
 
 ```text
-请先读这份橘猫 AI 任务包，不要急着写代码。
-先告诉我你理解的产品目标、首版边界、缺口和下一步最小安全动作。
+./tmp/ai-note
 ```
 
-## 橘猫适合谁
+以及一份可以交给 Codex 的任务包：
 
-- 你有一个 App、网站、SaaS、AI 工具或小产品想法。
-- 你不会代码，或者只会一点点，但想让 AI 真正把东西做出来。
-- 你怕 AI 一上来乱写、乱扩需求、乱动生产环境。
-- 你希望每一步都有测试、截图、日志或人工验收，不想只听 AI 说“差不多好了”。
+```text
+./tmp/ai-note/tasks/codex-task-pack.md
+```
 
-## 它解决什么
+把这份任务包交给 AI 编程工具时，先让它总结产品目标、首版范围、风险和下一步最小安全任务，再开始改代码。
 
-很多 AI 编程项目开头就容易跑偏：想法太散，边界太模糊，AI 不知道哪些能碰、哪些不能碰。
+## 核心闭环
 
-- 这个产品到底给谁用。
-- 首版只做什么，不做什么。
-- 哪些数据可以收集，哪些不能碰。
-- 每个页面的空状态、失败状态、权限状态是什么。
-- 什么时候才算真的完成。
-- 哪些动作会影响真实用户、账单、审核、上线或生产数据。
+```text
+new -> interview -> check --strict -> audit -> pack --target codex|claude|cursor
+```
 
-橘猫把这些问题拆成一组普通人能填写的文件，再整理成 AI 能读懂的任务包。
+| 步骤 | 证明什么 |
+| --- | --- |
+| `new` | 产品工作区已经生成。 |
+| `interview` | 用户不用面对空白 Markdown，也能补齐核心产品信息。 |
+| `check --strict` | 上下文不再是空模板、占位词或泛泛而谈。 |
+| `audit` | 用户能看到缺口、影响和下一步安全 AI 任务。 |
+| `pack --target` | Codex、Claude 或 Cursor 能拿到带工具规则的任务包。 |
+
+## 适合谁
+
+- 有 App、网站、SaaS、AI 工具或小产品想法的人。
+- 不太会写代码，但会用 Codex、Claude Code、Cursor 这类工具的人。
+- 希望 AI 写代码前先理解产品边界的人。
+- 希望每轮 AI 工作都留下测试、截图、日志或人工验收的人。
+
+## 解决的问题
+
+AI 编程经常一开始就跑偏，原因通常不是模型不够强，而是上下文太糊。
+
+- 用户是谁没说清。
+- 首版范围太大。
+- 不该做的功能没有写下来。
+- 页面缺少加载、空状态、错误、成功、权限拒绝。
+- 数据收集、保存、删除规则不清楚。
+- AI 没有证据就说完成。
+- AI 过早碰发布、生产数据、付费或远程仓库。
+
+橘猫把这些风险整理成文件、检查、诊断报告和任务包。
 
 ## 命令
 
@@ -61,34 +80,31 @@ jumao audit [dir]
 jumao audit [dir] --write
 jumao interview [dir]
 jumao interview [dir] --answers answers.json
+jumao interview [dir] --answers answers.json --force
 jumao pack [dir]
 jumao pack [dir] --target codex
 jumao pack [dir] --target claude
 jumao pack [dir] --target cursor
 ```
 
-没有全局安装时，也可以直接用：
-
-```bash
-node bin/jumao.js new "我的产品" --dir ./work/my-product
-```
+没有全局安装时，在本仓库里用 `node bin/jumao.js ...` 即可。
 
 | 命令 | 做什么 |
 | --- | --- |
-| `init` | 在一个目录里放入橘猫文档、模板、产品骨架。 |
-| `new` | 为一个产品生成独立工作区。 |
-| `check` | 检查关键文件是否齐全。 |
-| `check --strict` | 门禁：拦住占位、泛话和核心结构缺口。 |
-| `audit` | 诊断缺口、说明影响，并给出下一步安全 AI 任务。 |
+| `init` | 在目录里放入橘猫文档、模板和可填写的产品骨架。 |
+| `new` | 创建一个产品工作区。 |
+| `check` | 检查必需文件是否存在。 |
+| `check --strict` | 门禁：拦住占位词、泛话、空结构和核心产品信息缺口。 |
+| `audit` | 诊断缺口，说明影响，并给出下一步安全 AI 任务。 |
 | `audit --write` | 把诊断写入 `tasks/audit-report.md`。 |
-| `interview` | 通过问答补齐核心产品文件。 |
-| `interview --answers` | 用 `answers.json` 非交互生成；加 `--force` 会覆盖已有核心文件。 |
-| `pack` | 打包成可以交给 AI 编程工具的 `jumao-task-pack.md`。 |
+| `interview` | 通过问答补齐四个核心产品文件。 |
+| `interview --answers` | 用 JSON 非交互生成核心文件；加 `--force` 会覆盖已填写文件。 |
+| `pack` | 生成旧版兼容的 `jumao-task-pack.md`。 |
 | `pack --target` | strict 门禁通过后，生成 Codex、Claude 或 Cursor 任务包。 |
 
-## 生成出来长什么样
+## 生成的工作区
 
-`jumao new "AI 旅行助手"` 会生成：
+`jumao new "AI Note"` 会生成：
 
 ```text
 AGENTS.md
@@ -109,111 +125,83 @@ proof/
   release-proof.md
 ```
 
-`jumao pack` 会生成一个 AI 任务包，里面会合并产品简报、首版边界、
-页面状态、数据安全和完成证据。AI 编程工具读完后，就不容易一上来写偏。
+`pack --target codex|claude|cursor` 还会在 `tasks/` 下生成对应工具的任务包。
 
-## 推荐工作流
-
-1. 用 `jumao new` 生成产品工作区。
-2. 先填 `product/product-brief.zh-CN.md`，把想法说清楚。
-3. 再填 `product/scope-gate.zh-CN.md`，写清楚首版做什么、不做什么。
-4. 填 `screen-states`，避免只做顺利路径。
-5. 填 `data-safety`，说明收什么数据、放哪里、怎么删。
-6. 用 `jumao check` 检查文件是否齐。
-7. 用 `jumao pack` 生成任务包。
-8. 把任务包交给 Codex、Claude Code、Cursor 或其他 AI 编程工具。
-9. 每轮完成后，把测试、截图、日志或人工验收写进 `proof/release-proof.zh-CN.md`。
-
-## 和 Codex / Claude / Cursor 怎么配合
+## 和 AI 编程工具配合
 
 ### Codex
 
-把 `jumao-task-pack.md` 贴给 Codex，然后说：
-
-```text
-先不要改代码。请根据橘猫任务包总结目标、缺口、风险和下一步计划。
-只有当我确认后，才开始实现。
+```bash
+node bin/jumao.js pack ./tmp/ai-note --target codex
 ```
 
-### Claude Code
+Codex 任务包会提醒它先读 `AGENTS.md`，只改请求范围内的文件，完成前跑测试，并汇报 changed / not changed / test result / remaining gaps。
 
-仓库里有 [CLAUDE.md](CLAUDE.md)。把产品工作区交给 Claude Code 后，让它先读 `AGENTS.md` 和 `product/` 下的文件。
+### Claude
+
+```bash
+node bin/jumao.js pack ./tmp/ai-note --target claude
+```
+
+Claude 任务包会提醒它先读 `CLAUDE.md`，保持实现范围克制，大改前先说明假设。
 
 ### Cursor
 
-把 `AGENTS.md` 的规则放进项目规则，把 `jumao-task-pack.md` 放进上下文。每次让 Cursor 做事前，先问它“这次改动对应哪个首版目标”。
+```bash
+node bin/jumao.js pack ./tmp/ai-note --target cursor
+```
 
-更多可直接复制的提示词见 [AI 提示词](docs/prompts.zh-CN.md)。
+Cursor 任务包会提醒它保持小改动，优先沿用现有项目结构，不要主动新建架构。
 
 ## 完整示例
 
-看 [examples/ai-note-helper](examples/ai-note-helper)。这是一个填好的“AI 笔记助手”示例，可以直接运行：
+看 [examples/ai-note-helper](examples/ai-note-helper)。它是一个已经填好的“AI 笔记助手”工作区。
 
 ```bash
-node bin/jumao.js check examples/ai-note-helper
-node bin/jumao.js pack examples/ai-note-helper
+node bin/jumao.js check examples/ai-note-helper --strict
+node bin/jumao.js audit examples/ai-note-helper
+node bin/jumao.js pack examples/ai-note-helper --target codex
 ```
 
-示例任务包会长这样：
+Quickstart 使用的示例答案在 [examples/ai-note-helper/answers.json](examples/ai-note-helper/answers.json)。
 
-```text
-# 橘猫 AI 任务包
+## v0.1.0 候选检查
 
-## product/product-brief.zh-CN.md
-
-首版只证明一件事：用户输入一段混乱笔记后，
-能得到一个可复制的标题、一段摘要和三条下一步行动。
-
-## product/scope-gate.zh-CN.md
-
-首版明确不做：登录、付费、团队协作、云同步、自动发布。
-涉及真实用户、生产数据、付费、上线或外部账号的动作，必须人工确认。
-```
-
-完整输出在 [examples/ai-note-helper/jumao-task-pack.md](examples/ai-note-helper/jumao-task-pack.md)。
-
-## 重要原则
-
-- 先让 AI 问清楚，再让 AI 写代码。
-- 没有证据，不要说完成。
-- 不懂技术也可以做产品，但涉及真实用户、钱和上线的事不能让 AI 猜。
-- 任何会影响用户、付费、上线、审核、生产数据的动作，都要人工确认。
-
-## 维护者发布前检查
-
-发布到 GitHub 或 npm 前，先在本地跑：
+发布候选前运行：
 
 ```bash
+node bin/jumao.js --help
+npm test
 npm run check
 npm pack --dry-run
 git status --short
 ```
 
-只有在工作区干净、检查通过、包内容符合预期后，再创建远程仓库并 push。
-创建 GitHub 仓库、push、发布 npm 都是外部动作，建议先人工确认。
+创建 GitHub 仓库、push 分支、发布 npm、创建 git tag 都是外部发布动作，需要人工确认后再做。
 
-更完整的发布步骤见 [发布清单](docs/publish-checklist.zh-CN.md)。
-想参与改进请先看 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)，
-安全问题见 [SECURITY.zh-CN.md](SECURITY.zh-CN.md)，版本变化见
-[CHANGELOG.md](CHANGELOG.md)。
+## 项目文件
+
+- [CHANGELOG.md](CHANGELOG.md)：版本记录。
+- [ROADMAP.md](ROADMAP.md)：下一步小范围计划。
+- [CONTRIBUTING.md](CONTRIBUTING.md)：贡献规则。
+- [SECURITY.md](SECURITY.md)：安全报告方式。
+- [docs/guide.zh-CN.md](docs/guide.zh-CN.md)：更完整的使用指南。
+- [docs/prompts.zh-CN.md](docs/prompts.zh-CN.md)：可以直接复制的 AI 提示词。
+- [docs/publish-checklist.zh-CN.md](docs/publish-checklist.zh-CN.md)：发布清单。
 
 ## 常见问题
 
 ### 橘猫会调用 OpenAI、Claude 或其他模型吗？
 
-不会。橘猫只生成本地文件，不调用模型、不读取 API Key、不产生模型费用。
+不会。橘猫只读写本地文件，不调用模型 API，不读取 API Key，不产生模型费用。
 
 ### 我不会代码也能用吗？
 
-可以。橘猫的第一目标就是帮你把想法讲清楚，再交给 AI 编程工具继续做。
+可以。橘猫的目标就是帮你先把产品讲清楚，再交给 AI 编程工具继续做。
 
-### 它能直接生成一个完整 App 吗？
+### 它能直接生成完整 App 吗？
 
-不能，也不应该承诺。橘猫负责把需求、边界、状态、数据、安全和证据整理清楚，让 AI 编程工具少走弯路。
-
-### 为什么一直强调“证据”？
-
-因为 AI 很容易说“已经完成”，但真实项目需要测试、截图、日志、审核状态或人工验收来证明。
+不能。橘猫负责整理产品上下文、边界、任务交接和完成证据。真正实现仍然需要 AI 编程工具或开发者继续完成。
 
 ### 可以商用吗？
 

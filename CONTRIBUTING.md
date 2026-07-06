@@ -18,7 +18,11 @@ Jumao is for people who may not code much but still want to turn an idea into a 
 Run:
 
 ```bash
+node bin/jumao.js --help
 npm run check
+node bin/jumao.js check examples/ai-note-helper --strict
+node bin/jumao.js audit examples/ai-note-helper
+node bin/jumao.js pack examples/ai-note-helper --target codex
 npm pack --dry-run
 git status --short
 ```
