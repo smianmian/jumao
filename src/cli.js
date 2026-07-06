@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { auditWorkspace } from './core/audit.js';
 import { missingRequiredFiles, requiredProductFiles, validateStrictWorkspace } from './core/strict-check.js';
 
 const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
@@ -28,6 +29,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'init') return initCommand(args, io);
   if (command === 'new') return newCommand(args, io);
   if (command === 'check') return checkCommand(args, io);
+  if (command === 'audit') return auditCommand(args, io);
   if (command === 'pack') return packCommand(args, io);
 
   io.stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
@@ -42,6 +44,7 @@ function helpText() {
     '  jumao init [dir]',
     '  jumao new <product-name> --dir [dir]',
     '  jumao check [dir] [--strict]',
+    '  jumao audit [dir] [--write]',
     '  jumao pack [dir]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
@@ -139,6 +142,25 @@ function checkCommand(args, io) {
   return 1;
 }
 
+function auditCommand(args, io) {
+  const { targetDir, write } = parseAuditArgs(args);
+  const result = auditWorkspace(targetDir);
+
+  if (!result.ok) {
+    io.stderr.write(`${result.message}\n`);
+    return 1;
+  }
+
+  if (write) {
+    const tasksDir = path.join(targetDir, 'tasks');
+    ensureDir(tasksDir);
+    fs.writeFileSync(path.join(tasksDir, 'audit-report.md'), result.report, 'utf8');
+  }
+
+  io.stdout.write(result.report);
+  return 0;
+}
+
 function packCommand(args, io) {
   const targetDir = path.resolve(args[0] || '.');
   const sections = [];
@@ -200,6 +222,15 @@ function parseCheckArgs(args) {
   return {
     targetDir: path.resolve(positional[0] || '.'),
     strict
+  };
+}
+
+function parseAuditArgs(args) {
+  const write = args.includes('--write');
+  const positional = args.filter((arg) => arg !== '--write');
+  return {
+    targetDir: path.resolve(positional[0] || '.'),
+    write
   };
 }
 

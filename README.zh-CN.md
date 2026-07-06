@@ -57,6 +57,8 @@ jumao init [dir]
 jumao new <product-name> --dir [dir]
 jumao check [dir]
 jumao check [dir] --strict
+jumao audit [dir]
+jumao audit [dir] --write
 jumao pack [dir]
 ```
 
@@ -71,7 +73,9 @@ node bin/jumao.js new "我的产品" --dir ./work/my-product
 | `init` | 在一个目录里放入橘猫文档、模板、产品骨架。 |
 | `new` | 为一个产品生成独立工作区。 |
 | `check` | 检查关键文件是否齐全。 |
-| `check --strict` | 拦住占位、泛话和核心结构缺口；完成证据未填时只提醒。 |
+| `check --strict` | 门禁：拦住占位、泛话和核心结构缺口。 |
+| `audit` | 诊断缺口、说明影响，并给出下一步安全 AI 任务。 |
+| `audit --write` | 把诊断写入 `tasks/audit-report.md`。 |
 | `pack` | 打包成可以交给 AI 编程工具的 `jumao-task-pack.md`。 |
 
 ## 生成出来长什么样

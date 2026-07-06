@@ -59,6 +59,8 @@ jumao init [dir]
 jumao new <product-name> --dir [dir]
 jumao check [dir]
 jumao check [dir] --strict
+jumao audit [dir]
+jumao audit [dir] --write
 jumao pack [dir]
 ```
 
@@ -73,7 +75,9 @@ node bin/jumao.js new "My Product" --dir ./work/my-product
 | `init` | Put Jumao docs, templates, and a fillable product skeleton into a directory. |
 | `new` | Create a product launch workspace. |
 | `check` | Verify required files exist. |
-| `check --strict` | Fail on placeholders, filler text, and missing core structure; warn when completion proof is not filled yet. |
+| `check --strict` | Gate: fail on placeholders, filler text, and missing core structure. |
+| `audit` | Diagnose gaps, why they matter, and the next safe AI task. |
+| `audit --write` | Write the diagnosis to `tasks/audit-report.md`. |
 | `pack` | Build `jumao-task-pack.md` for an AI coding tool. |
 
 ## Generated workspace

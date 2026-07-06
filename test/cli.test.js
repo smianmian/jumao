@@ -241,6 +241,50 @@ test('strict check passes for minimal valid Chinese content', () => {
   assert.doesNotMatch(checked.stdout, /Warnings:/);
 });
 
+test('audit reports gaps for a new workspace', () => {
+  const workspace = createProductWorkspace();
+
+  const audited = spawnSync(process.execPath, [cli, 'audit', workspace], { encoding: 'utf8' });
+
+  assert.equal(audited.status, 0, audited.stdout + audited.stderr);
+  assert.match(audited.stdout, /Jumao audit report/);
+  assert.match(audited.stdout, /Workspace status: not ready/);
+  assert.match(audited.stdout, /Next safe task for AI/);
+});
+
+test('audit write creates a report file', () => {
+  const workspace = createProductWorkspace();
+
+  const audited = spawnSync(process.execPath, [cli, 'audit', workspace, '--write'], { encoding: 'utf8' });
+  const reportPath = path.join(workspace, 'tasks', 'audit-report.md');
+
+  assert.equal(audited.status, 0, audited.stdout + audited.stderr);
+  assert.ok(fs.existsSync(reportPath));
+  assert.match(fs.readFileSync(reportPath, 'utf8'), /Findings/);
+});
+
+test('audit rejects an empty directory', () => {
+  const workspace = tempDir();
+
+  const audited = spawnSync(process.execPath, [cli, 'audit', workspace], { encoding: 'utf8' });
+
+  assert.equal(audited.status, 1);
+  assert.match(audited.stderr, /not a valid Jumao workspace/);
+});
+
+test('audit reports planning-ready workspace with empty completion proof warning', () => {
+  const workspace = createProductWorkspace();
+  writeMinimalValidCore(workspace);
+
+  const audited = spawnSync(process.execPath, [cli, 'audit', workspace], { encoding: 'utf8' });
+
+  assert.equal(audited.status, 0, audited.stdout + audited.stderr);
+  assert.match(audited.stdout, /Workspace status: planning ready, not release ready/);
+  assert.doesNotMatch(audited.stdout, /\[error\]/);
+  assert.match(audited.stdout, /\[warning\] proof\/release-proof\.zh-CN\.md/);
+  assert.match(audited.stdout, /completion proof is not filled yet/);
+});
+
 test('initializes a ready-to-fill workspace', () => {
   const workspace = tempDir();
 
