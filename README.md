@@ -13,6 +13,139 @@ repositories.
 
 中文版本: [README.zh-CN.md](README.zh-CN.md)
 
+## How to Use Jumao
+
+Jumao is not an app and it does not generate your app by itself.
+It is a small command-line helper that makes your idea clear before you ask
+Codex, Claude, or Cursor to write code.
+
+If your terminal says `npm: command not found` or `command not found: npm`,
+install Node.js LTS first. Then close and reopen the terminal.
+
+https://nodejs.org/
+
+## 1. Install Jumao
+
+```bash
+npm install -g jumao
+jumao --help
+```
+
+## 2. Create a Project
+
+```bash
+mkdir -p ~/jumao-work
+cd ~/jumao-work
+jumao new "My App" --dir ./my-app
+jumao interview ./my-app
+jumao check ./my-app --strict
+jumao audit ./my-app --write
+jumao pack ./my-app --target codex
+```
+
+## 3. Copy the Codex Task Pack
+
+Mac users:
+
+```bash
+cat ./my-app/tasks/codex-task-pack.md | pbcopy
+```
+
+Not on macOS:
+
+```text
+Open ./my-app/tasks/codex-task-pack.md and copy everything inside it.
+```
+
+## 4. Use It in the Codex App
+
+- Open the Codex app.
+- Open your project folder: `~/jumao-work/my-app`.
+- Start a new chat.
+- Paste the task pack you just copied.
+- Send this message:
+
+```text
+Please read the Jumao task pack above first.
+Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
+Wait for my confirmation before editing code.
+Do not do anything outside the task pack.
+```
+
+## 5. Use It in Codex CLI
+
+```bash
+cd ~/jumao-work/my-app
+codex
+```
+
+After it opens, paste the task pack you copied, then paste this message:
+
+```text
+Please read the Jumao task pack above first.
+Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
+Wait for my confirmation before editing code.
+Do not do anything outside the task pack.
+```
+
+## 6. Use It in Claude Code
+
+Create a Claude task pack:
+
+```bash
+cd ~/jumao-work
+jumao pack ./my-app --target claude
+cat ./my-app/tasks/claude-task-pack.md | pbcopy
+```
+
+Not on macOS:
+
+```text
+Open ./my-app/tasks/claude-task-pack.md and copy everything inside it.
+```
+
+- Open Claude Code.
+- Open your project folder: `~/jumao-work/my-app`.
+- Paste the Claude task pack.
+- Send this message:
+
+```text
+Please read the Claude task pack above first.
+Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
+Wait for my confirmation before editing code.
+Do not do anything outside the task pack.
+```
+
+If you use Claude Code from the terminal, you can open it like this:
+
+```bash
+cd ~/jumao-work/my-app
+claude
+```
+
+After it opens, paste the Claude task pack, then paste this message:
+
+```text
+Please read the Claude task pack above first.
+Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
+Wait for my confirmation before editing code.
+Do not do anything outside the task pack.
+```
+
+## 7. Uninstall Jumao
+
+```bash
+npm uninstall -g jumao
+```
+
+## Try Without Global Install
+
+Use this if you only want to try Jumao:
+
+```bash
+npx jumao --help
+```
+
 ## 5-minute Quickstart
 
 Run this from the repo root:

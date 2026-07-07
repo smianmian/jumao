@@ -1,3 +1,135 @@
+# 你该怎么用 Jumao
+
+Jumao 不是 App，也不是代码生成器。
+它是你让 Codex / Claude / Cursor 写代码之前，用来把想法说清楚的小工具。
+
+如果终端提示 `npm: command not found` 或 `command not found: npm`，先安装 Node.js LTS，因为 Jumao 通过 npm 安装。
+安装完以后，关闭终端再重新打开。
+
+https://nodejs.org/
+
+## 1. 安装 Jumao
+
+```bash
+npm install -g jumao
+jumao --help
+```
+
+## 2. 创建一个项目
+
+```bash
+mkdir -p ~/jumao-work
+cd ~/jumao-work
+jumao new "我的 App" --dir ./my-app
+jumao interview ./my-app
+jumao check ./my-app --strict
+jumao audit ./my-app --write
+jumao pack ./my-app --target codex
+```
+
+## 3. 复制 Codex 任务包
+
+Mac 用户：
+
+```bash
+cat ./my-app/tasks/codex-task-pack.md | pbcopy
+```
+
+不是 Mac：
+
+```text
+打开 ./my-app/tasks/codex-task-pack.md，复制里面全部内容。
+```
+
+## 4. 在 Codex 客户端里怎么用
+
+- 打开 Codex 客户端。
+- 打开你的项目文件夹：`~/jumao-work/my-app`。
+- 新开一个对话。
+- 粘贴刚才复制的 task pack。
+- 再发送这句话：
+
+```text
+请先阅读上面的 Jumao task pack。
+先总结产品目标、首版范围、风险边界和下一步最小安全任务。
+我确认后，你再开始改代码。
+不要做 task pack 之外的事情。
+```
+
+## 5. 在 Codex CLI 里怎么用
+
+```bash
+cd ~/jumao-work/my-app
+codex
+```
+
+打开后，粘贴刚才复制的 task pack，再粘贴这句话：
+
+```text
+请先阅读上面的 Jumao task pack。
+先总结产品目标、首版范围、风险边界和下一步最小安全任务。
+我确认后，你再开始改代码。
+不要做 task pack 之外的事情。
+```
+
+## 6. 在 Claude Code 里怎么用
+
+先生成 Claude 任务包：
+
+```bash
+cd ~/jumao-work
+jumao pack ./my-app --target claude
+cat ./my-app/tasks/claude-task-pack.md | pbcopy
+```
+
+不是 Mac：
+
+```text
+打开 ./my-app/tasks/claude-task-pack.md，复制里面全部内容。
+```
+
+- 打开 Claude Code。
+- 打开你的项目文件夹：`~/jumao-work/my-app`。
+- 粘贴 Claude task pack。
+- 再发送这句话：
+
+```text
+请先阅读上面的 Claude task pack。
+先总结产品目标、首版范围、风险边界和下一步最小安全任务。
+我确认后，你再开始改代码。
+不要做 task pack 之外的事情。
+```
+
+如果你用 Claude Code 的命令行，也可以这样打开：
+
+```bash
+cd ~/jumao-work/my-app
+claude
+```
+
+打开后，粘贴 Claude task pack，再粘贴这句话：
+
+```text
+请先阅读上面的 Claude task pack。
+先总结产品目标、首版范围、风险边界和下一步最小安全任务。
+我确认后，你再开始改代码。
+不要做 task pack 之外的事情。
+```
+
+## 7. 卸载
+
+```bash
+npm uninstall -g jumao
+```
+
+## 不想全局安装也可以
+
+只想试一下，用这个：
+
+```bash
+npx jumao --help
+```
+
 # 橘猫
 
 橘猫是一套面向 AI 编程工具的项目治理 CLI。
