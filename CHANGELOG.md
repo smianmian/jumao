@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.1 - Unreleased
+
+### Changed
+
+- Improve beginner-friendly install, uninstall, and Codex usage instructions.
+
+### No code changes
+
+- No CLI behavior changes.
+- No dependency changes.
+
 ## 0.1.0 - Release Candidate
 
 First public candidate for Jumao, an agent-ready project governance CLI for AI
