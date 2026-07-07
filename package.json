@@ -4,7 +4,7 @@
   "description": "Agent-ready project governance CLI for AI coding tools",
   "type": "module",
   "bin": {
-    "jumao": "./bin/jumao.js"
+    "jumao": "bin/jumao.js"
   },
   "files": [
     "bin/",
