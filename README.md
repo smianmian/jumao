@@ -57,6 +57,19 @@ Not on macOS:
 Open ./my-app/tasks/codex-task-pack.md and copy everything inside it.
 ```
 
+## Optional: Run a Project Doctor Check First
+
+If you plan to launch, charge money, support login, or submit to the App Store,
+run this first:
+
+```bash
+jumao doctor ./my-app --answers ./node_modules/jumao/examples/ai-note-helper/doctor-answers.json --write
+jumao pack ./my-app --target codex
+```
+
+Jumao writes the diagnosis to `governance/` and includes the hard gates in the
+task pack.
+
 ## 4. Use It in the Codex App
 
 - Open the Codex app.
@@ -215,6 +228,8 @@ jumao check [dir]
 jumao check [dir] --strict
 jumao audit [dir]
 jumao audit [dir] --write
+jumao doctor [dir] --answers answers.json
+jumao doctor [dir] --answers answers.json --write
 jumao interview [dir]
 jumao interview [dir] --answers answers.json
 jumao interview [dir] --answers answers.json --force
@@ -234,6 +249,8 @@ Without global install, use `node bin/jumao.js ...` from this repo.
 | `check --strict` | Gate: fail on placeholders, filler text, empty structures, and missing core product context. |
 | `audit` | Diagnose gaps, explain why they matter, and suggest the next safe AI task. |
 | `audit --write` | Write the diagnosis to `tasks/audit-report.md`. |
+| `doctor --answers` | Run a plain-language project diagnosis through the built-in Agent Review Board. |
+| `doctor --write` | Write the doctor report, agent findings, and Codex hard gates under `governance/`. |
 | `interview` | Ask questions and fill the four core product files. |
 | `interview --answers` | Generate core files from JSON; add `--force` to overwrite filled files. |
 | `pack` | Build the legacy `jumao-task-pack.md`. |

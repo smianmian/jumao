@@ -154,6 +154,47 @@ function writeAnswersFile(answers = minimalAnswers()) {
   return answersPath;
 }
 
+function doctorAnswers(overrides = {}) {
+  return {
+    projectStage: 'prototype',
+    launchIntent: 'public_launch',
+    storePlan: 'app_store',
+    ownerType: 'company',
+    loginNeeded: true,
+    chargingPlan: 'subscription',
+    crossDeviceData: 'needed',
+    sensitiveData: ['health'],
+    chinaUsers: true,
+    supportNeeds: ['refund', 'deletion', 'account'],
+    ...overrides
+  };
+}
+
+function writeDoctorAnswersFile(answers = doctorAnswers()) {
+  const answersPath = path.join(tempDir(), 'doctor-answers.json');
+  fs.writeFileSync(answersPath, JSON.stringify(answers, null, 2), 'utf8');
+  return answersPath;
+}
+
+function writeCodexAgentGates(workspace) {
+  const governanceDir = path.join(workspace, 'governance');
+  fs.mkdirSync(governanceDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(governanceDir, 'codex-agent-gates.md'),
+    `# Codex Agent Gates
+
+- 没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。
+- 没有 SDK_VENDOR_REGISTER.md，不得引入第三方 SDK。
+- 没有 HEALTH_CLAIMS_APPROVAL_LOG.md，不得新增健康结论、推送文案、报告文案。
+- 没有 IAP_REVENUE_OPS_CHECKLIST.md，不得接入 StoreKit 生产订阅。
+- 没有 RELEASE_MANAGER_CHECKLIST.md，不得提交 TestFlight 或 App Store 审核包。
+- 没有 CLOUD_IAM_SECRETS_BACKUP_SPEC.md，不得部署生产环境。
+- 没有 SUPPORT_REFUND_DELETION_PLAYBOOK.md，不得上线带登录和订阅的版本。
+`,
+    'utf8'
+  );
+}
+
 function createInterviewedWorkspace() {
   const workspace = createProductWorkspace();
   const answersPath = writeAnswersFile();
@@ -452,6 +493,30 @@ test('pack target codex writes a Codex task pack', () => {
   assert.match(taskPack, /## First safe task/);
   assert.match(taskPack, /## Do not do yet/);
   assert.match(taskPack, /Read AGENTS\.md first/);
+  assert.doesNotMatch(taskPack, /# Agent Review Board Gates/);
+});
+
+test('pack target includes Agent Review Board gates when governance file exists', () => {
+  const targets = ['codex', 'claude', 'cursor'];
+
+  for (const target of targets) {
+    const workspace = createInterviewedWorkspace();
+    writeCodexAgentGates(workspace);
+
+    const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', target], { encoding: 'utf8' });
+    const taskPack = fs.readFileSync(path.join(workspace, 'tasks', `${target}-task-pack.md`), 'utf8');
+
+    assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+    assert.match(taskPack, /# Agent Review Board Gates/);
+    assert.match(taskPack, /# Codex Agent Gates/);
+    assert.match(taskPack, /DATA_GOVERNANCE_REGISTER\.md/);
+    assert.match(taskPack, /SDK_VENDOR_REGISTER\.md/);
+    assert.match(taskPack, /HEALTH_CLAIMS_APPROVAL_LOG\.md/);
+    assert.match(taskPack, /IAP_REVENUE_OPS_CHECKLIST\.md/);
+    assert.match(taskPack, /RELEASE_MANAGER_CHECKLIST\.md/);
+    assert.match(taskPack, /CLOUD_IAM_SECRETS_BACKUP_SPEC\.md/);
+    assert.match(taskPack, /SUPPORT_REFUND_DELETION_PLAYBOOK\.md/);
+  }
 });
 
 test('pack target claude writes a Claude task pack', () => {
@@ -514,6 +579,98 @@ test('pack target rejects an unknown target', () => {
 
   assert.equal(packed.status, 1);
   assert.match(packed.stderr, /Unknown pack target/);
+});
+
+test('doctor answers output a plain-language diagnosis', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeDoctorAnswersFile();
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.match(doctored.stdout, /你现在处于什么阶段/);
+  assert.match(doctored.stdout, /我帮你补一下认知/);
+  assert.match(doctored.stdout, /你可能需要什么/);
+  assert.match(doctored.stdout, /现在可以先不做什么/);
+  assert.match(doctored.stdout, /下一步最小安全任务/);
+  assert.match(doctored.stdout, /触发了哪些 Agent 组/);
+  assert.match(doctored.stdout, /触发了哪些关键 Agent/);
+  assert.match(doctored.stdout, /给 Codex 的硬门禁/);
+  assert.doesNotMatch(doctored.stdout, /要不要后端|要不要数据库|要不要云服务器|要不要 RBAC|要不要 IAP|要不要 SRE|要不要 CI\/CD/i);
+});
+
+test('doctor write creates governance files without writing task files', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeDoctorAnswersFile();
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath, '--write'], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.ok(fs.existsSync(path.join(workspace, 'governance', 'agent-review-report.md')));
+  assert.ok(fs.existsSync(path.join(workspace, 'governance', 'agent-findings.json')));
+  assert.ok(fs.existsSync(path.join(workspace, 'governance', 'codex-agent-gates.md')));
+  assert.ok(!fs.existsSync(path.join(workspace, 'tasks')));
+  assert.match(fs.readFileSync(path.join(workspace, 'governance', 'codex-agent-gates.md'), 'utf8'), /DATA_GOVERNANCE_REGISTER\.md/);
+});
+
+test('doctor triggers app store, login, subscription, health, and filing agents', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeDoctorAnswersFile();
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.match(doctored.stdout, /App Store 上架负责人 Agent/);
+  assert.match(doctored.stdout, /后端工程师 Agent/);
+  assert.match(doctored.stdout, /数据治理 \/ 数据字典负责人 Agent/);
+  assert.match(doctored.stdout, /IAP \/ 订阅营收负责人 Agent/);
+  assert.match(doctored.stdout, /医疗监管 \/ 健康声明审查负责人 Agent/);
+  assert.match(doctored.stdout, /外部备案服务 \/ 云厂商支持 Agent/);
+});
+
+test('doctor accepts not_sure answers without failing', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeDoctorAnswersFile({
+    launchIntent: 'not_sure',
+    chargingPlan: 'not_sure'
+  });
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.match(doctored.stdout, /现在不需要一次决定清楚，我会先按低风险路径处理/);
+});
+
+test('doctor exits when answers file is missing', () => {
+  const workspace = createProductWorkspace();
+  const missingAnswers = path.join(tempDir(), 'missing-answers.json');
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', missingAnswers], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(doctored.status, 1);
+  assert.match(doctored.stderr, /answers 文件不存在/);
+});
+
+test('doctor exits for a directory that is not a Jumao workspace', () => {
+  const workspace = tempDir();
+  const answersPath = writeDoctorAnswersFile();
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(doctored.status, 1);
+  assert.match(doctored.stderr, /请先运行 jumao new/);
 });
 
 test('check reports missing files', () => {

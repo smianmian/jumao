@@ -41,6 +41,17 @@ cat ./my-app/tasks/codex-task-pack.md | pbcopy
 打开 ./my-app/tasks/codex-task-pack.md，复制里面全部内容。
 ```
 
+## 可选：让 Jumao 先帮你做项目体检
+
+如果你准备正式上线、收费、登录、上 App Store，先跑：
+
+```bash
+jumao doctor ./my-app --answers ./node_modules/jumao/examples/ai-note-helper/doctor-answers.json --write
+jumao pack ./my-app --target codex
+```
+
+Jumao 会把体检结果写到 `governance/`，并把硬门禁带进 task pack。
+
 ## 4. 在 Codex 客户端里怎么用
 
 - 打开 Codex 客户端。
@@ -216,6 +227,8 @@ jumao check [dir]
 jumao check [dir] --strict
 jumao audit [dir]
 jumao audit [dir] --write
+jumao doctor [dir] --answers answers.json
+jumao doctor [dir] --answers answers.json --write
 jumao interview [dir]
 jumao interview [dir] --answers answers.json
 jumao interview [dir] --answers answers.json --force
@@ -235,6 +248,8 @@ jumao pack [dir] --target cursor
 | `check --strict` | 门禁：拦住占位词、泛话、空结构和核心产品信息缺口。 |
 | `audit` | 诊断缺口，说明影响，并给出下一步安全 AI 任务。 |
 | `audit --write` | 把诊断写入 `tasks/audit-report.md`。 |
+| `doctor --answers` | 用生活化答案做项目体检，触发内置 Agent Review Board。 |
+| `doctor --write` | 把体检报告、Agent 缺口和 Codex 硬门禁写入 `governance/`。 |
 | `interview` | 通过问答补齐四个核心产品文件。 |
 | `interview --answers` | 用 JSON 非交互生成核心文件；加 `--force` 会覆盖已填写文件。 |
 | `pack` | 生成旧版兼容的 `jumao-task-pack.md`。 |

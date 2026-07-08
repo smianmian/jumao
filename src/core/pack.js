@@ -110,6 +110,7 @@ function renderTargetPack(targetDir, target, strictResult) {
     '',
     '## AI execution rules',
     aiExecutionRules(target).map((rule) => `- ${rule}`).join('\n'),
+    agentReviewBoardGates(targetDir),
     '',
     '## First safe task',
     firstSafeTask(strictResult),
@@ -131,6 +132,18 @@ function releaseProofStatus(targetDir, strictResult) {
   }
 
   return readWorkspaceFile(targetDir, 'proof/release-proof.zh-CN.md');
+}
+
+function agentReviewBoardGates(targetDir) {
+  const gates = readWorkspaceFile(targetDir, 'governance/codex-agent-gates.md');
+  if (gates === '(missing)') return '';
+
+  return [
+    '',
+    '# Agent Review Board Gates',
+    '',
+    gates
+  ].join('\n');
 }
 
 function aiExecutionRules(target) {

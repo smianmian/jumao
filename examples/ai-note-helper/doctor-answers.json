@@ -1,0 +1,12 @@
+{
+  "projectStage": "prototype",
+  "launchIntent": "public_launch",
+  "storePlan": "app_store",
+  "ownerType": "company",
+  "loginNeeded": true,
+  "chargingPlan": "subscription",
+  "crossDeviceData": "needed",
+  "sensitiveData": ["health"],
+  "chinaUsers": true,
+  "supportNeeds": ["refund", "deletion", "account"]
+}
