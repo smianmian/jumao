@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { auditWorkspace } from './core/audit.js';
+import { runDoctor } from './core/doctor.js';
 import { collectInterviewAnswers, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
@@ -32,6 +33,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'new') return newCommand(args, io);
   if (command === 'check') return checkCommand(args, io);
   if (command === 'audit') return auditCommand(args, io);
+  if (command === 'doctor') return doctorCommand(args, io);
   if (command === 'interview') return interviewCommand(args, io);
   if (command === 'pack') return packCommand(args, io);
 
@@ -48,6 +50,7 @@ function helpText() {
     '  jumao new <product-name> --dir [dir]',
     '  jumao check [dir] [--strict]',
     '  jumao audit [dir] [--write]',
+    '  jumao doctor [dir] --answers file [--write]',
     '  jumao interview [dir] [--answers file] [--force]',
     '  jumao pack [dir] [--target codex|claude|cursor]',
     '',
@@ -165,6 +168,23 @@ function auditCommand(args, io) {
   return 0;
 }
 
+function doctorCommand(args, io) {
+  const { targetDir, answersFile, write } = parseDoctorArgs(args);
+  const result = runDoctor(targetDir, { answersFile, write });
+
+  if (!result.ok) {
+    io.stderr.write(`${result.message}\n`);
+    return 1;
+  }
+
+  io.stdout.write(result.report);
+  if (result.writtenFiles.length > 0) {
+    io.stdout.write('\nWrote governance files:\n');
+    for (const file of result.writtenFiles) io.stdout.write(`- ${file}\n`);
+  }
+  return 0;
+}
+
 async function interviewCommand(args, io) {
   const { targetDir, answersFile, force } = parseInterviewArgs(args);
   const answers = answersFile
@@ -238,6 +258,30 @@ function parseAuditArgs(args) {
   const positional = args.filter((arg) => arg !== '--write');
   return {
     targetDir: path.resolve(positional[0] || '.'),
+    write
+  };
+}
+
+function parseDoctorArgs(args) {
+  let targetDir;
+  let answersFile;
+  const write = args.includes('--write');
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--write') {
+      continue;
+    } else if (arg === '--answers') {
+      answersFile = path.resolve(args[index + 1] || '');
+      index += 1;
+    } else if (!targetDir) {
+      targetDir = arg;
+    }
+  }
+
+  return {
+    targetDir: path.resolve(targetDir || '.'),
+    answersFile,
     write
   };
 }
