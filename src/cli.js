@@ -5,6 +5,7 @@ import { runDoctor } from './core/doctor.js';
 import { collectInterviewAnswers, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
+import { isJumaoWorkspace, readJumaoStatus, renderStatus } from './core/status.js';
 
 const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
 
@@ -36,6 +37,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'doctor') return doctorCommand(args, io);
   if (command === 'interview') return interviewCommand(args, io);
   if (command === 'pack') return packCommand(args, io);
+  if (command === 'status') return statusCommand(args, io);
 
   io.stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
   return 1;
@@ -53,6 +55,7 @@ function helpText() {
     '  jumao doctor [dir] --answers file [--write]',
     '  jumao interview [dir] [--answers file] [--force]',
     '  jumao pack [dir] [--target codex|claude|cursor]',
+    '  jumao status [dir]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
   ].join('\n') + '\n';
@@ -214,6 +217,18 @@ function packCommand(args, io) {
   }
 
   io.stdout.write(`Wrote ${result.outputPath}\n`);
+  return 0;
+}
+
+function statusCommand(args, io) {
+  const targetDir = path.resolve(args[0] || '.');
+
+  if (!isJumaoWorkspace(targetDir)) {
+    io.stderr.write(`${targetDir} 不是 Jumao workspace。请先运行 jumao new。\n`);
+    return 1;
+  }
+
+  io.stdout.write(renderStatus(readJumaoStatus(targetDir)));
   return 0;
 }
 

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { agentGroups, getTriggeredAgents } from './agent-registry.js';
+import { writeCheckingStatus, writeCommandBlockedStatus, writeDoctorStatus } from './status.js';
 
 const governanceFiles = {
   report: 'governance/agent-review-report.md',
@@ -30,7 +31,12 @@ export function runDoctor(targetDir, options = {}) {
     };
   }
 
+  if (options.write) writeCheckingStatus(targetDir, { command: 'doctor', target: null });
+
   if (!answersFile || !fs.existsSync(answersFile)) {
+    if (options.write) {
+      writeCommandBlockedStatus(targetDir, { command: 'doctor', target: null }, 'answers 文件不存在');
+    }
     return {
       ok: false,
       message: `answers 文件不存在: ${answersFile || '(missing --answers)'}`
@@ -38,10 +44,18 @@ export function runDoctor(targetDir, options = {}) {
   }
 
   const answers = readJsonFile(answersFile);
-  if (!answers.ok) return answers;
+  if (!answers.ok) {
+    if (options.write) {
+      writeCommandBlockedStatus(targetDir, { command: 'doctor', target: null }, 'answers 文件不是有效 JSON');
+    }
+    return answers;
+  }
 
   const diagnosis = buildDoctorDiagnosis(targetDir, answers.value);
-  if (options.write) writeGovernanceFiles(targetDir, diagnosis);
+  if (options.write) {
+    writeGovernanceFiles(targetDir, diagnosis);
+    writeDoctorStatus(targetDir, diagnosis);
+  }
 
   return {
     ok: true,

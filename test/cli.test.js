@@ -195,6 +195,14 @@ function writeCodexAgentGates(workspace) {
   );
 }
 
+function readStatusJson(workspace) {
+  return JSON.parse(fs.readFileSync(path.join(workspace, '.jumao', 'status.json'), 'utf8'));
+}
+
+function outputLineCount(text) {
+  return text.trimEnd().split('\n').length;
+}
+
 function createInterviewedWorkspace() {
   const workspace = createProductWorkspace();
   const answersPath = writeAnswersFile();
@@ -222,6 +230,27 @@ test('creates and checks a product workspace', () => {
 
   const checked = spawnSync(process.execPath, [cli, 'check', workspace], { encoding: 'utf8' });
   assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+});
+
+test('status shows sleeping when no cat status exists', () => {
+  const workspace = createProductWorkspace('Cat Status');
+
+  const result = spawnSync(process.execPath, [cli, 'status', workspace], { encoding: 'utf8' });
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /橘猫状态：还没检查（sleeping）/);
+  assert.match(result.stdout, /不是项目没问题，也不是项目失败|先运行 jumao doctor/);
+  assert.ok(outputLineCount(result.stdout) <= 12);
+  assert.ok(!fs.existsSync(path.join(workspace, '.jumao', 'status.json')));
+});
+
+test('status exits for a directory that is not a Jumao workspace', () => {
+  const workspace = tempDir();
+
+  const result = spawnSync(process.execPath, [cli, 'status', workspace], { encoding: 'utf8' });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /请先运行 jumao new/);
 });
 
 test('default check does not inspect template content', () => {
@@ -545,21 +574,29 @@ test('pack target fails when strict gate has errors', () => {
   const workspace = createProductWorkspace();
 
   const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+  const status = readStatusJson(workspace);
 
   assert.equal(packed.status, 1);
   assert.match(packed.stderr, /strict gate failed/);
   assert.match(packed.stderr, /jumao audit/);
   assert.match(packed.stderr, /jumao interview/);
   assert.ok(!fs.existsSync(path.join(workspace, 'tasks', 'codex-task-pack.md')));
+  assert.equal(status.cat.state, 'blocked');
+  assert.equal(status.lastRun.command, 'pack');
+  assert.ok(status.blockers.length > 0);
 });
 
 test('pack target passes after interview answers', () => {
   const workspace = createInterviewedWorkspace();
 
   const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+  const status = readStatusJson(workspace);
 
   assert.equal(packed.status, 0, packed.stdout + packed.stderr);
   assert.ok(fs.existsSync(path.join(workspace, 'tasks', 'codex-task-pack.md')));
+  assert.equal(status.cat.state, 'packed');
+  assert.equal(status.artifacts.latestTaskPack, 'tasks/codex-task-pack.md');
+  assert.match(status.cat.message, /不是已复制剪贴板/);
 });
 
 test('release proof warning does not block target pack', () => {
@@ -567,9 +604,41 @@ test('release proof warning does not block target pack', () => {
 
   const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
   const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-task-pack.md'), 'utf8');
+  const status = readStatusJson(workspace);
 
   assert.equal(packed.status, 0, packed.stdout + packed.stderr);
   assert.match(taskPack, /completion proof is not filled yet/);
+  assert.equal(status.cat.state, 'packed');
+});
+
+test('packed status keeps complete status fields and warns about remaining blockers', () => {
+  const workspace = createInterviewedWorkspace();
+  const answersPath = writeDoctorAnswersFile();
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath, '--write'], {
+    encoding: 'utf8'
+  });
+  const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', 'codex'], { encoding: 'utf8' });
+  const status = readStatusJson(workspace);
+  const statusOutput = spawnSync(process.execPath, [cli, 'status', workspace], { encoding: 'utf8' });
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+  assert.equal(status.cat.state, 'packed');
+  assert.ok(!Number.isNaN(Date.parse(status.updatedAt)));
+  assert.equal(status.workspace.name, 'AI Note');
+  assert.equal(status.workspace.path, path.resolve(workspace));
+  assert.equal(status.cat.message, '任务包已生成，但仍需先处理关键门禁。');
+  assert.ok(Array.isArray(status.blockers));
+  assert.ok(status.blockers.length > 0);
+  assert.equal(typeof status.nextSafeTask, 'string');
+  assert.equal(status.artifacts.agentReport, 'governance/agent-review-report.md');
+  assert.equal(status.artifacts.agentFindings, 'governance/agent-findings.json');
+  assert.equal(status.artifacts.codexGates, 'governance/codex-agent-gates.md');
+  assert.equal(status.artifacts.latestTaskPack, 'tasks/codex-task-pack.md');
+  assert.equal(statusOutput.status, 0, statusOutput.stdout + statusOutput.stderr);
+  assert.match(statusOutput.stdout, /任务包已生成，但门禁仍需处理。/);
+  assert.ok(outputLineCount(statusOutput.stdout) <= 12);
 });
 
 test('pack target rejects an unknown target', () => {
@@ -608,13 +677,46 @@ test('doctor write creates governance files without writing task files', () => {
   const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath, '--write'], {
     encoding: 'utf8'
   });
+  const status = readStatusJson(workspace);
+  const statusText = JSON.stringify(status);
 
   assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
   assert.ok(fs.existsSync(path.join(workspace, 'governance', 'agent-review-report.md')));
   assert.ok(fs.existsSync(path.join(workspace, 'governance', 'agent-findings.json')));
   assert.ok(fs.existsSync(path.join(workspace, 'governance', 'codex-agent-gates.md')));
+  assert.ok(fs.existsSync(path.join(workspace, '.jumao', 'status.json')));
   assert.ok(!fs.existsSync(path.join(workspace, 'tasks')));
   assert.match(fs.readFileSync(path.join(workspace, 'governance', 'codex-agent-gates.md'), 'utf8'), /DATA_GOVERNANCE_REGISTER\.md/);
+  assert.equal(status.cat.state, 'blocked');
+  assert.equal(status.lastRun.command, 'doctor');
+  assert.equal(status.agentBoard.triggeredAgentCount > 0, true);
+  assert.doesNotMatch(statusText, /public_launch|subscription|ready_to_release|doctorAnswers/);
+});
+
+test('doctor write stores ready status when only base board advice is active', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeDoctorAnswersFile({
+    projectStage: 'prototype',
+    launchIntent: 'private',
+    storePlan: 'none',
+    ownerType: 'personal',
+    loginNeeded: false,
+    chargingPlan: 'free',
+    crossDeviceData: 'local_only',
+    sensitiveData: [],
+    chinaUsers: false,
+    supportNeeds: []
+  });
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath, '--write'], {
+    encoding: 'utf8'
+  });
+  const status = readStatusJson(workspace);
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.equal(status.cat.state, 'ready');
+  assert.match(status.cat.message, /不是可以上线/);
+  assert.equal(status.agentBoard.blockedGroupCount, 0);
 });
 
 test('doctor triggers app store, login, subscription, health, and filing agents', () => {
@@ -632,6 +734,26 @@ test('doctor triggers app store, login, subscription, health, and filing agents'
   assert.match(doctored.stdout, /IAP \/ 订阅营收负责人 Agent/);
   assert.match(doctored.stdout, /医疗监管 \/ 健康声明审查负责人 Agent/);
   assert.match(doctored.stdout, /外部备案服务 \/ 云厂商支持 Agent/);
+});
+
+test('status summarizes agent board without full agent table', () => {
+  const workspace = createProductWorkspace();
+  const answersPath = writeDoctorAnswersFile();
+
+  const doctored = spawnSync(process.execPath, [cli, 'doctor', workspace, '--answers', answersPath, '--write'], {
+    encoding: 'utf8'
+  });
+  const status = spawnSync(process.execPath, [cli, 'status', workspace], { encoding: 'utf8' });
+  const blockerLines = status.stdout.split('\n').filter((line) => line.startsWith('- '));
+
+  assert.equal(doctored.status, 0, doctored.stdout + doctored.stderr);
+  assert.equal(status.status, 0, status.stdout + status.stderr);
+  assert.ok(outputLineCount(status.stdout) <= 12);
+  assert.ok(blockerLines.length <= 3);
+  assert.match(status.stdout, /橘猫状态：需要处理（blocked）/);
+  assert.match(status.stdout, /Agent 组：/);
+  assert.match(status.stdout, /详情：governance\/agent-findings\.json/);
+  assert.doesNotMatch(status.stdout, /App Store 上架负责人 Agent|后端工程师 Agent|医疗监管 \/ 健康声明审查负责人 Agent/);
 });
 
 test('doctor accepts not_sure answers without failing', () => {
