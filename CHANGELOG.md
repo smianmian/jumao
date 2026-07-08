@@ -1,6 +1,27 @@
 # Changelog
 
-## 0.2.1 - Unreleased
+## 0.2.2 - Unreleased
+
+### Changed
+
+- Add a clear README entry point to the built-in Agent documentation.
+- Keep the full 44-agent explanation in `docs/agents.zh-CN.md` instead of
+  duplicating it in the README pages.
+- Bump package metadata for the docs hotfix release.
+
+### No code changes
+
+- No source code changes.
+- No CLI behavior changes.
+- No dependency changes.
+
+### Safety
+
+- No npm publish.
+- No git tag.
+- No push to main.
+
+## 0.2.1 - Released
 
 ### Changed
 
