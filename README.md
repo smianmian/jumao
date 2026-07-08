@@ -325,15 +325,17 @@ node bin/jumao.js pack examples/ai-note-helper --target codex
 The example answers file used in the quickstart lives at
 [examples/ai-note-helper/answers.json](examples/ai-note-helper/answers.json).
 
-## Release Candidate Checks
+## Release Checks
 
-For the v0.1.0 candidate, run:
+Before a release, run the local checks and make sure a human confirms any
+external action:
 
 ```bash
 node bin/jumao.js --help
 npm test
 npm run check
 npm pack --dry-run
+npm publish --dry-run
 git status --short
 ```
 
