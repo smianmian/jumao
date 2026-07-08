@@ -176,6 +176,25 @@ function writeDoctorAnswersFile(answers = doctorAnswers()) {
   return answersPath;
 }
 
+function writeCodexAgentGates(workspace) {
+  const governanceDir = path.join(workspace, 'governance');
+  fs.mkdirSync(governanceDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(governanceDir, 'codex-agent-gates.md'),
+    `# Codex Agent Gates
+
+- 没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。
+- 没有 SDK_VENDOR_REGISTER.md，不得引入第三方 SDK。
+- 没有 HEALTH_CLAIMS_APPROVAL_LOG.md，不得新增健康结论、推送文案、报告文案。
+- 没有 IAP_REVENUE_OPS_CHECKLIST.md，不得接入 StoreKit 生产订阅。
+- 没有 RELEASE_MANAGER_CHECKLIST.md，不得提交 TestFlight 或 App Store 审核包。
+- 没有 CLOUD_IAM_SECRETS_BACKUP_SPEC.md，不得部署生产环境。
+- 没有 SUPPORT_REFUND_DELETION_PLAYBOOK.md，不得上线带登录和订阅的版本。
+`,
+    'utf8'
+  );
+}
+
 function createInterviewedWorkspace() {
   const workspace = createProductWorkspace();
   const answersPath = writeAnswersFile();
@@ -474,6 +493,30 @@ test('pack target codex writes a Codex task pack', () => {
   assert.match(taskPack, /## First safe task/);
   assert.match(taskPack, /## Do not do yet/);
   assert.match(taskPack, /Read AGENTS\.md first/);
+  assert.doesNotMatch(taskPack, /# Agent Review Board Gates/);
+});
+
+test('pack target includes Agent Review Board gates when governance file exists', () => {
+  const targets = ['codex', 'claude', 'cursor'];
+
+  for (const target of targets) {
+    const workspace = createInterviewedWorkspace();
+    writeCodexAgentGates(workspace);
+
+    const packed = spawnSync(process.execPath, [cli, 'pack', workspace, '--target', target], { encoding: 'utf8' });
+    const taskPack = fs.readFileSync(path.join(workspace, 'tasks', `${target}-task-pack.md`), 'utf8');
+
+    assert.equal(packed.status, 0, packed.stdout + packed.stderr);
+    assert.match(taskPack, /# Agent Review Board Gates/);
+    assert.match(taskPack, /# Codex Agent Gates/);
+    assert.match(taskPack, /DATA_GOVERNANCE_REGISTER\.md/);
+    assert.match(taskPack, /SDK_VENDOR_REGISTER\.md/);
+    assert.match(taskPack, /HEALTH_CLAIMS_APPROVAL_LOG\.md/);
+    assert.match(taskPack, /IAP_REVENUE_OPS_CHECKLIST\.md/);
+    assert.match(taskPack, /RELEASE_MANAGER_CHECKLIST\.md/);
+    assert.match(taskPack, /CLOUD_IAM_SECRETS_BACKUP_SPEC\.md/);
+    assert.match(taskPack, /SUPPORT_REFUND_DELETION_PLAYBOOK\.md/);
+  }
 });
 
 test('pack target claude writes a Claude task pack', () => {
