@@ -24,6 +24,17 @@ install Node.js LTS first. Then close and reopen the terminal.
 
 https://nodejs.org/
 
+## What Are Jumao's Built-in Agents?
+
+Jumao includes 44 built-in responsibility agents.
+You do not need to hire 44 people.
+These agents help check product, design, data, privacy, App Store, revenue, and
+release gaps before you ask Codex to write code.
+
+For the full explanation:
+
+[Read the 44 built-in Agent guide](docs/agents.zh-CN.md)
+
 ## 1. Install Jumao
 
 ```bash

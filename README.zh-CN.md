@@ -8,6 +8,16 @@ Jumao 不是 App，也不是代码生成器。
 
 https://nodejs.org/
 
+## Jumao 内置 Agent 是什么
+
+Jumao 内置了 44 个责任单元 Agent。
+你不用雇 44 个人。
+这些 Agent 会在你让 Codex 写代码前，帮你检查产品、设计、数据、隐私、上架、收费、发布这些缺口。
+
+想看完整说明：
+
+[查看 44 个内置 Agent 说明](docs/agents.zh-CN.md)
+
 ## 1. 安装 Jumao
 
 ```bash
