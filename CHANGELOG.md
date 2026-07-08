@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 - Unreleased
+
+### Added
+
+- Add Agent Review Board with 44 built-in responsibility agents.
+- Add `jumao doctor --answers` for plain-language project diagnosis.
+- Add governance output files under `governance/`.
+- Include Agent Review Board gates in Codex, Claude, and Cursor task packs.
+- Add Chinese user-facing agent documentation.
+
+### Safety
+
+- No AI API calls.
+- No automatic backend, database, SDK, push, publish, or tag actions.
+
 ## 0.1.1 - Unreleased
 
 ### Changed
