@@ -1,6 +1,28 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.1 - Unreleased
+
+### Changed
+
+- Polish the public README pages and Chinese user-facing docs.
+- Restore readable multi-line Markdown for project pages.
+- Clarify that v0.2.0 delivered the Agent Review Board, doctor command, and
+  governance gates.
+- Refresh roadmap and contribution guidance for the next documentation release.
+
+### No code changes
+
+- No CLI behavior changes.
+- No dependency changes.
+- No new commands.
+
+### Safety
+
+- No npm publish.
+- No git tag.
+- No push to main.
+
+## 0.2.0 - Released
 
 ### Added
 

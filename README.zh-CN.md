@@ -324,15 +324,16 @@ node bin/jumao.js pack examples/ai-note-helper --target codex
 Quickstart 使用的示例答案在
 [examples/ai-note-helper/answers.json](examples/ai-note-helper/answers.json)。
 
-## v0.1.0 候选检查
+## 发布前检查
 
-发布候选前运行：
+发布前先跑本地检查，并且确认任何外部动作都有人明确同意：
 
 ```bash
 node bin/jumao.js --help
 npm test
 npm run check
 npm pack --dry-run
+npm publish --dry-run
 git status --short
 ```
 
