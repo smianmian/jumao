@@ -9,6 +9,7 @@
   "files": [
     "bin/",
     "src/",
+    "docs/",
     "templates/",
     "examples/ai-note-helper/",
     "README.md",
