@@ -1,6 +1,6 @@
 {
   "name": "jumao",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Agent-ready project governance CLI for AI coding tools",
   "type": "module",
   "bin": {
@@ -9,6 +9,7 @@
   "files": [
     "bin/",
     "src/",
+    "assets/",
     "docs/",
     "templates/",
     "examples/ai-note-helper/",
