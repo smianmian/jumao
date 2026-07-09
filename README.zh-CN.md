@@ -62,6 +62,24 @@ jumao pack ./my-app --target codex
 
 Jumao 会把体检结果写到 `governance/`，并把硬门禁带进 task pack。
 
+## 查看橘猫状态
+
+Jumao 会在项目里写入一个本地状态文件：
+
+```text
+./my-app/.jumao/status.json
+```
+
+你可以随时看当前状态：
+
+```bash
+jumao status ./my-app
+```
+
+它只显示橘猫状态、Agent 组摘要、关键阻塞和下一步。它不会显示 44 个 Agent 全表，不会联网，不会调用 AI API，也不会自动复制剪贴板。
+
+`ready` 只表示可以继续做一个小任务，不表示可以发布。`packed` 只表示任务包已经生成，不表示已经复制或发布。
+
 ## 4. 在 Codex 客户端里怎么用
 
 - 打开 Codex 客户端。

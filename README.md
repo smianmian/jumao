@@ -81,6 +81,28 @@ jumao pack ./my-app --target codex
 Jumao writes the diagnosis to `governance/` and includes the hard gates in the
 task pack.
 
+## Check Jumao Cat Status
+
+Jumao writes a local status file inside your project:
+
+```text
+./my-app/.jumao/status.json
+```
+
+You can check it from the terminal:
+
+```bash
+jumao status ./my-app
+```
+
+It only shows the cat status, Agent group summary, key blockers, and next step.
+It does not show the full 44-agent table, does not use the network, does not
+call AI APIs, and does not copy anything to your clipboard.
+
+`ready` only means you can continue with one small task. It does not mean the
+project is ready to launch. `packed` only means the task pack was generated. It
+does not mean it was copied or published.
+
 ## 4. Use It in the Codex App
 
 - Open the Codex app.

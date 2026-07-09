@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { requiredProductFiles, validateStrictWorkspace } from './strict-check.js';
+import { isJumaoWorkspace, writeCheckingStatus, writePackBlockedStatus, writePackedStatus } from './status.js';
 
 const targets = new Set(['codex', 'claude', 'cursor']);
 
@@ -62,8 +63,13 @@ export function packTargetWorkspace(targetDir, target) {
     };
   }
 
+  if (isJumaoWorkspace(targetDir)) {
+    writeCheckingStatus(targetDir, { command: 'pack', target });
+  }
+
   const strictResult = validateStrictWorkspace(targetDir);
   if (strictResult.errors.length > 0) {
+    if (isJumaoWorkspace(targetDir)) writePackBlockedStatus(targetDir, target, strictResult);
     return {
       ok: false,
       strictResult,
@@ -79,6 +85,7 @@ export function packTargetWorkspace(targetDir, target) {
   const outputPath = path.join(targetDir, 'tasks', `${target}-task-pack.md`);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, renderTargetPack(targetDir, target, strictResult), 'utf8');
+  writePackedStatus(targetDir, target, outputPath);
   return {
     ok: true,
     outputPath

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.3 - Unreleased
+
+### Added
+
+- Add Jumao Cat status system.
+- Add `.jumao/status.json` as a local status summary for future UI surfaces.
+- Add `jumao status <dir>` for terminal status checks.
+- Update `doctor --write` and `pack --target` to write Jumao Cat status.
+
+### Safety
+
+- No AI API calls.
+- No Mac menu bar app yet.
+- No Codex plugin yet.
+- No Web UI.
+- No network calls.
+- No automatic clipboard writes.
+- No assets included in this release.
+
 ## 0.2.2 - Unreleased
 
 ### Changed
