@@ -18,6 +18,11 @@ Jumao 内置了 44 个责任单元 Agent。
 
 [查看 44 个内置 Agent 说明](docs/agents.zh-CN.md)
 
+## Jumao 橘猫素材
+
+Jumao 橘猫素材已包含在 npm 包中，路径是 `assets/jumao/`。
+里面包含终端 ASCII、彩色 SVG/PNG 图标，以及黑白 template SVG，供后续界面使用。
+
 ## 1. 安装 Jumao
 
 ```bash
