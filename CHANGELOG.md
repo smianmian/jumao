@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.4 - Unreleased
+
+### Added
+
+- Add Jumao mascot assets under `assets/jumao/`.
+- Include terminal ASCII, color SVG/PNG, template SVG, and state variants in the
+  npm package for README, website, npm page, release, and future UI use.
+
+### Safety
+
+- No CLI behavior changes.
+- No Mac menu bar app.
+- No Codex plugin.
+- No automatic publish, push, or tag actions.
+
 ## 0.2.3 - Unreleased
 
 ### Added

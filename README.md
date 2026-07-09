@@ -35,6 +35,12 @@ For the full explanation:
 
 [Read the 44 built-in Agent guide](docs/agents.zh-CN.md)
 
+## Jumao Mascot Assets
+
+Jumao mascot assets are included in the npm package at `assets/jumao/`.
+They include terminal ASCII art, color SVG/PNG icons, and black template SVG
+variants for future UI surfaces.
+
 ## 1. Install Jumao
 
 ```bash
