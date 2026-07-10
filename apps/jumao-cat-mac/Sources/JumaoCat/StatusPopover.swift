@@ -65,22 +65,38 @@ struct StatusPopover: View {
             .fixedSize(horizontal: false, vertical: true)
         }
 
-        HStack(spacing: 10) {
-          Button("打开治理报告") {
-            appState.openAgentReport()
-          }
-          .disabled(!appState.canOpenAgentReport)
+        if let feedback = appState.taskPackCopyFeedback {
+          Text(feedback)
+            .font(.caption)
+            .foregroundStyle(appState.taskPackCopySucceeded ? .green : .red)
+            .fixedSize(horizontal: false, vertical: true)
+        }
 
-          Button("打开项目目录") {
-            appState.openWorkspaceInFinder()
-          }
-          .disabled(appState.workspaceURL == nil)
+        VStack(spacing: 8) {
+          HStack(spacing: 10) {
+            Button("复制 Codex 任务包") {
+              appState.copyLatestTaskPack()
+            }
+            .disabled(!appState.canCopyLatestTaskPack)
 
-          Spacer()
-          Button("刷新") {
-            appState.refreshStatus()
+            Button("打开治理报告") {
+              appState.openAgentReport()
+            }
+            .disabled(!appState.canOpenAgentReport)
           }
-          .disabled(appState.workspaceURL == nil)
+
+          HStack(spacing: 10) {
+            Button("打开项目目录") {
+              appState.openWorkspaceInFinder()
+            }
+            .disabled(appState.workspaceURL == nil)
+
+            Spacer()
+            Button("刷新") {
+              appState.refreshStatus()
+            }
+            .disabled(appState.workspaceURL == nil)
+          }
         }
       }
       .padding(16)

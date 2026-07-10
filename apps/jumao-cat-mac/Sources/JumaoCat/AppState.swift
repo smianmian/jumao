@@ -7,11 +7,15 @@ final class AppState: ObservableObject {
   @Published private(set) var status: WorkspaceStatus = .unselected
   @Published private(set) var workspaceOpenError: String?
   @Published private(set) var agentReportOpenError: String?
+  @Published private(set) var taskPackCopyFeedback: String?
+  @Published private(set) var taskPackCopySucceeded = false
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
   private let workspaceOpener: any WorkspaceOpening
   private let agentReportOpener: any AgentReportOpening
+  private let taskPackCopier: any TaskPackCopying
+  private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
       self?.refreshStatus()
@@ -21,11 +25,13 @@ final class AppState: ObservableObject {
   init(
     workspaceBookmarkStore: WorkspaceBookmarkStore = WorkspaceBookmarkStore(),
     workspaceOpener: any WorkspaceOpening = FinderWorkspaceOpener(),
-    agentReportOpener: any AgentReportOpening = FinderAgentReportOpener()
+    agentReportOpener: any AgentReportOpening = FinderAgentReportOpener(),
+    taskPackCopier: any TaskPackCopying = CodexTaskPackCopier()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
     self.workspaceOpener = workspaceOpener
     self.agentReportOpener = agentReportOpener
+    self.taskPackCopier = taskPackCopier
   }
 
   var workspacePath: String {
@@ -52,12 +58,21 @@ final class AppState: ObservableObject {
     return !reportPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }
 
+  var canCopyLatestTaskPack: Bool {
+    guard workspaceURL != nil, let taskPackPath = status.snapshot?.status.artifacts.latestTaskPack else {
+      return false
+    }
+
+    return !taskPackPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
   func loadSavedWorkspace() {
     guard let workspaceURL = workspaceBookmarkStore.restore() else {
       self.workspaceURL = nil
       status = .unselected
       workspaceOpenError = nil
       agentReportOpenError = nil
+      clearTaskPackCopyFeedback()
       return
     }
 
@@ -86,6 +101,7 @@ final class AppState: ObservableObject {
       status = .failed("无法保存项目目录访问权限：\(error.localizedDescription)")
       workspaceOpenError = nil
       agentReportOpenError = nil
+      clearTaskPackCopyFeedback()
     }
   }
 
@@ -104,6 +120,7 @@ final class AppState: ObservableObject {
     }
 
     agentReportOpenError = nil
+    clearTaskPackCopyFeedback()
 
     switch workspaceOpener.open(workspaceURL: workspaceURL) {
     case .opened:
@@ -123,6 +140,7 @@ final class AppState: ObservableObject {
     }
 
     workspaceOpenError = nil
+    clearTaskPackCopyFeedback()
 
     switch agentReportOpener.open(agentReportPath: reportPath, workspaceURL: workspaceURL) {
     case .opened:
@@ -140,6 +158,40 @@ final class AppState: ObservableObject {
     }
   }
 
+  func copyLatestTaskPack() {
+    guard let workspaceURL,
+          let taskPackPath = status.snapshot?.status.artifacts.latestTaskPack,
+          !taskPackPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      return
+    }
+
+    workspaceOpenError = nil
+    agentReportOpenError = nil
+
+    switch taskPackCopier.copy(taskPackPath: taskPackPath, workspaceURL: workspaceURL) {
+    case .copied:
+      showCopiedTaskPackFeedback()
+    case .emptyPath:
+      showTaskPackCopyError("Codex 任务包路径为空。")
+    case .outsideWorkspace:
+      showTaskPackCopyError("Codex 任务包必须位于当前项目目录内。")
+    case .missingFile:
+      showTaskPackCopyError("Codex 任务包文件不存在。")
+    case .directory:
+      showTaskPackCopyError("Codex 任务包路径指向的是目录，无法复制。")
+    case .notRegularFile:
+      showTaskPackCopyError("Codex 任务包不是普通文件，无法复制。")
+    case .tooLarge:
+      showTaskPackCopyError("Codex 任务包超过 5 MB，无法复制。")
+    case .readFailed:
+      showTaskPackCopyError("无法读取 Codex 任务包。")
+    case .invalidUTF8:
+      showTaskPackCopyError("Codex 任务包不是 UTF-8 文本，无法复制。")
+    case .pasteboardFailed:
+      showTaskPackCopyError("无法写入剪贴板。")
+    }
+  }
+
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
@@ -150,7 +202,35 @@ final class AppState: ObservableObject {
     self.workspaceURL = workspaceURL
     workspaceOpenError = nil
     agentReportOpenError = nil
+    clearTaskPackCopyFeedback()
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
+  }
+
+  private func showCopiedTaskPackFeedback() {
+    let token = UUID()
+    taskPackCopyFeedbackToken = token
+    taskPackCopyFeedback = "已复制"
+    taskPackCopySucceeded = true
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+      Task { @MainActor [weak self] in
+        guard self?.taskPackCopyFeedbackToken == token else { return }
+        self?.taskPackCopyFeedback = nil
+        self?.taskPackCopySucceeded = false
+      }
+    }
+  }
+
+  private func showTaskPackCopyError(_ message: String) {
+    taskPackCopyFeedbackToken = UUID()
+    taskPackCopyFeedback = message
+    taskPackCopySucceeded = false
+  }
+
+  private func clearTaskPackCopyFeedback() {
+    taskPackCopyFeedbackToken = UUID()
+    taskPackCopyFeedback = nil
+    taskPackCopySucceeded = false
   }
 }
