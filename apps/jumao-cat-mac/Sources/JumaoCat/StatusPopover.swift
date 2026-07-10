@@ -58,7 +58,19 @@ struct StatusPopover: View {
             .fixedSize(horizontal: false, vertical: true)
         }
 
+        if let error = appState.agentReportOpenError {
+          Text(error)
+            .font(.caption)
+            .foregroundStyle(.red)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
         HStack(spacing: 10) {
+          Button("打开治理报告") {
+            appState.openAgentReport()
+          }
+          .disabled(!appState.canOpenAgentReport)
+
           Button("打开项目目录") {
             appState.openWorkspaceInFinder()
           }
