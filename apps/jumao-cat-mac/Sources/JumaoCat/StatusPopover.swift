@@ -72,7 +72,25 @@ struct StatusPopover: View {
             .fixedSize(horizontal: false, vertical: true)
         }
 
+        if appState.isRegeneratingTaskPack {
+          Text("正在生成")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+
+        if let error = appState.taskPackGenerationError {
+          Text(error)
+            .font(.caption)
+            .foregroundStyle(.red)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
         VStack(spacing: 8) {
+          Button(appState.isRegeneratingTaskPack ? "正在生成" : "重新生成任务包") {
+            appState.regenerateCodexTaskPack()
+          }
+          .disabled(!appState.canRegenerateTaskPack)
+
           HStack(spacing: 10) {
             Button("复制 Codex 任务包") {
               appState.copyLatestTaskPack()

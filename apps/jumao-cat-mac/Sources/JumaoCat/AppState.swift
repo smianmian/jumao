@@ -9,12 +9,15 @@ final class AppState: ObservableObject {
   @Published private(set) var agentReportOpenError: String?
   @Published private(set) var taskPackCopyFeedback: String?
   @Published private(set) var taskPackCopySucceeded = false
+  @Published private(set) var isRegeneratingTaskPack = false
+  @Published private(set) var taskPackGenerationError: String?
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
   private let workspaceOpener: any WorkspaceOpening
   private let agentReportOpener: any AgentReportOpening
   private let taskPackCopier: any TaskPackCopying
+  private let taskPackRunner: any CodexTaskPackRunning
   private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
@@ -26,12 +29,14 @@ final class AppState: ObservableObject {
     workspaceBookmarkStore: WorkspaceBookmarkStore = WorkspaceBookmarkStore(),
     workspaceOpener: any WorkspaceOpening = FinderWorkspaceOpener(),
     agentReportOpener: any AgentReportOpening = FinderAgentReportOpener(),
-    taskPackCopier: any TaskPackCopying = CodexTaskPackCopier()
+    taskPackCopier: any TaskPackCopying = CodexTaskPackCopier(),
+    taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
     self.workspaceOpener = workspaceOpener
     self.agentReportOpener = agentReportOpener
     self.taskPackCopier = taskPackCopier
+    self.taskPackRunner = taskPackRunner
   }
 
   var workspacePath: String {
@@ -66,6 +71,19 @@ final class AppState: ObservableObject {
     return !taskPackPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }
 
+  var canRegenerateTaskPack: Bool {
+    guard !isRegeneratingTaskPack, let workspaceURL else {
+      return false
+    }
+
+    var isDirectory: ObjCBool = false
+    let jumaoDirectoryURL = workspaceURL.appendingPathComponent(".jumao", isDirectory: true)
+    return FileManager.default.fileExists(atPath: workspaceURL.path, isDirectory: &isDirectory)
+      && isDirectory.boolValue
+      && FileManager.default.fileExists(atPath: jumaoDirectoryURL.path, isDirectory: &isDirectory)
+      && isDirectory.boolValue
+  }
+
   func loadSavedWorkspace() {
     guard let workspaceURL = workspaceBookmarkStore.restore() else {
       self.workspaceURL = nil
@@ -73,6 +91,7 @@ final class AppState: ObservableObject {
       workspaceOpenError = nil
       agentReportOpenError = nil
       clearTaskPackCopyFeedback()
+      taskPackGenerationError = nil
       return
     }
 
@@ -102,6 +121,7 @@ final class AppState: ObservableObject {
       workspaceOpenError = nil
       agentReportOpenError = nil
       clearTaskPackCopyFeedback()
+      taskPackGenerationError = nil
     }
   }
 
@@ -192,6 +212,21 @@ final class AppState: ObservableObject {
     }
   }
 
+  func regenerateCodexTaskPack() {
+    guard canRegenerateTaskPack, let workspaceURL else {
+      return
+    }
+
+    isRegeneratingTaskPack = true
+    taskPackGenerationError = nil
+
+    taskPackRunner.run(workspaceURL: workspaceURL) { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishTaskPackGeneration(result)
+      }
+    }
+  }
+
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
@@ -203,6 +238,7 @@ final class AppState: ObservableObject {
     workspaceOpenError = nil
     agentReportOpenError = nil
     clearTaskPackCopyFeedback()
+    taskPackGenerationError = nil
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
@@ -232,5 +268,18 @@ final class AppState: ObservableObject {
     taskPackCopyFeedbackToken = UUID()
     taskPackCopyFeedback = nil
     taskPackCopySucceeded = false
+  }
+
+  private func finishTaskPackGeneration(_ result: CodexTaskPackRunResult) {
+    isRegeneratingTaskPack = false
+
+    switch result {
+    case .succeeded:
+      taskPackGenerationError = nil
+      refreshStatus()
+    case .failed(let exitCode, let message):
+      let code = exitCode.map(String.init) ?? "无法启动"
+      taskPackGenerationError = "任务包生成失败（退出码 \(code)）：\(message)"
+    }
   }
 }
