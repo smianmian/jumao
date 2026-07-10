@@ -51,7 +51,19 @@ struct StatusPopover: View {
           statusDetails(snapshot)
         }
 
-        HStack {
+        if let error = appState.workspaceOpenError {
+          Text(error)
+            .font(.caption)
+            .foregroundStyle(.red)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
+        HStack(spacing: 10) {
+          Button("打开项目目录") {
+            appState.openWorkspaceInFinder()
+          }
+          .disabled(appState.workspaceURL == nil)
+
           Spacer()
           Button("刷新") {
             appState.refreshStatus()

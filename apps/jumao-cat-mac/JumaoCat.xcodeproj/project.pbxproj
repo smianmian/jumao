@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		14D79AE67208962F1F507EC7 /* WorkspaceBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B662B3DD1321014000D1D406 /* WorkspaceBookmarkStore.swift */; };
+		1544BA710D0EE682A5DA5AB3 /* WorkspaceFolderOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A0FDECC557CAB0B0C5A5D1 /* WorkspaceFolderOpener.swift */; };
 		1C4F0F85B5612DF018912014 /* StatusPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */; };
 		2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */; };
 		35693AA109EBCDC0E254BAF1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B198C4CDC063D0EB47B93748 /* Assets.xcassets */; };
@@ -15,6 +16,7 @@
 		64ECC466AB2F4C9C3EB330C1 /* JumaoCatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2256032B0E164EE18FAEC2B9 /* JumaoCatApp.swift */; };
 		673D223DD660F54ACBCA7D19 /* WorkspaceBookmarkStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A364758B3243D66FFF978C9E /* WorkspaceBookmarkStoreTests.swift */; };
 		6EAB11C9C9B724F56186954B /* StatusFileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */; };
+		707E1D684CC86394519736DC /* WorkspaceFolderOpenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6104223B252443BA30F55309 /* WorkspaceFolderOpenerTests.swift */; };
 		92CA4E35F435FB42CC4596C9 /* JumaoMenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */; };
 		B5A76E62B4AF26313717BD4C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 090753BE37E91CB6A3826F34 /* AppDelegate.swift */; };
 		D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */; };
@@ -38,6 +40,8 @@
 		2885CB0A071BFBCF27A9F28A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3F69685249CE423C5BD76D01 /* JumaoCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JumaoCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopover.swift; sourceTree = "<group>"; };
+		6104223B252443BA30F55309 /* WorkspaceFolderOpenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFolderOpenerTests.swift; sourceTree = "<group>"; };
+		63A0FDECC557CAB0B0C5A5D1 /* WorkspaceFolderOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFolderOpener.swift; sourceTree = "<group>"; };
 		65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusReaderTests.swift; sourceTree = "<group>"; };
 		7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFileWatcherTests.swift; sourceTree = "<group>"; };
 		7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStatus.swift; sourceTree = "<group>"; };
@@ -72,6 +76,7 @@
 				DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */,
 				4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */,
 				B662B3DD1321014000D1D406 /* WorkspaceBookmarkStore.swift */,
+				63A0FDECC557CAB0B0C5A5D1 /* WorkspaceFolderOpener.swift */,
 			);
 			path = JumaoCat;
 			sourceTree = "<group>";
@@ -107,6 +112,7 @@
 				7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */,
 				65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */,
 				A364758B3243D66FFF978C9E /* WorkspaceBookmarkStoreTests.swift */,
+				6104223B252443BA30F55309 /* WorkspaceFolderOpenerTests.swift */,
 			);
 			path = JumaoCatTests;
 			sourceTree = "<group>";
@@ -208,6 +214,7 @@
 				6EAB11C9C9B724F56186954B /* StatusFileWatcher.swift in Sources */,
 				1C4F0F85B5612DF018912014 /* StatusPopover.swift in Sources */,
 				14D79AE67208962F1F507EC7 /* WorkspaceBookmarkStore.swift in Sources */,
+				1544BA710D0EE682A5DA5AB3 /* WorkspaceFolderOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,6 +225,7 @@
 				55D971836882979FF52D1E79 /* StatusFileWatcherTests.swift in Sources */,
 				2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */,
 				673D223DD660F54ACBCA7D19 /* WorkspaceBookmarkStoreTests.swift in Sources */,
+				707E1D684CC86394519736DC /* WorkspaceFolderOpenerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

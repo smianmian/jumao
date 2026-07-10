@@ -5,17 +5,23 @@ import SwiftUI
 final class AppState: ObservableObject {
   @Published private(set) var workspaceURL: URL?
   @Published private(set) var status: WorkspaceStatus = .unselected
+  @Published private(set) var workspaceOpenError: String?
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
+  private let workspaceOpener: any WorkspaceOpening
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
       self?.refreshStatus()
     }
   }
 
-  init(workspaceBookmarkStore: WorkspaceBookmarkStore = WorkspaceBookmarkStore()) {
+  init(
+    workspaceBookmarkStore: WorkspaceBookmarkStore = WorkspaceBookmarkStore(),
+    workspaceOpener: any WorkspaceOpening = FinderWorkspaceOpener()
+  ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
+    self.workspaceOpener = workspaceOpener
   }
 
   var workspacePath: String {
@@ -38,6 +44,7 @@ final class AppState: ObservableObject {
     guard let workspaceURL = workspaceBookmarkStore.restore() else {
       self.workspaceURL = nil
       status = .unselected
+      workspaceOpenError = nil
       return
     }
 
@@ -64,6 +71,7 @@ final class AppState: ObservableObject {
     } catch {
       workspaceURL = nil
       status = .failed("无法保存项目目录访问权限：\(error.localizedDescription)")
+      workspaceOpenError = nil
     }
   }
 
@@ -76,6 +84,21 @@ final class AppState: ObservableObject {
     status = statusReader.read(workspaceURL: workspaceURL)
   }
 
+  func openWorkspaceInFinder() {
+    guard let workspaceURL else {
+      return
+    }
+
+    switch workspaceOpener.open(workspaceURL: workspaceURL) {
+    case .opened:
+      workspaceOpenError = nil
+    case .missingDirectory:
+      workspaceOpenError = "项目目录不存在，无法在 Finder 中打开。"
+    case .failed:
+      workspaceOpenError = "无法在 Finder 中打开项目目录。"
+    }
+  }
+
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
@@ -84,6 +107,7 @@ final class AppState: ObservableObject {
   private func activateWorkspace(_ workspaceURL: URL) {
     statusWatcher.stop()
     self.workspaceURL = workspaceURL
+    workspaceOpenError = nil
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
