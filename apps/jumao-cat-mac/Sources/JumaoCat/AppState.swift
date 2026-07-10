@@ -11,6 +11,8 @@ final class AppState: ObservableObject {
   @Published private(set) var taskPackCopySucceeded = false
   @Published private(set) var isRegeneratingTaskPack = false
   @Published private(set) var taskPackGenerationError: String?
+  @Published private(set) var isOpeningTerminal = false
+  @Published private(set) var terminalOpenError: String?
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
@@ -18,6 +20,7 @@ final class AppState: ObservableObject {
   private let agentReportOpener: any AgentReportOpening
   private let taskPackCopier: any TaskPackCopying
   private let taskPackRunner: any CodexTaskPackRunning
+  private let terminalWorkspaceOpener: any TerminalWorkspaceOpening
   private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
@@ -30,13 +33,15 @@ final class AppState: ObservableObject {
     workspaceOpener: any WorkspaceOpening = FinderWorkspaceOpener(),
     agentReportOpener: any AgentReportOpening = FinderAgentReportOpener(),
     taskPackCopier: any TaskPackCopying = CodexTaskPackCopier(),
-    taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner()
+    taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner(),
+    terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
     self.workspaceOpener = workspaceOpener
     self.agentReportOpener = agentReportOpener
     self.taskPackCopier = taskPackCopier
     self.taskPackRunner = taskPackRunner
+    self.terminalWorkspaceOpener = terminalWorkspaceOpener
   }
 
   var workspacePath: String {
@@ -72,10 +77,15 @@ final class AppState: ObservableObject {
   }
 
   var canRegenerateTaskPack: Bool {
-    guard !isRegeneratingTaskPack, let workspaceURL else {
-      return false
-    }
+    !isRegeneratingTaskPack && hasValidWorkspace
+  }
 
+  var canOpenTerminal: Bool {
+    !isOpeningTerminal && hasValidWorkspace
+  }
+
+  private var hasValidWorkspace: Bool {
+    guard let workspaceURL else { return false }
     var isDirectory: ObjCBool = false
     let jumaoDirectoryURL = workspaceURL.appendingPathComponent(".jumao", isDirectory: true)
     return FileManager.default.fileExists(atPath: workspaceURL.path, isDirectory: &isDirectory)
@@ -92,6 +102,7 @@ final class AppState: ObservableObject {
       agentReportOpenError = nil
       clearTaskPackCopyFeedback()
       taskPackGenerationError = nil
+      terminalOpenError = nil
       return
     }
 
@@ -122,6 +133,7 @@ final class AppState: ObservableObject {
       agentReportOpenError = nil
       clearTaskPackCopyFeedback()
       taskPackGenerationError = nil
+      terminalOpenError = nil
     }
   }
 
@@ -227,6 +239,21 @@ final class AppState: ObservableObject {
     }
   }
 
+  func openWorkspaceInTerminal() {
+    guard canOpenTerminal, let workspaceURL else {
+      return
+    }
+
+    isOpeningTerminal = true
+    terminalOpenError = nil
+
+    terminalWorkspaceOpener.open(workspaceURL: workspaceURL) { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishOpeningTerminal(result)
+      }
+    }
+  }
+
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
@@ -239,6 +266,7 @@ final class AppState: ObservableObject {
     agentReportOpenError = nil
     clearTaskPackCopyFeedback()
     taskPackGenerationError = nil
+    terminalOpenError = nil
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
@@ -280,6 +308,21 @@ final class AppState: ObservableObject {
     case .failed(let exitCode, let message):
       let code = exitCode.map(String.init) ?? "无法启动"
       taskPackGenerationError = "任务包生成失败（退出码 \(code)）：\(message)"
+    }
+  }
+
+  private func finishOpeningTerminal(_ result: TerminalWorkspaceOpenResult) {
+    isOpeningTerminal = false
+
+    switch result {
+    case .opened:
+      terminalOpenError = nil
+    case .missingDirectory:
+      terminalOpenError = "项目目录不存在，无法打开终端。"
+    case .terminalUnavailable:
+      terminalOpenError = "找不到 macOS 终端。"
+    case .failed:
+      terminalOpenError = "无法打开 macOS 终端。"
     }
   }
 }

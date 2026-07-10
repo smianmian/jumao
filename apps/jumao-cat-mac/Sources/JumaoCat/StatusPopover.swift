@@ -85,6 +85,13 @@ struct StatusPopover: View {
             .fixedSize(horizontal: false, vertical: true)
         }
 
+        if let error = appState.terminalOpenError {
+          Text(error)
+            .font(.caption)
+            .foregroundStyle(.red)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
         VStack(spacing: 8) {
           Button(appState.isRegeneratingTaskPack ? "正在生成" : "重新生成任务包") {
             appState.regenerateCodexTaskPack()
@@ -104,6 +111,11 @@ struct StatusPopover: View {
           }
 
           HStack(spacing: 10) {
+            Button("打开终端") {
+              appState.openWorkspaceInTerminal()
+            }
+            .disabled(!appState.canOpenTerminal)
+
             Button("打开项目目录") {
               appState.openWorkspaceInFinder()
             }
