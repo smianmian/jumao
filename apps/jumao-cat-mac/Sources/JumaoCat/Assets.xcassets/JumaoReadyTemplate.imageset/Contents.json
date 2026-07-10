@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "jumao-ready-template.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

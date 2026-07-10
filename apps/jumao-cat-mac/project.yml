@@ -1,0 +1,43 @@
+name: JumaoCat
+options:
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    MACOSX_DEPLOYMENT_TARGET: 14.0
+schemes:
+  JumaoCat:
+    build:
+      targets:
+        JumaoCat: all
+        JumaoCatTests: [test]
+    test:
+      targets:
+        - name: JumaoCatTests
+targets:
+  JumaoCat:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/JumaoCat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.smianmian.JumaoCat
+        PRODUCT_NAME: Jumao Cat
+        PRODUCT_MODULE_NAME: JumaoCat
+        INFOPLIST_FILE: Sources/JumaoCat/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+  JumaoCatTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/JumaoCatTests
+    dependencies:
+      - target: JumaoCat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.smianmian.JumaoCatTests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Jumao Cat.app/Contents/MacOS/Jumao Cat"
+        BUNDLE_LOADER: "$(TEST_HOST)"

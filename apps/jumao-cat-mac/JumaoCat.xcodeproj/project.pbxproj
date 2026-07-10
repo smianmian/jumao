@@ -1,0 +1,459 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		14D79AE67208962F1F507EC7 /* WorkspaceBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B662B3DD1321014000D1D406 /* WorkspaceBookmarkStore.swift */; };
+		1C4F0F85B5612DF018912014 /* StatusPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */; };
+		2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */; };
+		35693AA109EBCDC0E254BAF1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B198C4CDC063D0EB47B93748 /* Assets.xcassets */; };
+		55D971836882979FF52D1E79 /* StatusFileWatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */; };
+		64ECC466AB2F4C9C3EB330C1 /* JumaoCatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2256032B0E164EE18FAEC2B9 /* JumaoCatApp.swift */; };
+		673D223DD660F54ACBCA7D19 /* WorkspaceBookmarkStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A364758B3243D66FFF978C9E /* WorkspaceBookmarkStoreTests.swift */; };
+		6EAB11C9C9B724F56186954B /* StatusFileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */; };
+		92CA4E35F435FB42CC4596C9 /* JumaoMenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */; };
+		B5A76E62B4AF26313717BD4C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 090753BE37E91CB6A3826F34 /* AppDelegate.swift */; };
+		D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */; };
+		F26FC4E1C5216981D1E864A7 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BF3E8598EEBA6E202BC750 /* AppState.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		10AF536129A1233AA6A47C40 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BB348367883E59B671E235F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EC328B895D58537F4B70A8AE;
+			remoteInfo = JumaoCat;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		090753BE37E91CB6A3826F34 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		2256032B0E164EE18FAEC2B9 /* JumaoCatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoCatApp.swift; sourceTree = "<group>"; };
+		25BF3E8598EEBA6E202BC750 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		2885CB0A071BFBCF27A9F28A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3F69685249CE423C5BD76D01 /* JumaoCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JumaoCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopover.swift; sourceTree = "<group>"; };
+		65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusReaderTests.swift; sourceTree = "<group>"; };
+		7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFileWatcherTests.swift; sourceTree = "<group>"; };
+		7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStatus.swift; sourceTree = "<group>"; };
+		9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoMenuBarIcon.swift; sourceTree = "<group>"; };
+		A364758B3243D66FFF978C9E /* WorkspaceBookmarkStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceBookmarkStoreTests.swift; sourceTree = "<group>"; };
+		B198C4CDC063D0EB47B93748 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B662B3DD1321014000D1D406 /* WorkspaceBookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceBookmarkStore.swift; sourceTree = "<group>"; };
+		DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFileWatcher.swift; sourceTree = "<group>"; };
+		E9B983D45F5C2A13944C86CE /* JumaoCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JumaoCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		211FC882552DEF2AFA8EE283 = {
+			isa = PBXGroup;
+			children = (
+				365B2C6610E085396D4024FD /* Sources */,
+				BCC1CE8B5EFEF88ACED9F0C4 /* Tests */,
+				A3163C72823EF1DD3C620259 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		30D0F34FDAD77BBC6FF0742E /* JumaoCat */ = {
+			isa = PBXGroup;
+			children = (
+				090753BE37E91CB6A3826F34 /* AppDelegate.swift */,
+				25BF3E8598EEBA6E202BC750 /* AppState.swift */,
+				B198C4CDC063D0EB47B93748 /* Assets.xcassets */,
+				2885CB0A071BFBCF27A9F28A /* Info.plist */,
+				2256032B0E164EE18FAEC2B9 /* JumaoCatApp.swift */,
+				9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */,
+				7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */,
+				DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */,
+				4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */,
+				B662B3DD1321014000D1D406 /* WorkspaceBookmarkStore.swift */,
+			);
+			path = JumaoCat;
+			sourceTree = "<group>";
+		};
+		365B2C6610E085396D4024FD /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				30D0F34FDAD77BBC6FF0742E /* JumaoCat */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		A3163C72823EF1DD3C620259 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3F69685249CE423C5BD76D01 /* JumaoCat.app */,
+				E9B983D45F5C2A13944C86CE /* JumaoCatTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BCC1CE8B5EFEF88ACED9F0C4 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				CFBAFCAF8CC72F649D0D259E /* JumaoCatTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		CFBAFCAF8CC72F649D0D259E /* JumaoCatTests */ = {
+			isa = PBXGroup;
+			children = (
+				7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */,
+				65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */,
+				A364758B3243D66FFF978C9E /* WorkspaceBookmarkStoreTests.swift */,
+			);
+			path = JumaoCatTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0250F15A5BB021B3D69B5E76 /* JumaoCatTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92211DC0C3D0D6AF0C23C27A /* Build configuration list for PBXNativeTarget "JumaoCatTests" */;
+			buildPhases = (
+				79912E20E2F92ED06CE994BF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC05465F2D6C2E1AED45E3F2 /* PBXTargetDependency */,
+			);
+			name = JumaoCatTests;
+			packageProductDependencies = (
+			);
+			productName = JumaoCatTests;
+			productReference = E9B983D45F5C2A13944C86CE /* JumaoCatTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		EC328B895D58537F4B70A8AE /* JumaoCat */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6C10D05894D0D4EACACEA37E /* Build configuration list for PBXNativeTarget "JumaoCat" */;
+			buildPhases = (
+				25132893F59A2C938468ED12 /* Sources */,
+				86E642D4A9A3762819648B72 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JumaoCat;
+			packageProductDependencies = (
+			);
+			productName = JumaoCat;
+			productReference = 3F69685249CE423C5BD76D01 /* JumaoCat.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BB348367883E59B671E235F9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					EC328B895D58537F4B70A8AE = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 69BBA0A6C1CAE040BA497BA8 /* Build configuration list for PBXProject "JumaoCat" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 211FC882552DEF2AFA8EE283;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EC328B895D58537F4B70A8AE /* JumaoCat */,
+				0250F15A5BB021B3D69B5E76 /* JumaoCatTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		86E642D4A9A3762819648B72 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				35693AA109EBCDC0E254BAF1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		25132893F59A2C938468ED12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B5A76E62B4AF26313717BD4C /* AppDelegate.swift in Sources */,
+				F26FC4E1C5216981D1E864A7 /* AppState.swift in Sources */,
+				64ECC466AB2F4C9C3EB330C1 /* JumaoCatApp.swift in Sources */,
+				92CA4E35F435FB42CC4596C9 /* JumaoMenuBarIcon.swift in Sources */,
+				D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */,
+				6EAB11C9C9B724F56186954B /* StatusFileWatcher.swift in Sources */,
+				1C4F0F85B5612DF018912014 /* StatusPopover.swift in Sources */,
+				14D79AE67208962F1F507EC7 /* WorkspaceBookmarkStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79912E20E2F92ED06CE994BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				55D971836882979FF52D1E79 /* StatusFileWatcherTests.swift in Sources */,
+				2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */,
+				673D223DD660F54ACBCA7D19 /* WorkspaceBookmarkStoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CC05465F2D6C2E1AED45E3F2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EC328B895D58537F4B70A8AE /* JumaoCat */;
+			targetProxy = 10AF536129A1233AA6A47C40 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0100C501BB27CC29E88EAE1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/JumaoCat/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.smianmian.JumaoCat;
+				PRODUCT_MODULE_NAME = JumaoCat;
+				PRODUCT_NAME = "Jumao Cat";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		355D925E3B5C23DE77A84AE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		7211024A13AC1DD0CB24EEDA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/JumaoCat/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.smianmian.JumaoCat;
+				PRODUCT_MODULE_NAME = JumaoCat;
+				PRODUCT_NAME = "Jumao Cat";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		8066D467468F17DFCC78FBD0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.smianmian.JumaoCatTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jumao Cat.app/Contents/MacOS/Jumao Cat";
+			};
+			name = Release;
+		};
+		E67A7D69609CC7C689C083A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		EA631DB612E8BFFD31886ED9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.smianmian.JumaoCatTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Jumao Cat.app/Contents/MacOS/Jumao Cat";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		69BBA0A6C1CAE040BA497BA8 /* Build configuration list for PBXProject "JumaoCat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E67A7D69609CC7C689C083A5 /* Debug */,
+				355D925E3B5C23DE77A84AE7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6C10D05894D0D4EACACEA37E /* Build configuration list for PBXNativeTarget "JumaoCat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0100C501BB27CC29E88EAE1B /* Debug */,
+				7211024A13AC1DD0CB24EEDA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		92211DC0C3D0D6AF0C23C27A /* Build configuration list for PBXNativeTarget "JumaoCatTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA631DB612E8BFFD31886ED9 /* Debug */,
+				8066D467468F17DFCC78FBD0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BB348367883E59B671E235F9 /* Project object */;
+}
