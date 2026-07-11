@@ -3,13 +3,21 @@ import AppKit
 enum JumaoMenuBarIcon {
   static func makeImage(for state: String) -> NSImage {
     let assetName = assetName(for: state)
-
-    guard let image = NSImage(named: NSImage.Name(assetName)) else {
-      return NSImage(systemSymbolName: "cat", accessibilityDescription: "Jumao Cat") ?? NSImage()
-    }
-
+    let sourceImage = NSImage(named: NSImage.Name(assetName))
+      ?? NSImage(systemSymbolName: "cat", accessibilityDescription: "Jumao Cat")
+      ?? NSImage()
+    let image = sourceImage.copy() as? NSImage ?? sourceImage
     image.size = NSSize(width: 18, height: 18)
     image.isTemplate = true
+    return image
+  }
+
+  static func makeColorImage() -> NSImage {
+    let sourceImage = NSImage(named: NSImage.Name("JumaoCatColor"))
+      ?? NSImage(systemSymbolName: "cat.fill", accessibilityDescription: "Jumao Cat")
+      ?? NSImage()
+    let image = sourceImage.copy() as? NSImage ?? sourceImage
+    image.isTemplate = false
     return image
   }
 

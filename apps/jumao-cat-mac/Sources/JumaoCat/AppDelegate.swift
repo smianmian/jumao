@@ -15,13 +15,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     statusItem = item
     item.button?.image = JumaoMenuBarIcon.makeImage(for: appState.status.catState)
+    item.button?.imageScaling = .scaleProportionallyDown
     item.button?.target = self
     item.button?.action = #selector(togglePopover(_:))
     item.button?.toolTip = "Jumao Cat"
 
     popover.behavior = .transient
-    popover.contentSize = NSSize(width: 360, height: 500)
-    popover.contentViewController = NSHostingController(rootView: StatusPopover(appState: appState))
+    let hostingController = NSHostingController(rootView: StatusPopover(appState: appState))
+    hostingController.sizingOptions = [.preferredContentSize]
+    popover.contentViewController = hostingController
 
     appState.$status
       .receive(on: RunLoop.main)

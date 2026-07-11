@@ -2,140 +2,181 @@ import SwiftUI
 
 struct StatusPopover: View {
   @ObservedObject var appState: AppState
+  private let actionColumns = [
+    GridItem(.flexible(), spacing: 8),
+    GridItem(.flexible(), spacing: 8)
+  ]
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 14) {
-        HStack(spacing: 10) {
-          Image(nsImage: JumaoMenuBarIcon.makeImage(for: appState.status.catState))
-            .resizable()
-            .frame(width: 28, height: 28)
-          VStack(alignment: .leading, spacing: 2) {
-            Text(appState.projectName)
-              .font(.headline)
-              .lineLimit(1)
-            Text("Jumao Cat")
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-          Spacer()
-          Button("选择项目") {
-            appState.chooseWorkspace()
-          }
-        }
+    VStack(alignment: .leading, spacing: 14) {
+      header
+      Divider()
 
-        Divider()
-
-        VStack(alignment: .leading, spacing: 6) {
-          Text("橘猫状态：\(appState.status.catState)")
-            .font(.subheadline.weight(.semibold))
-          Text(appState.status.label)
-            .font(.headline)
-          Text(appState.status.message)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        VStack(alignment: .leading, spacing: 3) {
-          Text("项目目录")
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-          Text(appState.workspacePath)
-            .font(.caption)
-            .textSelection(.enabled)
-            .lineLimit(2)
-        }
-
-        if let snapshot = appState.status.snapshot {
-          statusDetails(snapshot)
-        }
-
-        if let error = appState.workspaceOpenError {
-          Text(error)
-            .font(.caption)
-            .foregroundStyle(.red)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        if let error = appState.agentReportOpenError {
-          Text(error)
-            .font(.caption)
-            .foregroundStyle(.red)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        if let feedback = appState.taskPackCopyFeedback {
-          Text(feedback)
-            .font(.caption)
-            .foregroundStyle(appState.taskPackCopySucceeded ? .green : .red)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        if appState.isRegeneratingTaskPack {
-          Text("正在生成")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-
-        if let error = appState.taskPackGenerationError {
-          Text(error)
-            .font(.caption)
-            .foregroundStyle(.red)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        if let error = appState.terminalOpenError {
-          Text(error)
-            .font(.caption)
-            .foregroundStyle(.red)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-
-        VStack(spacing: 8) {
-          Button(appState.isRegeneratingTaskPack ? "正在生成" : "重新生成任务包") {
-            appState.regenerateCodexTaskPack()
-          }
-          .disabled(!appState.canRegenerateTaskPack)
-
-          HStack(spacing: 10) {
-            Button("复制 Codex 任务包") {
-              appState.copyLatestTaskPack()
-            }
-            .disabled(!appState.canCopyLatestTaskPack)
-
-            Button("打开治理报告") {
-              appState.openAgentReport()
-            }
-            .disabled(!appState.canOpenAgentReport)
-          }
-
-          HStack(spacing: 10) {
-            Button("打开终端") {
-              appState.openWorkspaceInTerminal()
-            }
-            .disabled(!appState.canOpenTerminal)
-
-            Button("打开项目目录") {
-              appState.openWorkspaceInFinder()
-            }
-            .disabled(appState.workspaceURL == nil)
-
-            Spacer()
-            Button("刷新") {
-              appState.refreshStatus()
-            }
-            .disabled(appState.workspaceURL == nil)
-          }
-        }
+      if appState.workspaceURL == nil {
+        unselectedWorkspace
+      } else {
+        selectedWorkspace
       }
-      .padding(16)
     }
-    .frame(width: 360, height: 500)
+    .padding(16)
+    .frame(width: 380, alignment: .leading)
+    .fixedSize(horizontal: false, vertical: true)
+  }
+
+  private var header: some View {
+    HStack(spacing: 10) {
+      Image(nsImage: JumaoMenuBarIcon.makeColorImage())
+        .resizable()
+        .interpolation(.none)
+        .scaledToFit()
+        .frame(width: 36, height: 36)
+        .accessibilityLabel("Jumao Cat")
+
+      VStack(alignment: .leading, spacing: 2) {
+        Text(appState.workspaceURL == nil ? "Jumao Cat" : appState.projectName)
+          .font(.headline)
+          .lineLimit(1)
+        Text(appState.workspaceURL == nil ? "本地项目状态" : "Jumao Cat")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+      Button(appState.workspaceURL == nil ? "选择项目" : "更换项目") {
+        appState.chooseWorkspace()
+      }
+    }
+  }
+
+  private var unselectedWorkspace: some View {
+    VStack(alignment: .leading, spacing: 7) {
+      Text("橘猫状态：sleeping")
+        .font(.subheadline.weight(.semibold))
+      Text("还没有选择项目")
+        .font(.headline)
+      Text("请选择一个 Jumao 项目目录。")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  private var selectedWorkspace: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      VStack(alignment: .leading, spacing: 6) {
+        Text("橘猫状态：\(appState.status.catState)")
+          .font(.subheadline.weight(.semibold))
+        Text(appState.status.label)
+          .font(.headline)
+        Text(appState.status.message)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+
+      VStack(alignment: .leading, spacing: 3) {
+        sectionTitle("项目目录")
+        Text(appState.workspacePath)
+          .font(.caption)
+          .textSelection(.enabled)
+          .lineLimit(2)
+      }
+
+      if let snapshot = appState.status.snapshot {
+        statusDetails(snapshot)
+      }
+
+      feedback
+      Divider()
+      actions
+    }
+  }
+
+  @ViewBuilder
+  private var feedback: some View {
+    if let error = appState.workspaceOpenError {
+      feedbackText(error, color: .red)
+    }
+    if let error = appState.agentReportOpenError {
+      feedbackText(error, color: .red)
+    }
+    if let message = appState.taskPackCopyFeedback {
+      feedbackText(message, color: appState.taskPackCopySucceeded ? .green : .red)
+    }
+    if appState.isRegeneratingTaskPack {
+      feedbackText("正在生成", color: .secondary)
+    }
+    if let error = appState.taskPackGenerationError {
+      feedbackText(error, color: .red)
+    }
+    if let error = appState.terminalOpenError {
+      feedbackText(error, color: .red)
+    }
+  }
+
+  private var actions: some View {
+    LazyVGrid(columns: actionColumns, alignment: .leading, spacing: 8) {
+      actionButton(
+        appState.isRegeneratingTaskPack ? "正在生成" : "重新生成任务包",
+        systemImage: "arrow.clockwise",
+        enabled: appState.canRegenerateTaskPack,
+        action: appState.regenerateCodexTaskPack
+      )
+      actionButton(
+        "复制 Codex 任务包",
+        systemImage: "doc.on.doc",
+        enabled: appState.canCopyLatestTaskPack,
+        action: appState.copyLatestTaskPack
+      )
+      actionButton(
+        "打开治理报告",
+        systemImage: "doc.text",
+        enabled: appState.canOpenAgentReport,
+        action: appState.openAgentReport
+      )
+      actionButton(
+        "打开终端",
+        systemImage: "terminal",
+        enabled: appState.canOpenTerminal,
+        action: appState.openWorkspaceInTerminal
+      )
+      actionButton(
+        "打开项目目录",
+        systemImage: "folder",
+        enabled: appState.workspaceURL != nil,
+        action: appState.openWorkspaceInFinder
+      )
+      actionButton(
+        "刷新",
+        systemImage: "arrow.clockwise.circle",
+        enabled: appState.workspaceURL != nil,
+        action: appState.refreshStatus
+      )
+    }
+    .buttonStyle(.bordered)
+  }
+
+  private func actionButton(
+    _ title: String,
+    systemImage: String,
+    enabled: Bool,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      Label(title, systemImage: systemImage)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .disabled(!enabled)
+  }
+
+  private func feedbackText(_ value: String, color: Color) -> some View {
+    Text(value)
+      .font(.caption)
+      .foregroundStyle(color)
+      .fixedSize(horizontal: false, vertical: true)
   }
 
   private func statusDetails(_ snapshot: StatusSnapshot) -> some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: 12) {
       if let date = appState.statusFileModificationDate {
         detail("最后更新", date.formatted(date: .abbreviated, time: .shortened))
       }
