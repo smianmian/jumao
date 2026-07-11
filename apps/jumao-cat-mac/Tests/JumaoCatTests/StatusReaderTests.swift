@@ -29,6 +29,38 @@ final class StatusReaderTests: XCTestCase {
     XCTAssertEqual(presentation.message, "原始状态码：investigating")
   }
 
+  func testProjectReadinessDoesNotAppearBeforeSelectingWorkspace() {
+    XCTAssertNil(WorkspaceStatus.unselected.projectReadiness)
+  }
+
+  func testProjectReadinessForMissingStatusFileWaitsForCheck() {
+    XCTAssertEqual(
+      WorkspaceStatus.missingStatusFile.projectReadiness,
+      ProjectReadiness(percentage: 10, stage: "等待检查", rawState: nil)
+    )
+  }
+
+  func testProjectReadinessMapsEveryCatState() {
+    let expected = [
+      "sleeping": ProjectReadiness(percentage: 20, stage: "待命", rawState: nil),
+      "checking": ProjectReadiness(percentage: 40, stage: "正在检查", rawState: nil),
+      "blocked": ProjectReadiness(percentage: 60, stage: "处理阻塞", rawState: nil),
+      "ready": ProjectReadiness(percentage: 80, stage: "准备生成任务包", rawState: nil),
+      "packed": ProjectReadiness(percentage: 100, stage: "任务包已生成", rawState: nil)
+    ]
+
+    for (state, readiness) in expected {
+      XCTAssertEqual(ProjectReadiness.forState(state), readiness)
+    }
+  }
+
+  func testUnknownProjectReadinessKeepsRawStateCode() {
+    XCTAssertEqual(
+      ProjectReadiness.forState("investigating"),
+      ProjectReadiness(percentage: 20, stage: "未知阶段", rawState: "investigating")
+    )
+  }
+
   func testMissingStatusFileIsDistinctFromUnselectedWorkspace() throws {
     let workspaceURL = try makeWorkspace()
     let status = StatusReader().read(workspaceURL: workspaceURL)

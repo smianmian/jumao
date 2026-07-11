@@ -205,6 +205,19 @@ enum WorkspaceStatus {
     guard case .loaded(let snapshot) = self else { return nil }
     return snapshot
   }
+
+  var projectReadiness: ProjectReadiness? {
+    switch self {
+    case .unselected:
+      return nil
+    case .missingStatusFile:
+      return .waitingForCheck
+    case .loaded(let snapshot):
+      return ProjectReadiness.forState(snapshot.status.cat.state)
+    case .failed:
+      return ProjectReadiness.forState("blocked")
+    }
+  }
 }
 
 struct CatStatePresentation: Equatable {
@@ -226,6 +239,39 @@ struct CatStatePresentation: Equatable {
     default:
       let rawState = state.isEmpty ? "空值" : state
       return CatStatePresentation(label: "未知状态", message: "原始状态码：\(rawState)")
+    }
+  }
+}
+
+struct ProjectReadiness: Equatable {
+  let percentage: Int
+  let stage: String
+  let rawState: String?
+
+  static let waitingForCheck = ProjectReadiness(
+    percentage: 10,
+    stage: "等待检查",
+    rawState: nil
+  )
+
+  static func forState(_ state: String) -> ProjectReadiness {
+    switch state {
+    case "sleeping":
+      return ProjectReadiness(percentage: 20, stage: "待命", rawState: nil)
+    case "checking":
+      return ProjectReadiness(percentage: 40, stage: "正在检查", rawState: nil)
+    case "blocked":
+      return ProjectReadiness(percentage: 60, stage: "处理阻塞", rawState: nil)
+    case "ready":
+      return ProjectReadiness(percentage: 80, stage: "准备生成任务包", rawState: nil)
+    case "packed":
+      return ProjectReadiness(percentage: 100, stage: "任务包已生成", rawState: nil)
+    default:
+      return ProjectReadiness(
+        percentage: 20,
+        stage: "未知阶段",
+        rawState: state.isEmpty ? "空值" : state
+      )
     }
   }
 }

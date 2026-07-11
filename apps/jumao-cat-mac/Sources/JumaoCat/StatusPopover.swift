@@ -78,6 +78,10 @@ struct StatusPopover: View {
           .fixedSize(horizontal: false, vertical: true)
       }
 
+      if let readiness = appState.status.projectReadiness {
+        projectReadiness(readiness)
+      }
+
       VStack(alignment: .leading, spacing: 3) {
         sectionTitle("项目目录")
         Text(appState.workspacePath)
@@ -93,6 +97,36 @@ struct StatusPopover: View {
       feedback
       Divider()
       actions
+    }
+  }
+
+  private func projectReadiness(_ readiness: ProjectReadiness) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+      HStack {
+        sectionTitle("项目准备度")
+        Spacer()
+        Text("\(readiness.percentage)%")
+          .font(.caption.weight(.semibold))
+          .monospacedDigit()
+      }
+
+      ProgressView(value: Double(readiness.percentage), total: 100)
+        .progressViewStyle(.linear)
+        .tint(.orange)
+
+      HStack(spacing: 4) {
+        Text("当前阶段：")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        Text(readiness.stage)
+          .font(.caption.weight(.semibold))
+      }
+
+      if let rawState = readiness.rawState {
+        Text("原始状态码：\(rawState)")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
     }
   }
 
