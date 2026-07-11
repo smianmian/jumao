@@ -181,8 +181,10 @@ enum WorkspaceStatus {
 
   var label: String {
     switch self {
-    case .unselected, .missingStatusFile:
+    case .unselected:
       return CatStatePresentation.forState("sleeping").label
+    case .missingStatusFile:
+      return "这个项目还没有完成检查"
     case .loaded(let snapshot):
       return CatStatePresentation.forState(snapshot.status.cat.state).label
     case .failed:
@@ -192,8 +194,10 @@ enum WorkspaceStatus {
 
   var message: String {
     switch self {
-    case .unselected, .missingStatusFile:
+    case .unselected:
       return CatStatePresentation.forState("sleeping").message
+    case .missingStatusFile:
+      return "运行 Jumao 检查后，这里会显示项目状态"
     case .loaded(let snapshot):
       return CatStatePresentation.forState(snapshot.status.cat.state).message
     case .failed(let message):

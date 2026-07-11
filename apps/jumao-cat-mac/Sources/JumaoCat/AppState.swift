@@ -16,6 +16,7 @@ final class AppState: ObservableObject {
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
+  private let workspaceChooser: any WorkspaceChoosing
   private let workspaceOpener: any WorkspaceOpening
   private let agentReportOpener: any AgentReportOpening
   private let taskPackCopier: any TaskPackCopying
@@ -30,6 +31,7 @@ final class AppState: ObservableObject {
 
   init(
     workspaceBookmarkStore: WorkspaceBookmarkStore = WorkspaceBookmarkStore(),
+    workspaceChooser: any WorkspaceChoosing = MacWorkspaceChooser(),
     workspaceOpener: any WorkspaceOpening = FinderWorkspaceOpener(),
     agentReportOpener: any AgentReportOpening = FinderAgentReportOpener(),
     taskPackCopier: any TaskPackCopying = CodexTaskPackCopier(),
@@ -37,6 +39,7 @@ final class AppState: ObservableObject {
     terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
+    self.workspaceChooser = workspaceChooser
     self.workspaceOpener = workspaceOpener
     self.agentReportOpener = agentReportOpener
     self.taskPackCopier = taskPackCopier
@@ -110,14 +113,8 @@ final class AppState: ObservableObject {
   }
 
   func chooseWorkspace() {
-    let panel = NSOpenPanel()
-    panel.title = "选择 Jumao 项目"
-    panel.message = "选择包含 .jumao/status.json 的项目目录。"
-    panel.canChooseFiles = false
-    panel.canChooseDirectories = true
-    panel.allowsMultipleSelection = false
-
-    guard panel.runModal() == .OK, let url = panel.url else {
+    let startingURL = workspaceURL ?? FileManager.default.homeDirectoryForCurrentUser
+    guard let url = workspaceChooser.chooseWorkspace(startingAt: startingURL) else {
       return
     }
 
