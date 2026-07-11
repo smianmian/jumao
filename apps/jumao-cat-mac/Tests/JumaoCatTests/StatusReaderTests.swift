@@ -61,6 +61,57 @@ final class StatusReaderTests: XCTestCase {
     )
   }
 
+  func testAgentTeamUsesStatusAgentBoardCounts() throws {
+    let workspaceURL = try makeWorkspace()
+    try writeStatus(fullStatusJSON, in: workspaceURL)
+
+    let overview = StatusReader().read(workspaceURL: workspaceURL).agentTeamOverview
+
+    XCTAssertEqual(overview?.triggeredAgentCount, 27)
+    XCTAssertEqual(overview?.activeGroupCount, 8)
+    XCTAssertEqual(overview?.blockedGroupCount, 6)
+  }
+
+  func testAgentTeamShowsExplicitZeroCounts() throws {
+    let workspaceURL = try makeWorkspace()
+    try writeStatus(#"{"cat":{"state":"ready","label":"可以继续","message":"可以继续做一个小任务。"},"agentBoard":{"triggeredAgentCount":0,"activeGroupCount":0,"blockedGroupCount":0}}"#, in: workspaceURL)
+
+    let overview = StatusReader().read(workspaceURL: workspaceURL).agentTeamOverview
+
+    XCTAssertEqual(overview?.triggeredAgentCount, 0)
+    XCTAssertEqual(overview?.activeGroupCount, 0)
+    XCTAssertEqual(overview?.blockedGroupCount, 0)
+  }
+
+  func testAgentTeamUsesZeroDefaultsWhenAgentBoardIsMissing() throws {
+    let workspaceURL = try makeWorkspace()
+    try writeStatus(#"{"cat":{"state":"ready","label":"可以继续","message":"可以继续做一个小任务。"}}"#, in: workspaceURL)
+
+    let overview = StatusReader().read(workspaceURL: workspaceURL).agentTeamOverview
+
+    XCTAssertEqual(overview?.triggeredAgentCount, 0)
+    XCTAssertEqual(overview?.activeGroupCount, 0)
+    XCTAssertEqual(overview?.blockedGroupCount, 0)
+  }
+
+  func testAgentTeamOnlyAppearsWhenStatusFileLoadsSuccessfully() {
+    XCTAssertNil(WorkspaceStatus.unselected.agentTeamOverview)
+    XCTAssertNil(WorkspaceStatus.missingStatusFile.agentTeamOverview)
+    XCTAssertNil(WorkspaceStatus.failed("读取失败").agentTeamOverview)
+  }
+
+  func testCheckingAgentTeamShowsActivityMarker() {
+    let overview = AgentTeamOverview(agentBoard: .empty, catState: "checking")
+
+    XCTAssertTrue(overview.showsCheckingActivity)
+  }
+
+  func testNonCheckingAgentTeamsDoNotShowActivityMarker() {
+    for state in ["sleeping", "blocked", "ready", "packed", "unknown"] {
+      XCTAssertFalse(AgentTeamOverview(agentBoard: .empty, catState: state).showsCheckingActivity)
+    }
+  }
+
   func testMissingStatusFileIsDistinctFromUnselectedWorkspace() throws {
     let workspaceURL = try makeWorkspace()
     let status = StatusReader().read(workspaceURL: workspaceURL)

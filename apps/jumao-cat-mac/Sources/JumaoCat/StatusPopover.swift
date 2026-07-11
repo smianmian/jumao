@@ -82,6 +82,10 @@ struct StatusPopover: View {
         projectReadiness(readiness)
       }
 
+      if let team = appState.status.agentTeamOverview {
+        agentTeam(team)
+      }
+
       VStack(alignment: .leading, spacing: 3) {
         sectionTitle("项目目录")
         Text(appState.workspacePath)
@@ -126,6 +130,17 @@ struct StatusPopover: View {
         Text("原始状态码：\(rawState)")
           .font(.caption)
           .foregroundStyle(.secondary)
+      }
+    }
+  }
+
+  private func agentTeam(_ team: AgentTeamOverview) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+      sectionTitle("Agent 团队")
+      HStack(spacing: 18) {
+        agentMetric("已召集", team.triggeredAgentCount)
+        agentMetric("活跃分组", team.activeGroupCount, showsActivity: team.showsCheckingActivity)
+        agentMetric("阻塞分组", team.blockedGroupCount)
       }
     }
   }
@@ -221,15 +236,6 @@ struct StatusPopover: View {
       }
 
       VStack(alignment: .leading, spacing: 6) {
-        sectionTitle("Agent Board")
-        HStack(spacing: 12) {
-          metric("已触发", snapshot.status.agentBoard.triggeredAgentCount)
-          metric("活跃分组", snapshot.status.agentBoard.activeGroupCount)
-          metric("阻塞分组", snapshot.status.agentBoard.blockedGroupCount)
-        }
-      }
-
-      VStack(alignment: .leading, spacing: 6) {
         sectionTitle("关键阻塞")
         if snapshot.status.blockers.isEmpty {
           Text("当前没有关键阻塞")
@@ -267,13 +273,24 @@ struct StatusPopover: View {
       .foregroundStyle(.secondary)
   }
 
-  private func metric(_ title: String, _ value: Int) -> some View {
+  private func agentMetric(
+    _ title: String,
+    _ value: Int,
+    showsActivity: Bool = false
+  ) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(title)
         .font(.caption2)
         .foregroundStyle(.secondary)
-      Text("\(value)")
-        .font(.subheadline.weight(.semibold))
+      HStack(spacing: 4) {
+        Text("\(value)")
+          .font(.subheadline.weight(.semibold))
+        if showsActivity {
+          Image(systemName: "arrow.triangle.2.circlepath")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
     }
   }
 

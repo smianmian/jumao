@@ -218,6 +218,14 @@ enum WorkspaceStatus {
       return ProjectReadiness.forState("blocked")
     }
   }
+
+  var agentTeamOverview: AgentTeamOverview? {
+    guard case .loaded(let snapshot) = self else { return nil }
+    return AgentTeamOverview(
+      agentBoard: snapshot.status.agentBoard,
+      catState: snapshot.status.cat.state
+    )
+  }
 }
 
 struct CatStatePresentation: Equatable {
@@ -273,6 +281,20 @@ struct ProjectReadiness: Equatable {
         rawState: state.isEmpty ? "空值" : state
       )
     }
+  }
+}
+
+struct AgentTeamOverview {
+  let triggeredAgentCount: Int
+  let activeGroupCount: Int
+  let blockedGroupCount: Int
+  let showsCheckingActivity: Bool
+
+  init(agentBoard: JumaoCatStatus.AgentBoard, catState: String) {
+    triggeredAgentCount = agentBoard.triggeredAgentCount
+    activeGroupCount = agentBoard.activeGroupCount
+    blockedGroupCount = agentBoard.blockedGroupCount
+    showsCheckingActivity = catState == "checking"
   }
 }
 
