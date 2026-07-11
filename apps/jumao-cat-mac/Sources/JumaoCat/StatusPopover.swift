@@ -50,12 +50,16 @@ struct StatusPopover: View {
 
   private var unselectedWorkspace: some View {
     VStack(alignment: .leading, spacing: 7) {
-      Text("橘猫状态：sleeping")
-        .font(.subheadline.weight(.semibold))
-      Text("还没有选择项目")
+      Text("橘猫状态")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      Text(appState.status.label)
         .font(.headline)
-      Text("请选择一个 Jumao 项目目录。")
+      Text(appState.status.message)
         .font(.subheadline)
+        .foregroundStyle(.secondary)
+      Text("请选择一个 Jumao 项目目录。")
+        .font(.caption)
         .foregroundStyle(.secondary)
     }
   }
@@ -63,8 +67,9 @@ struct StatusPopover: View {
   private var selectedWorkspace: some View {
     VStack(alignment: .leading, spacing: 14) {
       VStack(alignment: .leading, spacing: 6) {
-        Text("橘猫状态：\(appState.status.catState)")
-          .font(.subheadline.weight(.semibold))
+        Text("橘猫状态")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
         Text(appState.status.label)
           .font(.headline)
         Text(appState.status.message)

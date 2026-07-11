@@ -181,12 +181,10 @@ enum WorkspaceStatus {
 
   var label: String {
     switch self {
-    case .unselected:
-      return "还没有选择项目"
-    case .missingStatusFile:
-      return "还没检查"
+    case .unselected, .missingStatusFile:
+      return CatStatePresentation.forState("sleeping").label
     case .loaded(let snapshot):
-      return snapshot.status.cat.label
+      return CatStatePresentation.forState(snapshot.status.cat.state).label
     case .failed:
       return "无法读取"
     }
@@ -194,12 +192,10 @@ enum WorkspaceStatus {
 
   var message: String {
     switch self {
-    case .unselected:
-      return "请选择一个 Jumao 项目目录。"
-    case .missingStatusFile:
-      return "项目中还没有 .jumao/status.json。"
+    case .unselected, .missingStatusFile:
+      return CatStatePresentation.forState("sleeping").message
     case .loaded(let snapshot):
-      return snapshot.status.cat.message
+      return CatStatePresentation.forState(snapshot.status.cat.state).message
     case .failed(let message):
       return message
     }
@@ -208,6 +204,29 @@ enum WorkspaceStatus {
   var snapshot: StatusSnapshot? {
     guard case .loaded(let snapshot) = self else { return nil }
     return snapshot
+  }
+}
+
+struct CatStatePresentation: Equatable {
+  let label: String
+  let message: String
+
+  static func forState(_ state: String) -> CatStatePresentation {
+    switch state {
+    case "sleeping":
+      return CatStatePresentation(label: "待命", message: "项目尚未开始检查")
+    case "checking":
+      return CatStatePresentation(label: "检查中", message: "橘猫正在分析项目目标、边界和风险")
+    case "blocked":
+      return CatStatePresentation(label: "存在阻塞", message: "发现关键问题，处理后才能继续")
+    case "ready":
+      return CatStatePresentation(label: "准备完成", message: "项目检查已通过，可以生成任务包")
+    case "packed":
+      return CatStatePresentation(label: "任务包已生成", message: "任务已经整理完成，可以交给 Codex 执行")
+    default:
+      let rawState = state.isEmpty ? "空值" : state
+      return CatStatePresentation(label: "未知状态", message: "原始状态码：\(rawState)")
+    }
   }
 }
 

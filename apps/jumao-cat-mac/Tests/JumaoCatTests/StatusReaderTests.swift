@@ -4,7 +4,29 @@ import XCTest
 final class StatusReaderTests: XCTestCase {
   func testUnselectedWorkspaceUsesSleepingIcon() {
     XCTAssertEqual(WorkspaceStatus.unselected.catState, "sleeping")
-    XCTAssertEqual(WorkspaceStatus.unselected.label, "还没有选择项目")
+    XCTAssertEqual(WorkspaceStatus.unselected.label, "待命")
+    XCTAssertEqual(WorkspaceStatus.unselected.message, "项目尚未开始检查")
+  }
+
+  func testUserFacingStateTextUsesChineseMappings() {
+    let expected = [
+      "sleeping": CatStatePresentation(label: "待命", message: "项目尚未开始检查"),
+      "checking": CatStatePresentation(label: "检查中", message: "橘猫正在分析项目目标、边界和风险"),
+      "blocked": CatStatePresentation(label: "存在阻塞", message: "发现关键问题，处理后才能继续"),
+      "ready": CatStatePresentation(label: "准备完成", message: "项目检查已通过，可以生成任务包"),
+      "packed": CatStatePresentation(label: "任务包已生成", message: "任务已经整理完成，可以交给 Codex 执行")
+    ]
+
+    for (state, presentation) in expected {
+      XCTAssertEqual(CatStatePresentation.forState(state), presentation)
+    }
+  }
+
+  func testUnknownStateUsesChineseLabelAndKeepsRawCodeInMessage() {
+    let presentation = CatStatePresentation.forState("investigating")
+
+    XCTAssertEqual(presentation.label, "未知状态")
+    XCTAssertEqual(presentation.message, "原始状态码：investigating")
   }
 
   func testMissingStatusFileIsDistinctFromUnselectedWorkspace() throws {
