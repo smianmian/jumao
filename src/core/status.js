@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { agentGroups } from './agent-registry.js';
 
 const schemaVersion = '0.2.3';
 const jumaoVersion = '0.2.3';
@@ -109,11 +110,7 @@ export function writeDoctorStatus(targetDir, diagnosis) {
   const state = blockers.length > 0 ? 'blocked' : 'ready';
 
   return writeStatus(targetDir, makeStatus(targetDir, state, {
-    agentBoard: {
-      triggeredAgentCount: diagnosis.triggeredAgents.length,
-      activeGroupCount: diagnosis.triggeredGroups.length,
-      blockedGroupCount: blockers.length
-    },
+    agentBoard: createAgentBoard(diagnosis.triggeredAgents, blockers),
     blockers,
     nextSafeTask: nextDoctorTask(blockers),
     lastRun: { command: 'doctor', target: null, ok: true }
@@ -264,7 +261,14 @@ function emptyAgentBoard() {
   return {
     triggeredAgentCount: 0,
     activeGroupCount: 0,
-    blockedGroupCount: 0
+    blockedGroupCount: 0,
+    groups: agentGroups.map((group) => ({
+      id: group.id,
+      name: group.name,
+      state: 'idle',
+      triggeredAgentCount: 0,
+      message: ''
+    }))
   };
 }
 
@@ -274,7 +278,41 @@ function previousAgentBoard(targetDir, blockedGroupCount) {
   return {
     triggeredAgentCount: board.triggeredAgentCount || 0,
     activeGroupCount: board.activeGroupCount || 0,
-    blockedGroupCount
+    blockedGroupCount,
+    groups: Array.isArray(board.groups) ? board.groups : emptyAgentBoard().groups
+  };
+}
+
+function createAgentBoard(triggeredAgents, blockers) {
+  const triggeredCounts = new Map();
+  const blockerByGroupId = new Map();
+
+  for (const agent of triggeredAgents) {
+    triggeredCounts.set(agent.groupId, (triggeredCounts.get(agent.groupId) || 0) + 1);
+  }
+
+  for (const blocker of blockers) {
+    if (blocker.groupId) blockerByGroupId.set(blocker.groupId, blocker);
+  }
+
+  const groups = agentGroups.map((group) => {
+    const triggeredAgentCount = triggeredCounts.get(group.id) || 0;
+    const blocker = blockerByGroupId.get(group.id);
+
+    return {
+      id: group.id,
+      name: group.name,
+      state: blocker ? 'blocked' : triggeredAgentCount > 0 ? 'triggered' : 'idle',
+      triggeredAgentCount,
+      message: blocker?.message || ''
+    };
+  });
+
+  return {
+    triggeredAgentCount: triggeredAgents.length,
+    activeGroupCount: groups.filter((group) => group.state !== 'idle').length,
+    blockedGroupCount: groups.filter((group) => group.state === 'blocked').length,
+    groups
   };
 }
 
@@ -299,6 +337,7 @@ function doctorBlockers(diagnosis) {
 
     const group = groups.get(agent.groupId);
     blockers.set(agent.groupId, {
+      groupId: agent.groupId,
       title: displayGroupName(group?.name || agent.groupId),
       message: groupMessages[agent.groupId] || agent.blockingRules?.[0] || '先处理这个 Agent 组的硬门禁',
       source: 'governance/codex-agent-gates.md'

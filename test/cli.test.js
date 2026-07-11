@@ -719,6 +719,53 @@ test('doctor write stores ready status when only base board advice is active', (
   assert.equal(status.agentBoard.blockedGroupCount, 0);
 });
 
+test('doctor status writes idle, triggered, and blocked Agent groups from registry ids', () => {
+  const readyWorkspace = createProductWorkspace();
+  const readyAnswersPath = writeDoctorAnswersFile({
+    projectStage: 'prototype',
+    launchIntent: 'private',
+    storePlan: 'none',
+    ownerType: 'personal',
+    loginNeeded: false,
+    chargingPlan: 'free',
+    crossDeviceData: 'local_only',
+    sensitiveData: [],
+    chinaUsers: false,
+    supportNeeds: []
+  });
+  const blockedWorkspace = createProductWorkspace();
+  const blockedAnswersPath = writeDoctorAnswersFile();
+
+  const readyDoctor = spawnSync(process.execPath, [cli, 'doctor', readyWorkspace, '--answers', readyAnswersPath, '--write'], {
+    encoding: 'utf8'
+  });
+  const blockedDoctor = spawnSync(process.execPath, [cli, 'doctor', blockedWorkspace, '--answers', blockedAnswersPath, '--write'], {
+    encoding: 'utf8'
+  });
+  const readyStatus = readStatusJson(readyWorkspace);
+  const blockedStatus = readStatusJson(blockedWorkspace);
+  const readyGroups = new Map(readyStatus.agentBoard.groups.map((group) => [group.id, group]));
+  const blockedGroups = new Map(blockedStatus.agentBoard.groups.map((group) => [group.id, group]));
+  const dataPrivacyBlocker = blockedStatus.blockers.find((blocker) => blocker.groupId === 'data_privacy');
+
+  assert.equal(readyDoctor.status, 0, readyDoctor.stdout + readyDoctor.stderr);
+  assert.equal(blockedDoctor.status, 0, blockedDoctor.stdout + blockedDoctor.stderr);
+  assert.equal(readyStatus.agentBoard.groups.length, 8);
+  assert.deepEqual(readyGroups.get('data_privacy'), {
+    id: 'data_privacy',
+    name: '数据与隐私 Agent 组',
+    state: 'idle',
+    triggeredAgentCount: 0,
+    message: ''
+  });
+  assert.equal(readyGroups.get('product_design').state, 'triggered');
+  assert.equal(readyGroups.get('product_design').triggeredAgentCount, 3);
+  assert.equal(blockedGroups.get('data_privacy').state, 'blocked');
+  assert.ok(blockedGroups.get('data_privacy').triggeredAgentCount > 0);
+  assert.equal(blockedGroups.get('data_privacy').message, dataPrivacyBlocker.message);
+  assert.equal(dataPrivacyBlocker.groupId, 'data_privacy');
+});
+
 test('doctor triggers app store, login, subscription, health, and filing agents', () => {
   const workspace = createProductWorkspace();
   const answersPath = writeDoctorAnswersFile();
