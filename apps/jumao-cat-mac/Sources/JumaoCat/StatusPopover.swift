@@ -84,6 +84,7 @@ struct StatusPopover: View {
 
       if let team = appState.status.agentTeamOverview {
         agentTeam(team)
+        agentGroups(team.groups)
       }
 
       VStack(alignment: .leading, spacing: 3) {
@@ -141,6 +142,52 @@ struct StatusPopover: View {
         agentMetric("已召集", team.triggeredAgentCount)
         agentMetric("活跃分组", team.activeGroupCount, showsActivity: team.showsCheckingActivity)
         agentMetric("阻塞分组", team.blockedGroupCount)
+      }
+    }
+  }
+
+  private func agentGroups(_ groups: [JumaoCatStatus.AgentGroup]) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+      sectionTitle("Agent 分组")
+
+      if groups.isEmpty {
+        Text("暂无分组详情")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      } else {
+        ScrollView {
+          LazyVStack(alignment: .leading, spacing: 8) {
+            ForEach(groups.prefix(8)) { group in
+              agentGroupRow(group)
+            }
+          }
+        }
+        .frame(maxHeight: 176)
+      }
+    }
+  }
+
+  private func agentGroupRow(_ group: JumaoCatStatus.AgentGroup) -> some View {
+    VStack(alignment: .leading, spacing: 3) {
+      HStack(alignment: .firstTextBaseline, spacing: 8) {
+        Text(group.name)
+          .font(.caption.weight(.semibold))
+          .lineLimit(1)
+        Spacer(minLength: 8)
+        Text(group.stateLabel)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(group.state == "blocked" ? .red : .secondary)
+      }
+
+      Text("已触发 \(group.triggeredAgentCount) 个 Agent")
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+
+      if group.state == "blocked", !group.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        Text(group.message)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
       }
     }
   }

@@ -155,6 +155,38 @@ final class StatusReaderTests: XCTestCase {
     XCTAssertTrue(snapshot.status.blockers.isEmpty)
     XCTAssertEqual(snapshot.status.nextSafeTask, "")
     XCTAssertEqual(snapshot.status.artifacts.agentReport, "")
+    XCTAssertTrue(snapshot.status.agentBoard.groups.isEmpty)
+  }
+
+  func testReadsEightAgentGroupsFromStatus() throws {
+    let workspaceURL = try makeWorkspace()
+    try writeStatus(fullStatusJSON, in: workspaceURL)
+
+    let groups = StatusReader().read(workspaceURL: workspaceURL).snapshot?.status.agentBoard.groups
+
+    XCTAssertEqual(groups?.count, 8)
+    XCTAssertEqual(groups?.first?.id, "direction_entity")
+    XCTAssertEqual(groups?.first?.name, "方向与主体 Agent 组")
+    XCTAssertEqual(groups?.first?.triggeredAgentCount, 1)
+  }
+
+  func testAgentGroupUsesChineseStateLabels() {
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "idle"), "未召集")
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "triggered"), "已召集")
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "blocked"), "存在阻塞")
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "future_state"), "未知状态")
+  }
+
+  func testBlockedAgentGroupKeepsItsMessage() throws {
+    let workspaceURL = try makeWorkspace()
+    try writeStatus(fullStatusJSON, in: workspaceURL)
+
+    let groups = StatusReader().read(workspaceURL: workspaceURL).snapshot?.status.agentBoard.groups
+    let dataPrivacy = groups?.first { $0.id == "data_privacy" }
+
+    XCTAssertEqual(dataPrivacy?.state, "blocked")
+    XCTAssertEqual(dataPrivacy?.stateLabel, "存在阻塞")
+    XCTAssertEqual(dataPrivacy?.message, "先补数据保存、删除和第三方工具边界")
   }
 
   func testReportsInvalidJSON() throws {
@@ -211,7 +243,17 @@ final class StatusReaderTests: XCTestCase {
     "agentBoard": {
       "triggeredAgentCount": 27,
       "activeGroupCount": 8,
-      "blockedGroupCount": 6
+      "blockedGroupCount": 6,
+      "groups": [
+        { "id": "direction_entity", "name": "方向与主体 Agent 组", "state": "triggered", "triggeredAgentCount": 1, "message": "" },
+        { "id": "product_design", "name": "产品与设计 Agent 组", "state": "triggered", "triggeredAgentCount": 3, "message": "" },
+        { "id": "tech_development", "name": "技术与开发 Agent 组", "state": "blocked", "triggeredAgentCount": 4, "message": "先补账号、服务端、密钥或构建边界" },
+        { "id": "data_privacy", "name": "数据与隐私 Agent 组", "state": "blocked", "triggeredAgentCount": 5, "message": "先补数据保存、删除和第三方工具边界" },
+        { "id": "compliance_health", "name": "合规与健康声明 Agent 组", "state": "blocked", "triggeredAgentCount": 4, "message": "先补合规、健康声明或证据边界" },
+        { "id": "platform_qualification", "name": "上架与平台资质 Agent 组", "state": "blocked", "triggeredAgentCount": 5, "message": "先补发布、审核或平台材料" },
+        { "id": "revenue_operations", "name": "收费与运营 Agent 组", "state": "blocked", "triggeredAgentCount": 3, "message": "先补收费、退款和对账规则" },
+        { "id": "release_incident", "name": "发布与事故 Agent 组", "state": "blocked", "triggeredAgentCount": 2, "message": "先补测试、发布清单和回滚计划" }
+      ]
     },
     "blockers": [
       { "title": "数据与隐私", "message": "先补数据保存和删除规则", "source": "governance/codex-agent-gates.md" },

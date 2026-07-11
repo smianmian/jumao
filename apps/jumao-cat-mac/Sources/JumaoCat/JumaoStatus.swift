@@ -72,13 +72,25 @@ struct JumaoCatStatus: Decodable {
     let triggeredAgentCount: Int
     let activeGroupCount: Int
     let blockedGroupCount: Int
+    let groups: [AgentGroup]
 
-    static let empty = AgentBoard(triggeredAgentCount: 0, activeGroupCount: 0, blockedGroupCount: 0)
+    static let empty = AgentBoard(
+      triggeredAgentCount: 0,
+      activeGroupCount: 0,
+      blockedGroupCount: 0,
+      groups: []
+    )
 
-    init(triggeredAgentCount: Int, activeGroupCount: Int, blockedGroupCount: Int) {
+    init(
+      triggeredAgentCount: Int,
+      activeGroupCount: Int,
+      blockedGroupCount: Int,
+      groups: [AgentGroup] = []
+    ) {
       self.triggeredAgentCount = triggeredAgentCount
       self.activeGroupCount = activeGroupCount
       self.blockedGroupCount = blockedGroupCount
+      self.groups = groups
     }
 
     init(from decoder: Decoder) throws {
@@ -86,12 +98,43 @@ struct JumaoCatStatus: Decodable {
       triggeredAgentCount = (try? container.decode(Int.self, forKey: .triggeredAgentCount)) ?? 0
       activeGroupCount = (try? container.decode(Int.self, forKey: .activeGroupCount)) ?? 0
       blockedGroupCount = (try? container.decode(Int.self, forKey: .blockedGroupCount)) ?? 0
+      groups = (try? container.decode([AgentGroup].self, forKey: .groups)) ?? []
     }
 
     enum CodingKeys: String, CodingKey {
       case triggeredAgentCount
       case activeGroupCount
       case blockedGroupCount
+      case groups
+    }
+  }
+
+  struct AgentGroup: Decodable, Identifiable {
+    let id: String
+    let name: String
+    let state: String
+    let triggeredAgentCount: Int
+    let message: String
+
+    init(from decoder: Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      id = (try? container.decode(String.self, forKey: .id)) ?? UUID().uuidString
+      name = (try? container.decode(String.self, forKey: .name)) ?? "未命名分组"
+      state = (try? container.decode(String.self, forKey: .state)) ?? ""
+      triggeredAgentCount = (try? container.decode(Int.self, forKey: .triggeredAgentCount)) ?? 0
+      message = (try? container.decode(String.self, forKey: .message)) ?? ""
+    }
+
+    enum CodingKeys: String, CodingKey {
+      case id
+      case name
+      case state
+      case triggeredAgentCount
+      case message
+    }
+
+    var stateLabel: String {
+      AgentGroupStatePresentation.label(for: state)
     }
   }
 
@@ -292,13 +335,30 @@ struct AgentTeamOverview {
   let triggeredAgentCount: Int
   let activeGroupCount: Int
   let blockedGroupCount: Int
+  let groups: [JumaoCatStatus.AgentGroup]
   let showsCheckingActivity: Bool
 
   init(agentBoard: JumaoCatStatus.AgentBoard, catState: String) {
     triggeredAgentCount = agentBoard.triggeredAgentCount
     activeGroupCount = agentBoard.activeGroupCount
     blockedGroupCount = agentBoard.blockedGroupCount
+    groups = agentBoard.groups
     showsCheckingActivity = catState == "checking"
+  }
+}
+
+enum AgentGroupStatePresentation {
+  static func label(for state: String) -> String {
+    switch state {
+    case "idle":
+      return "未召集"
+    case "triggered":
+      return "已召集"
+    case "blocked":
+      return "存在阻塞"
+    default:
+      return "未知状态"
+    }
   }
 }
 
