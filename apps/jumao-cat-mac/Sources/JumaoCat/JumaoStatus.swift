@@ -260,7 +260,10 @@ enum WorkspaceStatus {
     case .missingStatusFile:
       return .waitingForCheck
     case .loaded(let snapshot):
-      return ProjectReadiness.forState(snapshot.status.cat.state)
+      return ProjectReadiness.forState(
+        snapshot.status.cat.state,
+        blockedGroupCount: snapshot.status.agentBoard.blockedGroupCount
+      )
     case .failed:
       return ProjectReadiness.forState("blocked")
     }
@@ -309,18 +312,22 @@ struct ProjectReadiness: Equatable {
     rawState: nil
   )
 
-  static func forState(_ state: String) -> ProjectReadiness {
+  static func forState(_ state: String, blockedGroupCount: Int = 0) -> ProjectReadiness {
     switch state {
     case "sleeping":
       return ProjectReadiness(percentage: 20, stage: "待命", rawState: nil)
     case "checking":
       return ProjectReadiness(percentage: 40, stage: "正在检查", rawState: nil)
     case "blocked":
-      return ProjectReadiness(percentage: 60, stage: "处理阻塞", rawState: nil)
+      return ProjectReadiness(percentage: 60, stage: "处理关键阻塞", rawState: nil)
     case "ready":
-      return ProjectReadiness(percentage: 80, stage: "准备生成任务包", rawState: nil)
+      return ProjectReadiness(percentage: 90, stage: "可以生成任务包", rawState: nil)
     case "packed":
-      return ProjectReadiness(percentage: 100, stage: "任务包已生成", rawState: nil)
+      if blockedGroupCount > 0 {
+        return ProjectReadiness(percentage: 80, stage: "任务包已生成，仍需处理阻塞", rawState: nil)
+      }
+
+      return ProjectReadiness(percentage: 100, stage: "准备完成", rawState: nil)
     default:
       return ProjectReadiness(
         percentage: 20,

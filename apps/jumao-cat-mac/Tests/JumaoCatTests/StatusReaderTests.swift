@@ -44,9 +44,9 @@ final class StatusReaderTests: XCTestCase {
     let expected = [
       "sleeping": ProjectReadiness(percentage: 20, stage: "待命", rawState: nil),
       "checking": ProjectReadiness(percentage: 40, stage: "正在检查", rawState: nil),
-      "blocked": ProjectReadiness(percentage: 60, stage: "处理阻塞", rawState: nil),
-      "ready": ProjectReadiness(percentage: 80, stage: "准备生成任务包", rawState: nil),
-      "packed": ProjectReadiness(percentage: 100, stage: "任务包已生成", rawState: nil)
+      "blocked": ProjectReadiness(percentage: 60, stage: "处理关键阻塞", rawState: nil),
+      "ready": ProjectReadiness(percentage: 90, stage: "可以生成任务包", rawState: nil),
+      "packed": ProjectReadiness(percentage: 100, stage: "准备完成", rawState: nil)
     ]
 
     for (state, readiness) in expected {
@@ -59,6 +59,30 @@ final class StatusReaderTests: XCTestCase {
       ProjectReadiness.forState("investigating"),
       ProjectReadiness(percentage: 20, stage: "未知阶段", rawState: "investigating")
     )
+  }
+
+  func testPackedProjectReadinessDropsWhenGroupsAreBlocked() {
+    XCTAssertEqual(
+      ProjectReadiness.forState("packed", blockedGroupCount: 6),
+      ProjectReadiness(percentage: 80, stage: "任务包已生成，仍需处理阻塞", rawState: nil)
+    )
+  }
+
+  func testPackedProjectReadinessReachesCompletionWithoutBlockedGroups() {
+    XCTAssertEqual(
+      ProjectReadiness.forState("packed", blockedGroupCount: 0),
+      ProjectReadiness(percentage: 100, stage: "准备完成", rawState: nil)
+    )
+  }
+
+  func testBlockedGroupsNeverReportFullReadiness() {
+    for state in ["sleeping", "checking", "blocked", "ready", "packed"] {
+      XCTAssertLessThan(
+        ProjectReadiness.forState(state, blockedGroupCount: 6).percentage,
+        100,
+        "Expected \(state) with blocked groups to stay below 100%."
+      )
+    }
   }
 
   func testAgentTeamUsesStatusAgentBoardCounts() throws {
