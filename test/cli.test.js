@@ -595,6 +595,8 @@ test('pack target passes after interview answers', () => {
   assert.equal(packed.status, 0, packed.stdout + packed.stderr);
   assert.ok(fs.existsSync(path.join(workspace, 'tasks', 'codex-task-pack.md')));
   assert.equal(status.cat.state, 'packed');
+  assert.ok(Array.isArray(status.agentBoard.groups));
+  assert.equal(status.agentBoard.groups.length, 8);
   assert.equal(status.artifacts.latestTaskPack, 'tasks/codex-task-pack.md');
   assert.match(status.cat.message, /不是已复制剪贴板/);
 });
