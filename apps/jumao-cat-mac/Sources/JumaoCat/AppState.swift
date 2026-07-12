@@ -33,6 +33,7 @@ final class AppState: ObservableObject {
   private let terminalWorkspaceOpener: any TerminalWorkspaceOpening
   private let projectInitializer: any JumaoProjectInitializing
   private let interviewSchemaLoader: any JumaoInterviewSchemaLoading
+  private let appTerminator: any AppTerminating
   private var projectInitializationConflicts: [String] = []
   private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
@@ -50,7 +51,8 @@ final class AppState: ObservableObject {
     taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner(),
     terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener(),
     projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer(),
-    interviewSchemaLoader: any JumaoInterviewSchemaLoading = JumaoInterviewSchemaLoader()
+    interviewSchemaLoader: any JumaoInterviewSchemaLoading = JumaoInterviewSchemaLoader(),
+    appTerminator: any AppTerminating = MacAppTerminator()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
     self.workspaceChooser = workspaceChooser
@@ -61,6 +63,7 @@ final class AppState: ObservableObject {
     self.terminalWorkspaceOpener = terminalWorkspaceOpener
     self.projectInitializer = projectInitializer
     self.interviewSchemaLoader = interviewSchemaLoader
+    self.appTerminator = appTerminator
   }
 
   var workspacePath: String {
@@ -328,6 +331,12 @@ final class AppState: ObservableObject {
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
+    taskPackRunner.cancel()
+  }
+
+  func quit() {
+    shutdown()
+    appTerminator.terminate()
   }
 
   private func activateWorkspace(_ workspaceURL: URL) {

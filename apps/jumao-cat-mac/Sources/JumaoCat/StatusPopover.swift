@@ -17,6 +17,17 @@ struct StatusPopover: View {
       } else {
         selectedWorkspace
       }
+
+      Divider()
+      Button {
+        appState.quit()
+      } label: {
+        Label("退出 Jumao Cat", systemImage: "power")
+          .frame(maxWidth: .infinity, alignment: .center)
+      }
+      .buttonStyle(.bordered)
+      .foregroundStyle(.secondary)
+      .keyboardShortcut("q", modifiers: .command)
     }
     .padding(16)
     .frame(width: 380, alignment: .leading)

@@ -159,4 +159,6 @@ private final class DeferredTaskPackRunner: CodexTaskPackRunning {
   func complete(_ result: CodexTaskPackRunResult) {
     completion?(result)
   }
+
+  func cancel() {}
 }

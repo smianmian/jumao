@@ -11,6 +11,7 @@ protocol CodexTaskPackRunning {
     workspaceURL: URL,
     completion: @escaping @MainActor @Sendable (CodexTaskPackRunResult) -> Void
   )
+  func cancel()
 }
 
 @MainActor
@@ -54,6 +55,11 @@ final class CodexTaskPackRunner: CodexTaskPackRunning {
     } catch {
       completion(.failed(exitCode: nil, message: error.localizedDescription))
     }
+  }
+
+  func cancel() {
+    guard let runningProcess, runningProcess.isRunning else { return }
+    runningProcess.terminate()
   }
 
   nonisolated private static func shortMessage(from data: Data) -> String {
