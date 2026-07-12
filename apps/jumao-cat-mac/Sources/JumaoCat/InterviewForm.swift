@@ -1,21 +1,10 @@
 import SwiftUI
 
 struct InterviewForm: View {
-  let schema: JumaoInterviewSchema
+  @ObservedObject var appState: AppState
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @State private var answer = ""
-  @State private var currentQuestionIndex = 0
   @State private var isCatIdleAnimating = false
   @State private var isCatJumping = false
-
-  private var questions: [JumaoInterviewQuestion] {
-    schema.questions.sorted { $0.order < $1.order }
-  }
-
-  private var currentQuestion: JumaoInterviewQuestion? {
-    guard questions.indices.contains(currentQuestionIndex) else { return nil }
-    return questions[currentQuestionIndex]
-  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
@@ -23,12 +12,14 @@ struct InterviewForm: View {
         Text("回答项目问题")
           .font(.title3.weight(.semibold))
         Spacer()
-        Text("共 \(questions.count) 题")
+        Text("共 \(appState.interviewQuestions.count) 题")
           .font(.caption.weight(.medium))
           .foregroundStyle(.secondary)
       }
 
-      if let question = currentQuestion {
+      if appState.isInterviewComplete {
+        completionCard
+      } else if let question = appState.interviewCurrentQuestion {
         questionCard(question)
       }
     }
@@ -46,11 +37,24 @@ struct InterviewForm: View {
     }
   }
 
+  private var completionCard: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("已完成 \(appState.interviewQuestions.count) 个问题")
+        .font(.headline)
+      Text("下一步：确认并写入项目")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
   private func questionCard(_ question: JumaoInterviewQuestion) -> some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack(alignment: .top, spacing: 12) {
         VStack(alignment: .leading, spacing: 5) {
-          Text("第 \(currentQuestionIndex + 1) 题 / 共 \(questions.count) 题")
+          Text("第 \(appState.interviewCurrentQuestionNumber) 题 / 共 \(appState.interviewQuestions.count) 题")
             .font(.caption.weight(.semibold))
             .foregroundStyle(.orange)
           Text(question.title)
@@ -70,14 +74,32 @@ struct InterviewForm: View {
         )
       }
 
-      TextField("请输入你的回答", text: $answer, axis: .vertical)
+      TextField("请输入你的回答", text: appState.interviewAnswerBinding(for: question.answerPath), axis: .vertical)
         .textFieldStyle(.roundedBorder)
         .lineLimit(2...3)
 
+      if let hint = appState.interviewInputHint {
+        Text(hint)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      if let message = appState.interviewValidationMessage {
+        Text(message)
+          .font(.caption)
+          .foregroundStyle(.red)
+      }
+
       HStack {
+        Button("上一题") {
+          appState.goToPreviousInterviewQuestion()
+        }
+        .buttonStyle(.bordered)
+        .disabled(!appState.canGoToPreviousInterviewQuestion || isCatJumping)
+
         Spacer()
-        Button("下一题") {
-          moveToNextQuestion()
+        Button(appState.isLastInterviewQuestion ? "完成填写" : "下一题") {
+          advanceInterview()
         }
         .buttonStyle(.borderedProminent)
         .tint(.orange)
@@ -92,24 +114,25 @@ struct InterviewForm: View {
     }
   }
 
-  private func moveToNextQuestion() {
-    guard currentQuestionIndex < questions.count - 1 else { return }
+  private func advanceInterview() {
+    guard appState.interviewCurrentQuestion?.required != true
+      || !(appState.interviewAnswers[appState.interviewCurrentQuestion?.answerPath ?? ""] ?? "")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .isEmpty else {
+      _ = appState.advanceInterviewQuestion()
+      return
+    }
 
     if reduceMotion {
-      advanceQuestion()
+      _ = appState.advanceInterviewQuestion()
       return
     }
 
     isCatJumping = true
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
       isCatJumping = false
-      advanceQuestion()
+      _ = appState.advanceInterviewQuestion()
     }
-  }
-
-  private func advanceQuestion() {
-    currentQuestionIndex += 1
-    answer = ""
   }
 }
 

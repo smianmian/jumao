@@ -169,9 +169,7 @@ struct StatusPopover: View {
       Text(appState.projectInitializationConflictMessage)
     }
     .sheet(isPresented: $appState.isInterviewPresented) {
-      if let schema = appState.interviewSchema {
-        InterviewForm(schema: schema)
-      }
+      InterviewForm(appState: appState)
     }
   }
 

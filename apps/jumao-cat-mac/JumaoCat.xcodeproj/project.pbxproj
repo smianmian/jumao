@@ -25,6 +25,7 @@
 		673D223DD660F54ACBCA7D19 /* WorkspaceBookmarkStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A364758B3243D66FFF978C9E /* WorkspaceBookmarkStoreTests.swift */; };
 		6EAB11C9C9B724F56186954B /* StatusFileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */; };
 		707E1D684CC86394519736DC /* WorkspaceFolderOpenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6104223B252443BA30F55309 /* WorkspaceFolderOpenerTests.swift */; };
+		742716F922BD27143ED88DAD /* InterviewNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576658033E20D382AF6ADCAD /* InterviewNavigationTests.swift */; };
 		84AB97C53E496DCCFDA22BCF /* InterviewForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C48A1C4BEC64C6D6C43750A /* InterviewForm.swift */; };
 		8A4DBE3978B8C06A61DE1529 /* AppTerminator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC42F191C873BC13FE1B4303 /* AppTerminator.swift */; };
 		92CA4E35F435FB42CC4596C9 /* JumaoMenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */; };
@@ -64,6 +65,7 @@
 		3F69685249CE423C5BD76D01 /* JumaoCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JumaoCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		490B658AB2874D55FFBA5116 /* TerminalWorkspaceOpenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWorkspaceOpenerTests.swift; sourceTree = "<group>"; };
 		4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopover.swift; sourceTree = "<group>"; };
+		576658033E20D382AF6ADCAD /* InterviewNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewNavigationTests.swift; sourceTree = "<group>"; };
 		6104223B252443BA30F55309 /* WorkspaceFolderOpenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFolderOpenerTests.swift; sourceTree = "<group>"; };
 		63A0FDECC557CAB0B0C5A5D1 /* WorkspaceFolderOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFolderOpener.swift; sourceTree = "<group>"; };
 		65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusReaderTests.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				3DF6B67E24B139C49E436547 /* AppTerminationTests.swift */,
 				2D80BBBD7D204EF5C83E5279 /* CodexTaskPackCopierTests.swift */,
 				B7B391F96B4623C08085A7CE /* CodexTaskPackRunnerTests.swift */,
+				576658033E20D382AF6ADCAD /* InterviewNavigationTests.swift */,
 				31BB3FBB91FBB16D793898C1 /* JumaoInterviewSchemaLoaderTests.swift */,
 				1BCBA848953B38CD8C263A09 /* JumaoProjectInitializerTests.swift */,
 				7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */,
@@ -286,6 +289,7 @@
 				DC09AC3A6A1312AB53EFF670 /* AppTerminationTests.swift in Sources */,
 				ECE7B95497CC92DDD208E0B5 /* CodexTaskPackCopierTests.swift in Sources */,
 				DC1D4A0D5159A968ADF025A2 /* CodexTaskPackRunnerTests.swift in Sources */,
+				742716F922BD27143ED88DAD /* InterviewNavigationTests.swift in Sources */,
 				10B4A3E19CE620B8CB37AD47 /* JumaoInterviewSchemaLoaderTests.swift in Sources */,
 				4599DEF19241B3807AFDB5E8 /* JumaoProjectInitializerTests.swift in Sources */,
 				55D971836882979FF52D1E79 /* StatusFileWatcherTests.swift in Sources */,

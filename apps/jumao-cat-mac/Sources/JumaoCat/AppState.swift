@@ -19,6 +19,10 @@ final class AppState: ObservableObject {
   @Published private(set) var isLoadingInterviewSchema = false
   @Published private(set) var interviewSchema: JumaoInterviewSchema?
   @Published private(set) var interviewSchemaError: String?
+  @Published private(set) var interviewAnswers: [String: String] = [:]
+  @Published private(set) var interviewCurrentQuestionIndex = 0
+  @Published private(set) var interviewValidationMessage: String?
+  @Published private(set) var isInterviewComplete = false
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
   @Published var isInterviewPresented = false
@@ -118,6 +122,31 @@ final class AppState: ObservableObject {
 
   var canAnswerProjectQuestions: Bool {
     workspaceURL != nil && !canInitializeProject && !isLoadingInterviewSchema
+  }
+
+  var interviewQuestions: [JumaoInterviewQuestion] {
+    interviewSchema?.questions.sorted { $0.order < $1.order } ?? []
+  }
+
+  var interviewCurrentQuestion: JumaoInterviewQuestion? {
+    guard interviewQuestions.indices.contains(interviewCurrentQuestionIndex) else { return nil }
+    return interviewQuestions[interviewCurrentQuestionIndex]
+  }
+
+  var interviewCurrentQuestionNumber: Int {
+    interviewCurrentQuestionIndex + 1
+  }
+
+  var canGoToPreviousInterviewQuestion: Bool {
+    interviewCurrentQuestionIndex > 0
+  }
+
+  var isLastInterviewQuestion: Bool {
+    !interviewQuestions.isEmpty && interviewCurrentQuestionIndex == interviewQuestions.count - 1
+  }
+
+  var interviewInputHint: String? {
+    interviewCurrentQuestion?.inputType == "list" ? "请使用逗号分隔多个项目。" : nil
   }
 
   var projectInitializationConflictMessage: String {
@@ -319,6 +348,11 @@ final class AppState: ObservableObject {
   func answerProjectQuestions() {
     guard canAnswerProjectQuestions else { return }
 
+    if interviewSchema != nil {
+      isInterviewPresented = true
+      return
+    }
+
     isLoadingInterviewSchema = true
     interviewSchemaError = nil
     interviewSchemaLoader.run { [weak self] result in
@@ -337,6 +371,46 @@ final class AppState: ObservableObject {
   func quit() {
     shutdown()
     appTerminator.terminate()
+  }
+
+  func beginInterview(with schema: JumaoInterviewSchema) {
+    interviewSchema = schema
+    let validAnswerPaths = Set(schema.questions.map(\.answerPath))
+    interviewAnswers = interviewAnswers.filter { validAnswerPaths.contains($0.key) }
+    interviewCurrentQuestionIndex = min(interviewCurrentQuestionIndex, max(schema.questions.count - 1, 0))
+    interviewValidationMessage = nil
+    isInterviewPresented = true
+  }
+
+  func interviewAnswerBinding(for answerPath: String) -> Binding<String> {
+    Binding(
+      get: { self.interviewAnswers[answerPath] ?? "" },
+      set: { self.updateInterviewAnswer($0, for: answerPath) }
+    )
+  }
+
+  func updateInterviewAnswer(_ answer: String, for answerPath: String) {
+    interviewAnswers[answerPath] = answer
+    interviewValidationMessage = nil
+  }
+
+  func goToPreviousInterviewQuestion() {
+    guard canGoToPreviousInterviewQuestion else { return }
+    interviewCurrentQuestionIndex -= 1
+    interviewValidationMessage = nil
+  }
+
+  @discardableResult
+  func advanceInterviewQuestion() -> Bool {
+    guard validateCurrentInterviewQuestion() else { return false }
+
+    if isLastInterviewQuestion {
+      isInterviewComplete = true
+    } else {
+      interviewCurrentQuestionIndex += 1
+      interviewValidationMessage = nil
+    }
+    return true
   }
 
   private func activateWorkspace(_ workspaceURL: URL) {
@@ -439,8 +513,7 @@ final class AppState: ObservableObject {
     switch result {
     case .succeeded(let schema):
       interviewSchemaError = nil
-      interviewSchema = schema
-      isInterviewPresented = true
+      beginInterview(with: schema)
     case .failed(let exitCode, let message):
       let code = exitCode.map(String.init) ?? "无法启动"
       interviewSchema = nil
@@ -458,7 +531,21 @@ final class AppState: ObservableObject {
     isLoadingInterviewSchema = false
     interviewSchema = nil
     interviewSchemaError = nil
+    interviewAnswers = [:]
+    interviewCurrentQuestionIndex = 0
+    interviewValidationMessage = nil
+    isInterviewComplete = false
     isInterviewPresented = false
+  }
+
+  private func validateCurrentInterviewQuestion() -> Bool {
+    guard let question = interviewCurrentQuestion else { return false }
+    guard question.required else { return true }
+    guard !(interviewAnswers[question.answerPath] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      interviewValidationMessage = "请先填写这道必填问题。"
+      return false
+    }
+    return true
   }
 
   private func isDirectory(_ url: URL) -> Bool {
