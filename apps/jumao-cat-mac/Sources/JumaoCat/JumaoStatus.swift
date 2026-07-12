@@ -253,6 +253,11 @@ enum WorkspaceStatus {
     return snapshot
   }
 
+  var isMissingStatusFile: Bool {
+    if case .missingStatusFile = self { return true }
+    return false
+  }
+
   var projectReadiness: ProjectReadiness? {
     switch self {
     case .unselected:

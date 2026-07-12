@@ -13,6 +13,11 @@ final class AppState: ObservableObject {
   @Published private(set) var taskPackGenerationError: String?
   @Published private(set) var isOpeningTerminal = false
   @Published private(set) var terminalOpenError: String?
+  @Published private(set) var isInitializingProject = false
+  @Published private(set) var projectInitializationMessage: String?
+  @Published private(set) var projectInitializationError: String?
+  @Published var isProjectInitializationConfirmationPresented = false
+  @Published var isProjectInitializationConflictPresented = false
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
@@ -22,6 +27,8 @@ final class AppState: ObservableObject {
   private let taskPackCopier: any TaskPackCopying
   private let taskPackRunner: any CodexTaskPackRunning
   private let terminalWorkspaceOpener: any TerminalWorkspaceOpening
+  private let projectInitializer: any JumaoProjectInitializing
+  private var projectInitializationConflicts: [String] = []
   private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
@@ -36,7 +43,8 @@ final class AppState: ObservableObject {
     agentReportOpener: any AgentReportOpening = FinderAgentReportOpener(),
     taskPackCopier: any TaskPackCopying = CodexTaskPackCopier(),
     taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner(),
-    terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener()
+    terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener(),
+    projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
     self.workspaceChooser = workspaceChooser
@@ -45,6 +53,7 @@ final class AppState: ObservableObject {
     self.taskPackCopier = taskPackCopier
     self.taskPackRunner = taskPackRunner
     self.terminalWorkspaceOpener = terminalWorkspaceOpener
+    self.projectInitializer = projectInitializer
   }
 
   var workspacePath: String {
@@ -87,6 +96,21 @@ final class AppState: ObservableObject {
     !isOpeningTerminal && hasValidWorkspace
   }
 
+  var canInitializeProject: Bool {
+    guard !isInitializingProject,
+          let workspaceURL,
+          isDirectory(workspaceURL) else {
+      return false
+    }
+
+    return projectInitializer.conflictingFiles(in: workspaceURL).count < JumaoProjectInitializer.targetFiles.count
+  }
+
+  var projectInitializationConflictMessage: String {
+    let files = projectInitializationConflicts.map { "- \($0)" }.joined(separator: "\n")
+    return "以下文件已存在，继续后可能被覆盖：\n\n\(files)"
+  }
+
   private var hasValidWorkspace: Bool {
     guard let workspaceURL else { return false }
     var isDirectory: ObjCBool = false
@@ -106,6 +130,7 @@ final class AppState: ObservableObject {
       clearTaskPackCopyFeedback()
       taskPackGenerationError = nil
       terminalOpenError = nil
+      clearProjectInitializationFeedback()
       return
     }
 
@@ -131,6 +156,7 @@ final class AppState: ObservableObject {
       clearTaskPackCopyFeedback()
       taskPackGenerationError = nil
       terminalOpenError = nil
+      clearProjectInitializationFeedback()
     }
   }
 
@@ -251,6 +277,31 @@ final class AppState: ObservableObject {
     }
   }
 
+  func requestProjectInitialization() {
+    guard canInitializeProject else { return }
+    projectInitializationError = nil
+    isProjectInitializationConfirmationPresented = true
+  }
+
+  func confirmProjectInitialization() {
+    isProjectInitializationConfirmationPresented = false
+    guard canInitializeProject, let workspaceURL else { return }
+
+    projectInitializationConflicts = projectInitializer.conflictingFiles(in: workspaceURL)
+    if !projectInitializationConflicts.isEmpty {
+      isProjectInitializationConflictPresented = true
+      return
+    }
+
+    runProjectInitialization(in: workspaceURL)
+  }
+
+  func confirmProjectInitializationWithConflicts() {
+    isProjectInitializationConflictPresented = false
+    guard canInitializeProject, let workspaceURL else { return }
+    runProjectInitialization(in: workspaceURL)
+  }
+
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
@@ -264,6 +315,7 @@ final class AppState: ObservableObject {
     clearTaskPackCopyFeedback()
     taskPackGenerationError = nil
     terminalOpenError = nil
+    clearProjectInitializationFeedback()
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
@@ -321,5 +373,45 @@ final class AppState: ObservableObject {
     case .failed:
       terminalOpenError = "无法打开 macOS 终端。"
     }
+  }
+
+  private func runProjectInitialization(in workspaceURL: URL) {
+    isInitializingProject = true
+    projectInitializationMessage = nil
+    projectInitializationError = nil
+
+    projectInitializer.run(projectName: workspaceURL.lastPathComponent, workspaceURL: workspaceURL) { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishProjectInitialization(result)
+      }
+    }
+  }
+
+  private func finishProjectInitialization(_ result: JumaoProjectInitializationResult) {
+    isInitializingProject = false
+
+    switch result {
+    case .succeeded:
+      projectInitializationError = nil
+      projectInitializationMessage = "项目框架已建立\n下一步：回答项目问题"
+      refreshStatus()
+    case .failed(let exitCode, let message):
+      let code = exitCode.map(String.init) ?? "无法启动"
+      projectInitializationError = "项目建立失败（退出码 \(code)）：\(message)"
+    }
+  }
+
+  private func clearProjectInitializationFeedback() {
+    isInitializingProject = false
+    projectInitializationMessage = nil
+    projectInitializationError = nil
+    isProjectInitializationConfirmationPresented = false
+    isProjectInitializationConflictPresented = false
+    projectInitializationConflicts = []
+  }
+
+  private func isDirectory(_ url: URL) -> Bool {
+    var directory = ObjCBool(false)
+    return FileManager.default.fileExists(atPath: url.path, isDirectory: &directory) && directory.boolValue
   }
 }

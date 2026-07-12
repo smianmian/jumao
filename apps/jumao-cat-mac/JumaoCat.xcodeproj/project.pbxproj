@@ -24,6 +24,7 @@
 		92CA4E35F435FB42CC4596C9 /* JumaoMenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */; };
 		B5A76E62B4AF26313717BD4C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 090753BE37E91CB6A3826F34 /* AppDelegate.swift */; };
 		BD7D859D35DD33513061160E /* CodexTaskPackRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */; };
+		3A2F4D8B7C6E5A1908F1E2D3 /* JumaoProjectInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F6A8B2C1D3E5F709182A4B6 /* JumaoProjectInitializer.swift */; };
 		D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */; };
 		DC1D4A0D5159A968ADF025A2 /* CodexTaskPackRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7B391F96B4623C08085A7CE /* CodexTaskPackRunnerTests.swift */; };
 		EA930FB7EE59C9B8EBD549BF /* AgentReportOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3FECF5824F796D0BB9C11C4 /* AgentReportOpener.swift */; };
@@ -31,6 +32,7 @@
 		F26FC4E1C5216981D1E864A7 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BF3E8598EEBA6E202BC750 /* AppState.swift */; };
 		F6DC62A780AE0BB416920308 /* CodexTaskPackCopier.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFC403C2398F1B7AF504B8E9 /* CodexTaskPackCopier.swift */; };
 		F96E5C8BB15145EEA5E48879 /* WorkspacePickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6B673307F84461BA10E6FD /* WorkspacePickerTests.swift */; };
+		5B7C9D1E3F4A6B8C0D2E5F70 /* JumaoProjectInitializerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C8E0A2B4D6F709182A3B5C7 /* JumaoProjectInitializerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,7 +72,9 @@
 		DBC33B6273657D3D9F60C28D /* AgentReportOpenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentReportOpenerTests.swift; sourceTree = "<group>"; };
 		DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFileWatcher.swift; sourceTree = "<group>"; };
 		E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTaskPackRunner.swift; sourceTree = "<group>"; };
+		4F6A8B2C1D3E5F709182A4B6 /* JumaoProjectInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoProjectInitializer.swift; sourceTree = "<group>"; };
 		E9B983D45F5C2A13944C86CE /* JumaoCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JumaoCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C8E0A2B4D6F709182A3B5C7 /* JumaoProjectInitializerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoProjectInitializerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -92,6 +96,7 @@
 				B198C4CDC063D0EB47B93748 /* Assets.xcassets */,
 				CFC403C2398F1B7AF504B8E9 /* CodexTaskPackCopier.swift */,
 				E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */,
+				4F6A8B2C1D3E5F709182A4B6 /* JumaoProjectInitializer.swift */,
 				2885CB0A071BFBCF27A9F28A /* Info.plist */,
 				2256032B0E164EE18FAEC2B9 /* JumaoCatApp.swift */,
 				9B600D1C1FC4A58373CEE5AF /* JumaoMenuBarIcon.swift */,
@@ -137,6 +142,7 @@
 				DBC33B6273657D3D9F60C28D /* AgentReportOpenerTests.swift */,
 				2D80BBBD7D204EF5C83E5279 /* CodexTaskPackCopierTests.swift */,
 				B7B391F96B4623C08085A7CE /* CodexTaskPackRunnerTests.swift */,
+				6C8E0A2B4D6F709182A3B5C7 /* JumaoProjectInitializerTests.swift */,
 				7B2444A757D944AE78D584E4 /* StatusFileWatcherTests.swift */,
 				65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */,
 				490B658AB2874D55FFBA5116 /* TerminalWorkspaceOpenerTests.swift */,
@@ -241,6 +247,7 @@
 				F26FC4E1C5216981D1E864A7 /* AppState.swift in Sources */,
 				F6DC62A780AE0BB416920308 /* CodexTaskPackCopier.swift in Sources */,
 				BD7D859D35DD33513061160E /* CodexTaskPackRunner.swift in Sources */,
+				3A2F4D8B7C6E5A1908F1E2D3 /* JumaoProjectInitializer.swift in Sources */,
 				64ECC466AB2F4C9C3EB330C1 /* JumaoCatApp.swift in Sources */,
 				92CA4E35F435FB42CC4596C9 /* JumaoMenuBarIcon.swift in Sources */,
 				D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */,
@@ -260,6 +267,7 @@
 				0E0347F5698813EC0CE4D227 /* AgentReportOpenerTests.swift in Sources */,
 				ECE7B95497CC92DDD208E0B5 /* CodexTaskPackCopierTests.swift in Sources */,
 				DC1D4A0D5159A968ADF025A2 /* CodexTaskPackRunnerTests.swift in Sources */,
+				5B7C9D1E3F4A6B8C0D2E5F70 /* JumaoProjectInitializerTests.swift in Sources */,
 				55D971836882979FF52D1E79 /* StatusFileWatcherTests.swift in Sources */,
 				2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */,
 				2326F4A63AE184877550C784 /* TerminalWorkspaceOpenerTests.swift in Sources */,

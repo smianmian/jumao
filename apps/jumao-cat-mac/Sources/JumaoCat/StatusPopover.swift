@@ -82,26 +82,72 @@ struct StatusPopover: View {
         projectReadiness(readiness)
       }
 
-      if let team = appState.status.agentTeamOverview {
-        agentTeam(team)
-        agentGroups(team.groups)
-      }
+      if appState.status.isMissingStatusFile {
+        projectInitialization
+      } else {
+        if let team = appState.status.agentTeamOverview {
+          agentTeam(team)
+          agentGroups(team.groups)
+        }
 
-      VStack(alignment: .leading, spacing: 3) {
-        sectionTitle("项目目录")
-        Text(appState.workspacePath)
-          .font(.caption)
-          .textSelection(.enabled)
-          .lineLimit(2)
-      }
+        VStack(alignment: .leading, spacing: 3) {
+          sectionTitle("项目目录")
+          Text(appState.workspacePath)
+            .font(.caption)
+            .textSelection(.enabled)
+            .lineLimit(2)
+        }
 
-      if let snapshot = appState.status.snapshot {
-        statusDetails(snapshot)
+        if let snapshot = appState.status.snapshot {
+          statusDetails(snapshot)
+        }
+
+        feedback
+        Divider()
+        actions
+      }
+    }
+  }
+
+  private var projectInitialization: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      if appState.canInitializeProject {
+        Button {
+          appState.requestProjectInitialization()
+        } label: {
+          Label(
+            appState.isInitializingProject ? "正在建立项目" : "开始建立项目",
+            systemImage: "sparkles"
+          )
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(appState.isInitializingProject)
+      } else if appState.projectInitializationMessage == nil {
+        Text("项目框架已建立")
+          .font(.headline)
+        Text("下一步：回答项目问题")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
       }
 
       feedback
-      Divider()
-      actions
+    }
+    .alert("确认建立项目", isPresented: $appState.isProjectInitializationConfirmationPresented) {
+      Button("取消", role: .cancel) {}
+      Button("继续") {
+        appState.confirmProjectInitialization()
+      }
+    } message: {
+      Text("将在当前文件夹中创建 Jumao 项目文档，不会修改项目源代码。")
+    }
+    .alert("发现同名文件", isPresented: $appState.isProjectInitializationConflictPresented) {
+      Button("取消", role: .cancel) {}
+      Button("仍然建立", role: .destructive) {
+        appState.confirmProjectInitializationWithConflicts()
+      }
+    } message: {
+      Text(appState.projectInitializationConflictMessage)
     }
   }
 
@@ -210,6 +256,12 @@ struct StatusPopover: View {
       feedbackText(error, color: .red)
     }
     if let error = appState.terminalOpenError {
+      feedbackText(error, color: .red)
+    }
+    if let message = appState.projectInitializationMessage {
+      feedbackText(message, color: .green)
+    }
+    if let error = appState.projectInitializationError {
       feedbackText(error, color: .red)
     }
   }
