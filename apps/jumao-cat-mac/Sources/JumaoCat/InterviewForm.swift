@@ -55,10 +55,38 @@ struct InterviewForm: View {
 
   private var completionCard: some View {
     VStack(alignment: .leading, spacing: 10) {
-      if let message = appState.interviewWriteMessage {
+      if appState.isCheckingProject {
+        Text("正在检查")
+          .font(.headline)
+        ProgressView()
+        Button("正在检查") {}
+          .buttonStyle(.borderedProminent)
+          .tint(.orange)
+          .disabled(true)
+      } else if let message = appState.projectCheckMessage {
         Text(message)
           .font(.headline)
           .fixedSize(horizontal: false, vertical: true)
+        if let error = appState.projectCheckError {
+          Text(error)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          Button("重新检查") {
+            appState.startProjectCheck()
+          }
+          .buttonStyle(.borderedProminent)
+          .tint(.orange)
+        }
+      } else if let message = appState.interviewWriteMessage {
+        Text(message)
+          .font(.headline)
+          .fixedSize(horizontal: false, vertical: true)
+        Button("开始检查") {
+          appState.startProjectCheck()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+        .disabled(!appState.canStartProjectCheck)
       } else {
         Text("已完成 \(appState.interviewQuestions.count) 个问题")
           .font(.headline)

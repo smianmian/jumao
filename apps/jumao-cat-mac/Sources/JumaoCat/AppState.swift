@@ -26,6 +26,9 @@ final class AppState: ObservableObject {
   @Published private(set) var isWritingInterviewAnswers = false
   @Published private(set) var interviewWriteMessage: String?
   @Published private(set) var interviewWriteError: String?
+  @Published private(set) var isCheckingProject = false
+  @Published private(set) var projectCheckMessage: String?
+  @Published private(set) var projectCheckError: String?
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
   @Published var isInterviewPresented = false
@@ -43,6 +46,7 @@ final class AppState: ObservableObject {
   private let projectInitializer: any JumaoProjectInitializing
   private let interviewSchemaLoader: any JumaoInterviewSchemaLoading
   private let interviewAnswerWriter: any JumaoInterviewAnswerWriting
+  private let strictCheckRunner: any JumaoStrictChecking
   private let appTerminator: any AppTerminating
   private var projectInitializationConflicts: [String] = []
   private var interviewDocumentsToOverwrite: [String] = []
@@ -64,6 +68,7 @@ final class AppState: ObservableObject {
     projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer(),
     interviewSchemaLoader: any JumaoInterviewSchemaLoading = JumaoInterviewSchemaLoader(),
     interviewAnswerWriter: any JumaoInterviewAnswerWriting = JumaoInterviewAnswerWriter(),
+    strictCheckRunner: any JumaoStrictChecking = JumaoStrictCheckRunner(),
     appTerminator: any AppTerminating = MacAppTerminator()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
@@ -76,6 +81,7 @@ final class AppState: ObservableObject {
     self.projectInitializer = projectInitializer
     self.interviewSchemaLoader = interviewSchemaLoader
     self.interviewAnswerWriter = interviewAnswerWriter
+    self.strictCheckRunner = strictCheckRunner
     self.appTerminator = appTerminator
   }
 
@@ -161,6 +167,10 @@ final class AppState: ObservableObject {
   var interviewOverwriteMessage: String {
     let files = interviewDocumentsToOverwrite.map { "- \($0)" }.joined(separator: "\n")
     return "以下项目文档已有内容，确认后将覆盖：\n\n\(files)"
+  }
+
+  var canStartProjectCheck: Bool {
+    interviewWriteMessage != nil && !isCheckingProject && workspaceURL != nil
   }
 
   var projectInitializationConflictMessage: String {
@@ -380,6 +390,7 @@ final class AppState: ObservableObject {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
     taskPackRunner.cancel()
+    strictCheckRunner.cancel()
   }
 
   func quit() {
@@ -453,6 +464,20 @@ final class AppState: ObservableObject {
     isInterviewOverwriteConfirmationPresented = false
     guard let workspaceURL, let interviewSchema else { return }
     runInterviewWrite(in: workspaceURL, schema: interviewSchema, force: true)
+  }
+
+  func startProjectCheck() {
+    guard canStartProjectCheck, let workspaceURL else { return }
+
+    isCheckingProject = true
+    projectCheckMessage = nil
+    projectCheckError = nil
+
+    strictCheckRunner.run(workspaceURL: workspaceURL) { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishProjectCheck(result)
+      }
+    }
   }
 
   private func activateWorkspace(_ workspaceURL: URL) {
@@ -588,9 +613,25 @@ final class AppState: ObservableObject {
       interviewWriteError = nil
       interviewWriteMessage = "项目问题已写入\n下一步：开始检查"
       interviewAnswers = [:]
+      projectCheckMessage = nil
+      projectCheckError = nil
     case .failed(let exitCode, let message):
       let code = exitCode.map(String.init) ?? "无法启动"
       interviewWriteError = "写入项目问题失败（退出码 \(code)）：\(message)"
+    }
+  }
+
+  private func finishProjectCheck(_ result: JumaoStrictCheckResult) {
+    isCheckingProject = false
+    refreshStatus()
+
+    switch result {
+    case .succeeded:
+      projectCheckMessage = "检查通过\n下一步：生成 Codex 任务包"
+      projectCheckError = nil
+    case .failed:
+      projectCheckMessage = "发现需要补充的内容"
+      projectCheckError = "请补充项目文档中的必要内容后重新检查。"
     }
   }
 
@@ -611,6 +652,9 @@ final class AppState: ObservableObject {
     isWritingInterviewAnswers = false
     interviewWriteMessage = nil
     interviewWriteError = nil
+    isCheckingProject = false
+    projectCheckMessage = nil
+    projectCheckError = nil
     isInterviewWriteConfirmationPresented = false
     isInterviewOverwriteConfirmationPresented = false
     interviewDocumentsToOverwrite = []
