@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { auditWorkspace } from './core/audit.js';
 import { runDoctor } from './core/doctor.js';
-import { collectInterviewAnswers, readAnswersFile, runInterview } from './core/interview.js';
+import { collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
 import { isJumaoWorkspace, readJumaoStatus, renderStatus } from './core/status.js';
@@ -54,6 +54,7 @@ function helpText() {
     '  jumao audit [dir] [--write]',
     '  jumao doctor [dir] --answers file [--write]',
     '  jumao interview [dir] [--answers file] [--force]',
+    '  jumao interview --schema',
     '  jumao pack [dir] [--target codex|claude|cursor]',
     '  jumao status [dir]',
     '',
@@ -189,7 +190,12 @@ function doctorCommand(args, io) {
 }
 
 async function interviewCommand(args, io) {
-  const { targetDir, answersFile, force } = parseInterviewArgs(args);
+  const { targetDir, answersFile, force, schema } = parseInterviewArgs(args);
+  if (schema) {
+    io.stdout.write(`${JSON.stringify(interviewSchema, null, 2)}\n`);
+    return 0;
+  }
+
   const answers = answersFile
     ? readAnswersFile(answersFile)
     : await collectInterviewAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
@@ -305,11 +311,14 @@ function parseInterviewArgs(args) {
   let target;
   let answersFile;
   let force = false;
+  let schema = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--force') {
       force = true;
+    } else if (arg === '--schema') {
+      schema = true;
     } else if (arg === '--answers') {
       answersFile = path.resolve(args[index + 1]);
       index += 1;
@@ -321,7 +330,8 @@ function parseInterviewArgs(args) {
   return {
     targetDir: path.resolve(target || '.'),
     answersFile,
-    force
+    force,
+    schema
   };
 }
 

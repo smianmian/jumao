@@ -556,6 +556,23 @@ test('interview schema preserves the 22 ordered answer paths', () => {
   }
 });
 
+test('interview --schema prints the source schema without writing project files', () => {
+  const workspace = tempDir();
+  const originalEntries = fs.readdirSync(workspace);
+  const result = spawnSync(process.execPath, [cli, 'interview', '--schema', workspace], {
+    encoding: 'utf8'
+  });
+  const schema = JSON.parse(result.stdout);
+  const sourceSchema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(schema, sourceSchema);
+  assert.equal(schema.schemaVersion, 1);
+  assert.equal(schema.questions.length, 22);
+  assert.deepEqual(fs.readdirSync(workspace), originalEntries);
+});
+
 test('interactive interview still writes the existing core Markdown output', async () => {
   const workspace = createProductWorkspace();
   const answers = minimalAnswers();
