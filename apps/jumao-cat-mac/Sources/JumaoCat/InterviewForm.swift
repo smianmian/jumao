@@ -35,15 +35,49 @@ struct InterviewForm: View {
         isCatJumping = false
       }
     }
+    .alert("确认写入项目", isPresented: $appState.isInterviewWriteConfirmationPresented) {
+      Button("取消", role: .cancel) {}
+      Button("确认并写入项目") {
+        appState.confirmInterviewWrite()
+      }
+    } message: {
+      Text("将生成或更新 4 份项目文档，不修改项目源代码。")
+    }
+    .alert("将覆盖已有项目文档", isPresented: $appState.isInterviewOverwriteConfirmationPresented) {
+      Button("取消", role: .cancel) {}
+      Button("确认覆盖", role: .destructive) {
+        appState.confirmInterviewOverwrite()
+      }
+    } message: {
+      Text(appState.interviewOverwriteMessage)
+    }
   }
 
   private var completionCard: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("已完成 \(appState.interviewQuestions.count) 个问题")
-        .font(.headline)
-      Text("下一步：确认并写入项目")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
+    VStack(alignment: .leading, spacing: 10) {
+      if let message = appState.interviewWriteMessage {
+        Text(message)
+          .font(.headline)
+          .fixedSize(horizontal: false, vertical: true)
+      } else {
+        Text("已完成 \(appState.interviewQuestions.count) 个问题")
+          .font(.headline)
+        Text("下一步：确认并写入项目")
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+        Button(appState.isWritingInterviewAnswers ? "正在写入项目" : "确认并写入项目") {
+          appState.requestInterviewWrite()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+        .disabled(appState.isWritingInterviewAnswers)
+      }
+
+      if let error = appState.interviewWriteError {
+        Text(error)
+          .font(.caption)
+          .foregroundStyle(.red)
+      }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(16)

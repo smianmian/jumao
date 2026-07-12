@@ -23,9 +23,14 @@ final class AppState: ObservableObject {
   @Published private(set) var interviewCurrentQuestionIndex = 0
   @Published private(set) var interviewValidationMessage: String?
   @Published private(set) var isInterviewComplete = false
+  @Published private(set) var isWritingInterviewAnswers = false
+  @Published private(set) var interviewWriteMessage: String?
+  @Published private(set) var interviewWriteError: String?
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
   @Published var isInterviewPresented = false
+  @Published var isInterviewWriteConfirmationPresented = false
+  @Published var isInterviewOverwriteConfirmationPresented = false
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
@@ -37,8 +42,10 @@ final class AppState: ObservableObject {
   private let terminalWorkspaceOpener: any TerminalWorkspaceOpening
   private let projectInitializer: any JumaoProjectInitializing
   private let interviewSchemaLoader: any JumaoInterviewSchemaLoading
+  private let interviewAnswerWriter: any JumaoInterviewAnswerWriting
   private let appTerminator: any AppTerminating
   private var projectInitializationConflicts: [String] = []
+  private var interviewDocumentsToOverwrite: [String] = []
   private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
@@ -56,6 +63,7 @@ final class AppState: ObservableObject {
     terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener(),
     projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer(),
     interviewSchemaLoader: any JumaoInterviewSchemaLoading = JumaoInterviewSchemaLoader(),
+    interviewAnswerWriter: any JumaoInterviewAnswerWriting = JumaoInterviewAnswerWriter(),
     appTerminator: any AppTerminating = MacAppTerminator()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
@@ -67,6 +75,7 @@ final class AppState: ObservableObject {
     self.terminalWorkspaceOpener = terminalWorkspaceOpener
     self.projectInitializer = projectInitializer
     self.interviewSchemaLoader = interviewSchemaLoader
+    self.interviewAnswerWriter = interviewAnswerWriter
     self.appTerminator = appTerminator
   }
 
@@ -147,6 +156,11 @@ final class AppState: ObservableObject {
 
   var interviewInputHint: String? {
     interviewCurrentQuestion?.inputType == "list" ? "请使用逗号分隔多个项目。" : nil
+  }
+
+  var interviewOverwriteMessage: String {
+    let files = interviewDocumentsToOverwrite.map { "- \($0)" }.joined(separator: "\n")
+    return "以下项目文档已有内容，确认后将覆盖：\n\n\(files)"
   }
 
   var projectInitializationConflictMessage: String {
@@ -379,6 +393,8 @@ final class AppState: ObservableObject {
     interviewAnswers = interviewAnswers.filter { validAnswerPaths.contains($0.key) }
     interviewCurrentQuestionIndex = min(interviewCurrentQuestionIndex, max(schema.questions.count - 1, 0))
     interviewValidationMessage = nil
+    interviewWriteMessage = nil
+    interviewWriteError = nil
     isInterviewPresented = true
   }
 
@@ -392,6 +408,7 @@ final class AppState: ObservableObject {
   func updateInterviewAnswer(_ answer: String, for answerPath: String) {
     interviewAnswers[answerPath] = answer
     interviewValidationMessage = nil
+    interviewWriteError = nil
   }
 
   func goToPreviousInterviewQuestion() {
@@ -411,6 +428,31 @@ final class AppState: ObservableObject {
       interviewValidationMessage = nil
     }
     return true
+  }
+
+  func requestInterviewWrite() {
+    guard isInterviewComplete, !isWritingInterviewAnswers, workspaceURL != nil else { return }
+    interviewWriteError = nil
+    isInterviewWriteConfirmationPresented = true
+  }
+
+  func confirmInterviewWrite() {
+    isInterviewWriteConfirmationPresented = false
+    guard let workspaceURL, let interviewSchema else { return }
+
+    interviewDocumentsToOverwrite = interviewAnswerWriter.documentsWithContent(in: workspaceURL)
+    if !interviewDocumentsToOverwrite.isEmpty {
+      isInterviewOverwriteConfirmationPresented = true
+      return
+    }
+
+    runInterviewWrite(in: workspaceURL, schema: interviewSchema, force: false)
+  }
+
+  func confirmInterviewOverwrite() {
+    isInterviewOverwriteConfirmationPresented = false
+    guard let workspaceURL, let interviewSchema else { return }
+    runInterviewWrite(in: workspaceURL, schema: interviewSchema, force: true)
   }
 
   private func activateWorkspace(_ workspaceURL: URL) {
@@ -521,6 +563,37 @@ final class AppState: ObservableObject {
     }
   }
 
+  private func runInterviewWrite(in workspaceURL: URL, schema: JumaoInterviewSchema, force: Bool) {
+    isWritingInterviewAnswers = true
+    interviewWriteMessage = nil
+    interviewWriteError = nil
+
+    interviewAnswerWriter.run(
+      workspaceURL: workspaceURL,
+      questions: schema.questions,
+      answers: interviewAnswers,
+      force: force
+    ) { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishInterviewWrite(result)
+      }
+    }
+  }
+
+  private func finishInterviewWrite(_ result: JumaoInterviewAnswerWriteResult) {
+    isWritingInterviewAnswers = false
+
+    switch result {
+    case .succeeded:
+      interviewWriteError = nil
+      interviewWriteMessage = "项目问题已写入\n下一步：开始检查"
+      interviewAnswers = [:]
+    case .failed(let exitCode, let message):
+      let code = exitCode.map(String.init) ?? "无法启动"
+      interviewWriteError = "写入项目问题失败（退出码 \(code)）：\(message)"
+    }
+  }
+
   private func clearProjectInitializationFeedback() {
     isInitializingProject = false
     projectInitializationMessage = nil
@@ -535,6 +608,12 @@ final class AppState: ObservableObject {
     interviewCurrentQuestionIndex = 0
     interviewValidationMessage = nil
     isInterviewComplete = false
+    isWritingInterviewAnswers = false
+    interviewWriteMessage = nil
+    interviewWriteError = nil
+    isInterviewWriteConfirmationPresented = false
+    isInterviewOverwriteConfirmationPresented = false
+    interviewDocumentsToOverwrite = []
     isInterviewPresented = false
   }
 
