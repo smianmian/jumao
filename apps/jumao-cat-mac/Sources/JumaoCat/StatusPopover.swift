@@ -123,12 +123,20 @@ struct StatusPopover: View {
         }
         .buttonStyle(.borderedProminent)
         .disabled(appState.isInitializingProject)
-      } else if appState.projectInitializationMessage == nil {
+      } else {
         Text("项目框架已建立")
           .font(.headline)
-        Text("下一步：回答项目问题")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
+        Button {
+          appState.answerProjectQuestions()
+        } label: {
+          Label(
+            appState.isLoadingInterviewSchema ? "正在读取项目问题" : "回答项目问题",
+            systemImage: "list.bullet.rectangle"
+          )
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(!appState.canAnswerProjectQuestions)
       }
 
       feedback
@@ -148,6 +156,11 @@ struct StatusPopover: View {
       }
     } message: {
       Text(appState.projectInitializationConflictMessage)
+    }
+    .sheet(isPresented: $appState.isInterviewPresented) {
+      if let schema = appState.interviewSchema {
+        InterviewForm(schema: schema)
+      }
     }
   }
 
@@ -262,6 +275,9 @@ struct StatusPopover: View {
       feedbackText(message, color: .green)
     }
     if let error = appState.projectInitializationError {
+      feedbackText(error, color: .red)
+    }
+    if let error = appState.interviewSchemaError {
       feedbackText(error, color: .red)
     }
   }

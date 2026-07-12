@@ -16,8 +16,12 @@ final class AppState: ObservableObject {
   @Published private(set) var isInitializingProject = false
   @Published private(set) var projectInitializationMessage: String?
   @Published private(set) var projectInitializationError: String?
+  @Published private(set) var isLoadingInterviewSchema = false
+  @Published private(set) var interviewSchema: JumaoInterviewSchema?
+  @Published private(set) var interviewSchemaError: String?
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
+  @Published var isInterviewPresented = false
 
   private let statusReader = StatusReader()
   private let workspaceBookmarkStore: WorkspaceBookmarkStore
@@ -28,6 +32,7 @@ final class AppState: ObservableObject {
   private let taskPackRunner: any CodexTaskPackRunning
   private let terminalWorkspaceOpener: any TerminalWorkspaceOpening
   private let projectInitializer: any JumaoProjectInitializing
+  private let interviewSchemaLoader: any JumaoInterviewSchemaLoading
   private var projectInitializationConflicts: [String] = []
   private var taskPackCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
@@ -44,7 +49,8 @@ final class AppState: ObservableObject {
     taskPackCopier: any TaskPackCopying = CodexTaskPackCopier(),
     taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner(),
     terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener(),
-    projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer()
+    projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer(),
+    interviewSchemaLoader: any JumaoInterviewSchemaLoading = JumaoInterviewSchemaLoader()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
     self.workspaceChooser = workspaceChooser
@@ -54,6 +60,7 @@ final class AppState: ObservableObject {
     self.taskPackRunner = taskPackRunner
     self.terminalWorkspaceOpener = terminalWorkspaceOpener
     self.projectInitializer = projectInitializer
+    self.interviewSchemaLoader = interviewSchemaLoader
   }
 
   var workspacePath: String {
@@ -104,6 +111,10 @@ final class AppState: ObservableObject {
     }
 
     return projectInitializer.conflictingFiles(in: workspaceURL).count < JumaoProjectInitializer.targetFiles.count
+  }
+
+  var canAnswerProjectQuestions: Bool {
+    workspaceURL != nil && !canInitializeProject && !isLoadingInterviewSchema
   }
 
   var projectInitializationConflictMessage: String {
@@ -302,6 +313,18 @@ final class AppState: ObservableObject {
     runProjectInitialization(in: workspaceURL)
   }
 
+  func answerProjectQuestions() {
+    guard canAnswerProjectQuestions else { return }
+
+    isLoadingInterviewSchema = true
+    interviewSchemaError = nil
+    interviewSchemaLoader.run { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishLoadingInterviewSchema(result)
+      }
+    }
+  }
+
   func shutdown() {
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
@@ -401,6 +424,21 @@ final class AppState: ObservableObject {
     }
   }
 
+  private func finishLoadingInterviewSchema(_ result: JumaoInterviewSchemaLoadResult) {
+    isLoadingInterviewSchema = false
+
+    switch result {
+    case .succeeded(let schema):
+      interviewSchemaError = nil
+      interviewSchema = schema
+      isInterviewPresented = true
+    case .failed(let exitCode, let message):
+      let code = exitCode.map(String.init) ?? "无法启动"
+      interviewSchema = nil
+      interviewSchemaError = "读取项目问题失败（退出码 \(code)）：\(message)"
+    }
+  }
+
   private func clearProjectInitializationFeedback() {
     isInitializingProject = false
     projectInitializationMessage = nil
@@ -408,6 +446,10 @@ final class AppState: ObservableObject {
     isProjectInitializationConfirmationPresented = false
     isProjectInitializationConflictPresented = false
     projectInitializationConflicts = []
+    isLoadingInterviewSchema = false
+    interviewSchema = nil
+    interviewSchemaError = nil
+    isInterviewPresented = false
   }
 
   private func isDirectory(_ url: URL) -> Bool {
