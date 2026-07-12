@@ -32,6 +32,7 @@
 		B5A76E62B4AF26313717BD4C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 090753BE37E91CB6A3826F34 /* AppDelegate.swift */; };
 		BD7D859D35DD33513061160E /* CodexTaskPackRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */; };
 		C8E1BE016ADF6B0613240465 /* WorkspacePickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874FEB2DFB55FF26BD7B1EC0 /* WorkspacePickerTests.swift */; };
+		C10300000000000000000001 /* InterviewTaskPackFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10300000000000000000002 /* InterviewTaskPackFlowTests.swift */; };
 		C10200000000000000000001 /* JumaoStrictCheckRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10200000000000000000002 /* JumaoStrictCheckRunner.swift */; };
 		C10200000000000000000003 /* JumaoStrictCheckRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10200000000000000000004 /* JumaoStrictCheckRunnerTests.swift */; };
 		C10100000000000000000001 /* JumaoInterviewAnswerWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10100000000000000000002 /* JumaoInterviewAnswerWriter.swift */; };
@@ -85,6 +86,7 @@
 		C3FECF5824F796D0BB9C11C4 /* AgentReportOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentReportOpener.swift; sourceTree = "<group>"; };
 		C951B952C56D9A93A71ED14F /* WorkspacePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePicker.swift; sourceTree = "<group>"; };
 		CFC403C2398F1B7AF504B8E9 /* CodexTaskPackCopier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTaskPackCopier.swift; sourceTree = "<group>"; };
+		C10300000000000000000002 /* InterviewTaskPackFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewTaskPackFlowTests.swift; sourceTree = "<group>"; };
 		C10200000000000000000002 /* JumaoStrictCheckRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStrictCheckRunner.swift; sourceTree = "<group>"; };
 		C10200000000000000000004 /* JumaoStrictCheckRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStrictCheckRunnerTests.swift; sourceTree = "<group>"; };
 		C10100000000000000000002 /* JumaoInterviewAnswerWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoInterviewAnswerWriter.swift; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 				2D80BBBD7D204EF5C83E5279 /* CodexTaskPackCopierTests.swift */,
 				B7B391F96B4623C08085A7CE /* CodexTaskPackRunnerTests.swift */,
 				576658033E20D382AF6ADCAD /* InterviewNavigationTests.swift */,
+				C10300000000000000000002 /* InterviewTaskPackFlowTests.swift */,
 				C10100000000000000000004 /* JumaoInterviewAnswerWriterTests.swift */,
 				C10200000000000000000004 /* JumaoStrictCheckRunnerTests.swift */,
 				31BB3FBB91FBB16D793898C1 /* JumaoInterviewSchemaLoaderTests.swift */,
@@ -304,6 +307,7 @@
 				ECE7B95497CC92DDD208E0B5 /* CodexTaskPackCopierTests.swift in Sources */,
 				DC1D4A0D5159A968ADF025A2 /* CodexTaskPackRunnerTests.swift in Sources */,
 				742716F922BD27143ED88DAD /* InterviewNavigationTests.swift in Sources */,
+				C10300000000000000000001 /* InterviewTaskPackFlowTests.swift in Sources */,
 				C10100000000000000000003 /* JumaoInterviewAnswerWriterTests.swift in Sources */,
 				C10200000000000000000003 /* JumaoStrictCheckRunnerTests.swift in Sources */,
 				10B4A3E19CE620B8CB37AD47 /* JumaoInterviewSchemaLoaderTests.swift in Sources */,

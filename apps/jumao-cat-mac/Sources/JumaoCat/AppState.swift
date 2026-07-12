@@ -29,6 +29,10 @@ final class AppState: ObservableObject {
   @Published private(set) var isCheckingProject = false
   @Published private(set) var projectCheckMessage: String?
   @Published private(set) var projectCheckError: String?
+  @Published private(set) var isGeneratingInterviewTaskPack = false
+  @Published private(set) var interviewTaskPackMessage: String?
+  @Published private(set) var interviewTaskPackError: String?
+  @Published private(set) var hasPassedProjectCheck = false
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
   @Published var isInterviewPresented = false
@@ -118,7 +122,7 @@ final class AppState: ObservableObject {
   }
 
   var canRegenerateTaskPack: Bool {
-    !isRegeneratingTaskPack && hasValidWorkspace
+    !isRegeneratingTaskPack && !isGeneratingInterviewTaskPack && hasValidWorkspace
   }
 
   var canOpenTerminal: Bool {
@@ -171,6 +175,10 @@ final class AppState: ObservableObject {
 
   var canStartProjectCheck: Bool {
     interviewWriteMessage != nil && !isCheckingProject && workspaceURL != nil
+  }
+
+  var canGenerateInterviewTaskPack: Bool {
+    hasPassedProjectCheck && !isGeneratingInterviewTaskPack && !isRegeneratingTaskPack && workspaceURL != nil
   }
 
   var projectInitializationConflictMessage: String {
@@ -470,12 +478,26 @@ final class AppState: ObservableObject {
     guard canStartProjectCheck, let workspaceURL else { return }
 
     isCheckingProject = true
+    hasPassedProjectCheck = false
     projectCheckMessage = nil
     projectCheckError = nil
 
     strictCheckRunner.run(workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
         self?.finishProjectCheck(result)
+      }
+    }
+  }
+
+  func generateInterviewTaskPack() {
+    guard canGenerateInterviewTaskPack, let workspaceURL else { return }
+
+    isGeneratingInterviewTaskPack = true
+    interviewTaskPackError = nil
+
+    taskPackRunner.run(workspaceURL: workspaceURL) { [weak self] result in
+      Task { @MainActor [weak self] in
+        self?.finishInterviewTaskPackGeneration(result)
       }
     }
   }
@@ -615,6 +637,9 @@ final class AppState: ObservableObject {
       interviewAnswers = [:]
       projectCheckMessage = nil
       projectCheckError = nil
+      hasPassedProjectCheck = false
+      interviewTaskPackMessage = nil
+      interviewTaskPackError = nil
     case .failed(let exitCode, let message):
       let code = exitCode.map(String.init) ?? "无法启动"
       interviewWriteError = "写入项目问题失败（退出码 \(code)）：\(message)"
@@ -627,11 +652,27 @@ final class AppState: ObservableObject {
 
     switch result {
     case .succeeded:
+      hasPassedProjectCheck = true
       projectCheckMessage = "检查通过\n下一步：生成 Codex 任务包"
       projectCheckError = nil
     case .failed:
+      hasPassedProjectCheck = false
       projectCheckMessage = "发现需要补充的内容"
       projectCheckError = "请补充项目文档中的必要内容后重新检查。"
+    }
+  }
+
+  private func finishInterviewTaskPackGeneration(_ result: CodexTaskPackRunResult) {
+    isGeneratingInterviewTaskPack = false
+
+    switch result {
+    case .succeeded:
+      refreshStatus()
+      isInterviewPresented = false
+      interviewTaskPackMessage = "任务包已生成"
+      interviewTaskPackError = nil
+    case .failed:
+      interviewTaskPackError = "任务包生成失败，请确认项目内容后重试。"
     }
   }
 
@@ -655,6 +696,10 @@ final class AppState: ObservableObject {
     isCheckingProject = false
     projectCheckMessage = nil
     projectCheckError = nil
+    isGeneratingInterviewTaskPack = false
+    interviewTaskPackMessage = nil
+    interviewTaskPackError = nil
+    hasPassedProjectCheck = false
     isInterviewWriteConfirmationPresented = false
     isInterviewOverwriteConfirmationPresented = false
     interviewDocumentsToOverwrite = []

@@ -277,6 +277,9 @@ struct StatusPopover: View {
     if let error = appState.taskPackGenerationError {
       feedbackText(error, color: .red)
     }
+    if let message = appState.interviewTaskPackMessage {
+      feedbackText(message, color: .green)
+    }
     if let error = appState.terminalOpenError {
       feedbackText(error, color: .red)
     }
