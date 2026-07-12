@@ -5,6 +5,10 @@ import { stdin as defaultInput, stdout as defaultOutput } from 'node:process';
 import { validateStrictWorkspace } from './strict-check.js';
 import { validateCoreFile } from './validators.js';
 
+export const interviewSchema = JSON.parse(
+  fs.readFileSync(new URL('./interview-schema.json', import.meta.url), 'utf8')
+);
+
 const coreFiles = [
   'product/product-brief.zh-CN.md',
   'product/scope-gate.zh-CN.md',
@@ -15,34 +19,16 @@ const coreFiles = [
 export async function collectInterviewAnswers(input = defaultInput, output = defaultOutput) {
   const rl = createInterface({ input, output });
   try {
-    return {
-      primaryUser: await rl.question('主要用户是谁？ '),
-      firstVersionGoal: await rl.question('第一版先证明什么？ '),
-      userCanDo: await rl.question('用户能完成什么？ '),
-      successEvidence: await rl.question('你能看到什么成功证据？ '),
-      cannotPromise: await rl.question('不能承诺什么？ '),
-      cannotCollect: await rl.question('不能收集什么？ '),
-      humanConfirmActions: splitList(await rl.question('哪些动作必须人工确认？用逗号分隔。 ')),
-      mustDo: splitList(await rl.question('首版必须做什么？用逗号分隔。 ')),
-      wontDo: splitList(await rl.question('首版明确不做什么？用逗号分隔。 ')),
-      aiMustNotAdd: splitList(await rl.question('不要让 AI 自己加什么？用逗号分隔。 ')),
-      mainScreen: {
-        name: await rl.question('主页面或主流程名称？ '),
-        userGoal: await rl.question('用户在这个页面想做什么？ '),
-        loading: await rl.question('加载中怎么显示？ '),
-        empty: await rl.question('空状态怎么显示？ '),
-        error: await rl.question('错误状态怎么显示？ '),
-        success: await rl.question('成功状态怎么显示？ '),
-        permissionDenied: await rl.question('权限拒绝怎么显示？不涉及也请写“不涉及”。 ')
-      },
-      dataSafety: {
-        collects: await rl.question('收集哪些数据？不收集就写“首版不收集用户数据”。 '),
-        doesNotCollect: await rl.question('明确不收集哪些数据？ '),
-        thirdParties: await rl.question('第三方服务是什么？没有就写“首版不使用第三方服务”。 '),
-        deletion: await rl.question('用户如何删除数据？ '),
-        retention: await rl.question('删除后是否保留数据？没有就写“删除后无保留数据”。 ')
-      }
-    };
+    const answers = {};
+    for (const question of interviewSchema.questions) {
+      const value = await rl.question(`${question.title} `);
+      setAnswerAtPath(
+        answers,
+        question.answerPath,
+        question.inputType === 'list' ? splitList(value) : value
+      );
+    }
+    return answers;
   } finally {
     rl.close();
   }
@@ -156,6 +142,13 @@ function splitList(value) {
     .split(/[，,、]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function setAnswerAtPath(answers, answerPath, value) {
+  const parts = answerPath.split('.');
+  const key = parts.pop();
+  const target = parts.reduce((current, part) => current[part] ||= {}, answers);
+  target[key] = value;
 }
 
 function bulletList(items) {

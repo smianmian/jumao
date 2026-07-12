@@ -3,10 +3,38 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { PassThrough, Writable } from 'node:stream';
 import test from 'node:test';
+import { collectInterviewAnswers, runInterview } from '../src/core/interview.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const cli = path.join(repoRoot, 'bin', 'jumao.js');
+const interviewSchemaPath = path.join(repoRoot, 'src', 'core', 'interview-schema.json');
+
+const interviewAnswerPaths = [
+  'primaryUser',
+  'firstVersionGoal',
+  'userCanDo',
+  'successEvidence',
+  'cannotPromise',
+  'cannotCollect',
+  'humanConfirmActions',
+  'mustDo',
+  'wontDo',
+  'aiMustNotAdd',
+  'mainScreen.name',
+  'mainScreen.userGoal',
+  'mainScreen.loading',
+  'mainScreen.empty',
+  'mainScreen.error',
+  'mainScreen.success',
+  'mainScreen.permissionDenied',
+  'dataSafety.collects',
+  'dataSafety.doesNotCollect',
+  'dataSafety.thirdParties',
+  'dataSafety.deletion',
+  'dataSafety.retention'
+];
 
 function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'jumao-test-'));
@@ -152,6 +180,82 @@ function writeAnswersFile(answers = minimalAnswers()) {
   const answersPath = path.join(tempDir(), 'answers.json');
   fs.writeFileSync(answersPath, JSON.stringify(answers, null, 2), 'utf8');
   return answersPath;
+}
+
+function interviewInput(answers) {
+  return [
+    answers.primaryUser,
+    answers.firstVersionGoal,
+    answers.userCanDo,
+    answers.successEvidence,
+    answers.cannotPromise,
+    answers.cannotCollect,
+    answers.humanConfirmActions.join(','),
+    answers.mustDo.join(','),
+    answers.wontDo.join(','),
+    answers.aiMustNotAdd.join(','),
+    answers.mainScreen.name,
+    answers.mainScreen.userGoal,
+    answers.mainScreen.loading,
+    answers.mainScreen.empty,
+    answers.mainScreen.error,
+    answers.mainScreen.success,
+    answers.mainScreen.permissionDenied,
+    answers.dataSafety.collects,
+    answers.dataSafety.doesNotCollect,
+    answers.dataSafety.thirdParties,
+    answers.dataSafety.deletion,
+    answers.dataSafety.retention
+  ].join('\n') + '\n';
+}
+
+function expectedInterviewFiles(answers) {
+  return {
+    'product/product-brief.zh-CN.md': `# 产品简报
+
+主要用户：${answers.primaryUser}
+第一版先证明一件事：${answers.firstVersionGoal}
+用户能完成：${answers.userCanDo}
+我们能看到的证据：${answers.successEvidence}
+不能承诺：${answers.cannotPromise}
+不能收集：${answers.cannotCollect}
+会影响真实用户或钱的动作：${answers.humanConfirmActions.join('、')}
+`,
+    'product/scope-gate.zh-CN.md': `# 范围门禁
+
+## 首版必须做
+${answers.mustDo.map((item) => `- ${item}`).join('\n')}
+
+## 首版明确不做
+${answers.wontDo.map((item) => `- ${item}`).join('\n')}
+
+## 不要让 AI 自己加
+${answers.aiMustNotAdd.map((item) => `- ${item}`).join('\n')}
+
+## 需要人工确认的动作
+${answers.humanConfirmActions.map((item) => `- ${item}`).join('\n')}
+`,
+    'product/screen-states.zh-CN.md': `# 页面状态
+
+| 页面 | 用户想做什么 | 加载中 | 空状态 | 错误状态 | 成功状态 | 权限拒绝 |
+|---|---|---|---|---|---|---|
+| ${answers.mainScreen.name} | ${answers.mainScreen.userGoal} | ${answers.mainScreen.loading} | ${answers.mainScreen.empty} | ${answers.mainScreen.error} | ${answers.mainScreen.success} | ${answers.mainScreen.permissionDenied} |
+`,
+    'product/data-safety.zh-CN.md': `# 数据安全
+
+${answers.dataSafety.collects}。
+${answers.dataSafety.thirdParties}。
+${answers.dataSafety.doesNotCollect}。
+${answers.dataSafety.deletion}。
+${answers.dataSafety.retention}。
+`
+  };
+}
+
+function assertInterviewFiles(workspace, answers) {
+  for (const [file, expected] of Object.entries(expectedInterviewFiles(answers))) {
+    assert.equal(fs.readFileSync(path.join(workspace, file), 'utf8'), expected, file);
+  }
 }
 
 function doctorAnswers(overrides = {}) {
@@ -421,7 +525,8 @@ test('audit reports planning-ready workspace with empty completion proof warning
 
 test('interview answers write the four core product files', () => {
   const workspace = createProductWorkspace();
-  const answersPath = writeAnswersFile();
+  const answers = minimalAnswers();
+  const answersPath = writeAnswersFile(answers);
 
   const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
     encoding: 'utf8'
@@ -432,7 +537,50 @@ test('interview answers write the four core product files', () => {
   assert.ok(fs.existsSync(path.join(workspace, 'product', 'scope-gate.zh-CN.md')));
   assert.ok(fs.existsSync(path.join(workspace, 'product', 'screen-states.zh-CN.md')));
   assert.ok(fs.existsSync(path.join(workspace, 'product', 'data-safety.zh-CN.md')));
-  assert.match(fs.readFileSync(path.join(workspace, 'product', 'product-brief.zh-CN.md'), 'utf8'), /第一次做小工具/);
+  assertInterviewFiles(workspace, answers);
+});
+
+test('interview schema preserves the 22 ordered answer paths', () => {
+  const schema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
+
+  assert.equal(schema.schemaVersion, 1);
+  assert.equal(schema.questions.length, 22);
+  assert.deepEqual(schema.questions.map((question) => question.order), Array.from({ length: 22 }, (_, index) => index + 1));
+  assert.deepEqual(schema.questions.map((question) => question.answerPath), interviewAnswerPaths);
+  for (const question of schema.questions) {
+    assert.equal(typeof question.id, 'string');
+    assert.equal(typeof question.title, 'string');
+    assert.equal(typeof question.description, 'string');
+    assert.ok(['text', 'list'].includes(question.inputType));
+    assert.equal(question.required, true);
+  }
+});
+
+test('interactive interview still writes the existing core Markdown output', async () => {
+  const workspace = createProductWorkspace();
+  const answers = minimalAnswers();
+  const responses = interviewInput(answers).trimEnd().split('\n');
+  const input = new PassThrough();
+  let prompts = '';
+  const output = new Writable({
+    write(chunk, _encoding, callback) {
+      prompts += chunk.toString();
+      const response = responses.shift();
+      queueMicrotask(() => {
+        input.write(`${response}\n`);
+        if (responses.length === 0) input.end();
+      });
+      callback();
+    }
+  });
+
+  const collectedAnswers = await collectInterviewAnswers(input, output);
+  const result = runInterview(workspace, collectedAnswers);
+
+  assert.equal(result.ok, true);
+  assert.match(prompts, /主要用户是谁？/);
+  assert.match(prompts, /删除后是否保留数据？没有就写“删除后无保留数据”。/);
+  assertInterviewFiles(workspace, answers);
 });
 
 test('interview output passes strict check with completion proof warning', () => {

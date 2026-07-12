@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "questions": [
+    {
+      "id": "primaryUser",
+      "answerPath": "primaryUser",
+      "title": "主要用户是谁？",
+      "description": "填写第一版产品服务的主要用户。",
+      "inputType": "text",
+      "required": true,
+      "order": 1
+    },
+    {
+      "id": "firstVersionGoal",
+      "answerPath": "firstVersionGoal",
+      "title": "第一版先证明什么？",
+      "description": "填写第一版需要验证的核心目标。",
+      "inputType": "text",
+      "required": true,
+      "order": 2
+    },
+    {
+      "id": "userCanDo",
+      "answerPath": "userCanDo",
+      "title": "用户能完成什么？",
+      "description": "填写用户能够完成的具体事情。",
+      "inputType": "text",
+      "required": true,
+      "order": 3
+    },
+    {
+      "id": "successEvidence",
+      "answerPath": "successEvidence",
+      "title": "你能看到什么成功证据？",
+      "description": "填写可以观察到的成功证据。",
+      "inputType": "text",
+      "required": true,
+      "order": 4
+    },
+    {
+      "id": "cannotPromise",
+      "answerPath": "cannotPromise",
+      "title": "不能承诺什么？",
+      "description": "填写产品不能保证或承诺的事情。",
+      "inputType": "text",
+      "required": true,
+      "order": 5
+    },
+    {
+      "id": "cannotCollect",
+      "answerPath": "cannotCollect",
+      "title": "不能收集什么？",
+      "description": "填写首版不能收集的数据。",
+      "inputType": "text",
+      "required": true,
+      "order": 6
+    },
+    {
+      "id": "humanConfirmActions",
+      "answerPath": "humanConfirmActions",
+      "title": "哪些动作必须人工确认？用逗号分隔。",
+      "description": "填写必须由人工确认的动作，可用逗号、顿号或英文逗号分隔。",
+      "inputType": "list",
+      "required": true,
+      "order": 7
+    },
+    {
+      "id": "mustDo",
+      "answerPath": "mustDo",
+      "title": "首版必须做什么？用逗号分隔。",
+      "description": "填写首版必须完成的事项，可用逗号、顿号或英文逗号分隔。",
+      "inputType": "list",
+      "required": true,
+      "order": 8
+    },
+    {
+      "id": "wontDo",
+      "answerPath": "wontDo",
+      "title": "首版明确不做什么？用逗号分隔。",
+      "description": "填写首版明确不做的事项，可用逗号、顿号或英文逗号分隔。",
+      "inputType": "list",
+      "required": true,
+      "order": 9
+    },
+    {
+      "id": "aiMustNotAdd",
+      "answerPath": "aiMustNotAdd",
+      "title": "不要让 AI 自己加什么？用逗号分隔。",
+      "description": "填写不允许 AI 自行增加的事项，可用逗号、顿号或英文逗号分隔。",
+      "inputType": "list",
+      "required": true,
+      "order": 10
+    },
+    {
+      "id": "mainScreenName",
+      "answerPath": "mainScreen.name",
+      "title": "主页面或主流程名称？",
+      "description": "填写主页面或主流程的名称。",
+      "inputType": "text",
+      "required": true,
+      "order": 11
+    },
+    {
+      "id": "mainScreenUserGoal",
+      "answerPath": "mainScreen.userGoal",
+      "title": "用户在这个页面想做什么？",
+      "description": "填写用户在主页面想完成的目标。",
+      "inputType": "text",
+      "required": true,
+      "order": 12
+    },
+    {
+      "id": "mainScreenLoading",
+      "answerPath": "mainScreen.loading",
+      "title": "加载中怎么显示？",
+      "description": "填写加载状态的呈现方式。",
+      "inputType": "text",
+      "required": true,
+      "order": 13
+    },
+    {
+      "id": "mainScreenEmpty",
+      "answerPath": "mainScreen.empty",
+      "title": "空状态怎么显示？",
+      "description": "填写空状态的呈现方式。",
+      "inputType": "text",
+      "required": true,
+      "order": 14
+    },
+    {
+      "id": "mainScreenError",
+      "answerPath": "mainScreen.error",
+      "title": "错误状态怎么显示？",
+      "description": "填写错误状态的呈现方式。",
+      "inputType": "text",
+      "required": true,
+      "order": 15
+    },
+    {
+      "id": "mainScreenSuccess",
+      "answerPath": "mainScreen.success",
+      "title": "成功状态怎么显示？",
+      "description": "填写成功状态的呈现方式。",
+      "inputType": "text",
+      "required": true,
+      "order": 16
+    },
+    {
+      "id": "mainScreenPermissionDenied",
+      "answerPath": "mainScreen.permissionDenied",
+      "title": "权限拒绝怎么显示？不涉及也请写“不涉及”。",
+      "description": "填写权限被拒绝时的呈现方式；不涉及权限时填写“不涉及”。",
+      "inputType": "text",
+      "required": true,
+      "order": 17
+    },
+    {
+      "id": "dataSafetyCollects",
+      "answerPath": "dataSafety.collects",
+      "title": "收集哪些数据？不收集就写“首版不收集用户数据”。",
+      "description": "填写首版收集的数据；不收集时填写指定说明。",
+      "inputType": "text",
+      "required": true,
+      "order": 18
+    },
+    {
+      "id": "dataSafetyDoesNotCollect",
+      "answerPath": "dataSafety.doesNotCollect",
+      "title": "明确不收集哪些数据？",
+      "description": "填写明确不会收集的数据。",
+      "inputType": "text",
+      "required": true,
+      "order": 19
+    },
+    {
+      "id": "dataSafetyThirdParties",
+      "answerPath": "dataSafety.thirdParties",
+      "title": "第三方服务是什么？没有就写“首版不使用第三方服务”。",
+      "description": "填写使用的第三方服务；没有时填写指定说明。",
+      "inputType": "text",
+      "required": true,
+      "order": 20
+    },
+    {
+      "id": "dataSafetyDeletion",
+      "answerPath": "dataSafety.deletion",
+      "title": "用户如何删除数据？",
+      "description": "填写用户删除数据的方式。",
+      "inputType": "text",
+      "required": true,
+      "order": 21
+    },
+    {
+      "id": "dataSafetyRetention",
+      "answerPath": "dataSafety.retention",
+      "title": "删除后是否保留数据？没有就写“删除后无保留数据”。",
+      "description": "填写删除后的数据保留规则；没有保留时填写指定说明。",
+      "inputType": "text",
+      "required": true,
+      "order": 22
+    }
+  ]
+}
