@@ -17,8 +17,6 @@ protocol JumaoProjectInitializing {
 
 @MainActor
 final class JumaoProjectInitializer: JumaoProjectInitializing {
-  static let executableURL = URL(fileURLWithPath: "/usr/bin/env")
-
   static let targetFiles = [
     "AGENTS.md",
     "CLAUDE.md",
@@ -37,10 +35,15 @@ final class JumaoProjectInitializer: JumaoProjectInitializing {
   ]
 
   nonisolated static func arguments(projectName: String, workspaceURL: URL) -> [String] {
-    ["jumao", "new", projectName, "--dir", workspaceURL.path]
+    ["new", projectName, "--dir", workspaceURL.path]
   }
 
+  private let resolver: any JumaoCLIResolving
   private var runningProcess: Process?
+
+  init(resolver: any JumaoCLIResolving = JumaoCLIResolver()) {
+    self.resolver = resolver
+  }
 
   func conflictingFiles(in workspaceURL: URL) -> [String] {
     let fileManager = FileManager.default
@@ -54,10 +57,28 @@ final class JumaoProjectInitializer: JumaoProjectInitializing {
     workspaceURL: URL,
     completion: @escaping @MainActor @Sendable (JumaoProjectInitializationResult) -> Void
   ) {
+    resolver.resolve { [weak self] resolution in
+      guard let self else { return }
+
+      switch resolution {
+      case .resolved(let command):
+        self.run(projectName: projectName, workspaceURL: workspaceURL, command: command, completion: completion)
+      case .failed(let error):
+        completion(.failed(exitCode: nil, message: error.userFacingMessage))
+      }
+    }
+  }
+
+  private func run(
+    projectName: String,
+    workspaceURL: URL,
+    command: JumaoCLICommand,
+    completion: @escaping @MainActor @Sendable (JumaoProjectInitializationResult) -> Void
+  ) {
     let process = Process()
     let standardError = Pipe()
-    process.executableURL = Self.executableURL
-    process.arguments = Self.arguments(projectName: projectName, workspaceURL: workspaceURL)
+    process.executableURL = command.executableURL
+    process.arguments = command.arguments(for: Self.arguments(projectName: projectName, workspaceURL: workspaceURL))
     process.standardOutput = FileHandle.nullDevice
     process.standardError = standardError
     process.terminationHandler = { [weak self] process in
@@ -84,14 +105,6 @@ final class JumaoProjectInitializer: JumaoProjectInitializing {
   }
 
   nonisolated private static func shortMessage(from data: Data) -> String {
-    guard let text = String(data: data, encoding: .utf8) else {
-      return "无法读取 Jumao 的错误信息。"
-    }
-
-    let normalized = text
-      .components(separatedBy: .whitespacesAndNewlines)
-      .filter { !$0.isEmpty }
-      .joined(separator: " ")
-    return String(normalized.prefix(240))
+    JumaoCLIErrorLog.userMessage(from: data, fallback: "无法建立项目。", operation: "new")
   }
 }

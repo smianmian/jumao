@@ -130,7 +130,9 @@ struct StatusPopover: View {
           appState.answerProjectQuestions()
         } label: {
           Label(
-            appState.isLoadingInterviewSchema ? "正在读取项目问题" : "回答项目问题",
+            appState.isLoadingInterviewSchema
+              ? "正在读取项目问题"
+              : (appState.hasUnfinishedInterviewDraft ? appState.interviewResumeTitle : "回答项目问题"),
             systemImage: "list.bullet.rectangle"
           )
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -156,9 +158,6 @@ struct StatusPopover: View {
       }
     } message: {
       Text(appState.projectInitializationConflictMessage)
-    }
-    .sheet(isPresented: $appState.isInterviewPresented) {
-      InterviewForm(appState: appState)
     }
   }
 
@@ -272,13 +271,13 @@ struct StatusPopover: View {
     if let error = appState.terminalOpenError {
       feedbackText(error, color: .red)
     }
-    if let message = appState.projectInitializationMessage {
-      feedbackText(message, color: .green)
-    }
     if let error = appState.projectInitializationError {
       feedbackText(error, color: .red)
     }
     if let error = appState.interviewSchemaError {
+      feedbackText(error, color: .red)
+    }
+    if let error = appState.interviewDraftError {
       feedbackText(error, color: .red)
     }
   }

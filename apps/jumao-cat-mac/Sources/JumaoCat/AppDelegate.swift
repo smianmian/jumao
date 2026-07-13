@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private let popover = NSPopover()
   private var statusItem: NSStatusItem?
   private var menuBarInteraction: MenuBarInteractionController?
+  private var interviewWindow: InterviewWindowController?
   private var cancellables = Set<AnyCancellable>()
 
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -26,6 +27,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let hostingController = NSHostingController(rootView: StatusPopover(appState: appState))
     hostingController.sizingOptions = [.preferredContentSize]
     popover.contentViewController = hostingController
+
+    let interviewWindow = InterviewWindowController(appState: appState)
+    self.interviewWindow = interviewWindow
+    appState.$isInterviewPresented
+      .receive(on: RunLoop.main)
+      .sink { isPresented in
+        if isPresented {
+          interviewWindow.show()
+        } else {
+          interviewWindow.hide()
+        }
+      }
+      .store(in: &cancellables)
 
     if let button = item.button {
       let popoverController = StatusPopoverController(popover: popover, button: button)

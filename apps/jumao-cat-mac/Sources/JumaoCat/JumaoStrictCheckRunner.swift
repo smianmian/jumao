@@ -16,22 +16,42 @@ protocol JumaoStrictChecking {
 
 @MainActor
 final class JumaoStrictCheckRunner: JumaoStrictChecking {
-  static let executableURL = URL(fileURLWithPath: "/usr/bin/env")
-
   nonisolated static func arguments(for workspaceURL: URL) -> [String] {
-    ["jumao", "check", workspaceURL.path, "--strict"]
+    ["check", workspaceURL.path, "--strict"]
   }
 
+  private let resolver: any JumaoCLIResolving
   private var runningProcess: Process?
+
+  init(resolver: any JumaoCLIResolving = JumaoCLIResolver()) {
+    self.resolver = resolver
+  }
 
   func run(
     workspaceURL: URL,
     completion: @escaping @MainActor @Sendable (JumaoStrictCheckResult) -> Void
   ) {
+    resolver.resolve { [weak self] resolution in
+      guard let self else { return }
+
+      switch resolution {
+      case .resolved(let command):
+        self.run(workspaceURL: workspaceURL, command: command, completion: completion)
+      case .failed(let error):
+        completion(.failed(exitCode: nil, message: error.userFacingMessage))
+      }
+    }
+  }
+
+  private func run(
+    workspaceURL: URL,
+    command: JumaoCLICommand,
+    completion: @escaping @MainActor @Sendable (JumaoStrictCheckResult) -> Void
+  ) {
     let process = Process()
     let standardError = Pipe()
-    process.executableURL = Self.executableURL
-    process.arguments = Self.arguments(for: workspaceURL)
+    process.executableURL = command.executableURL
+    process.arguments = command.arguments(for: Self.arguments(for: workspaceURL))
     process.standardOutput = FileHandle.nullDevice
     process.standardError = standardError
     process.terminationHandler = { [weak self] process in
@@ -63,14 +83,6 @@ final class JumaoStrictCheckRunner: JumaoStrictChecking {
   }
 
   nonisolated private static func shortMessage(from data: Data) -> String {
-    guard let text = String(data: data, encoding: .utf8) else {
-      return "无法读取 Jumao 的错误信息。"
-    }
-
-    let normalized = text
-      .components(separatedBy: .whitespacesAndNewlines)
-      .filter { !$0.isEmpty }
-      .joined(separator: " ")
-    return String(normalized.prefix(240))
+    JumaoCLIErrorLog.userMessage(from: data, fallback: "无法完成项目检查。", operation: "check --strict")
   }
 }

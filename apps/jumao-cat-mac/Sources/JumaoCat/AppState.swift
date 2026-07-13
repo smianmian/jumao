@@ -19,8 +19,12 @@ final class AppState: ObservableObject {
   @Published private(set) var isLoadingInterviewSchema = false
   @Published private(set) var interviewSchema: JumaoInterviewSchema?
   @Published private(set) var interviewSchemaError: String?
+  @Published private(set) var interviewDraftError: String?
   @Published private(set) var interviewAnswers: [String: String] = [:]
+  @Published private(set) var skippedInterviewAnswerPaths = Set<String>()
+  @Published private(set) var interviewCurrentStageID: String?
   @Published private(set) var interviewCurrentQuestionIndex = 0
+  @Published private(set) var isCurrentInterviewStageComplete = false
   @Published private(set) var interviewValidationMessage: String?
   @Published private(set) var isInterviewComplete = false
   @Published private(set) var isWritingInterviewAnswers = false
@@ -51,10 +55,13 @@ final class AppState: ObservableObject {
   private let interviewSchemaLoader: any JumaoInterviewSchemaLoading
   private let interviewAnswerWriter: any JumaoInterviewAnswerWriting
   private let strictCheckRunner: any JumaoStrictChecking
+  private let interviewDraftStore: any InterviewDraftStoring
   private let appTerminator: any AppTerminating
   private var projectInitializationConflicts: [String] = []
   private var interviewDocumentsToOverwrite: [String] = []
   private var taskPackCopyFeedbackToken = UUID()
+  private var interviewDraftSaveTask: Task<Void, Never>?
+  private var restoredInterviewDraftNeedsStageInference = false
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
       self?.refreshStatus()
@@ -67,12 +74,14 @@ final class AppState: ObservableObject {
     workspaceOpener: any WorkspaceOpening = FinderWorkspaceOpener(),
     agentReportOpener: any AgentReportOpening = FinderAgentReportOpener(),
     taskPackCopier: any TaskPackCopying = CodexTaskPackCopier(),
-    taskPackRunner: any CodexTaskPackRunning = CodexTaskPackRunner(),
+    cliResolver: any JumaoCLIResolving = JumaoCLIResolver(),
+    taskPackRunner: (any CodexTaskPackRunning)? = nil,
     terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener(),
-    projectInitializer: any JumaoProjectInitializing = JumaoProjectInitializer(),
-    interviewSchemaLoader: any JumaoInterviewSchemaLoading = JumaoInterviewSchemaLoader(),
-    interviewAnswerWriter: any JumaoInterviewAnswerWriting = JumaoInterviewAnswerWriter(),
-    strictCheckRunner: any JumaoStrictChecking = JumaoStrictCheckRunner(),
+    projectInitializer: (any JumaoProjectInitializing)? = nil,
+    interviewSchemaLoader: (any JumaoInterviewSchemaLoading)? = nil,
+    interviewAnswerWriter: (any JumaoInterviewAnswerWriting)? = nil,
+    strictCheckRunner: (any JumaoStrictChecking)? = nil,
+    interviewDraftStore: any InterviewDraftStoring = InterviewDraftStore(),
     appTerminator: any AppTerminating = MacAppTerminator()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
@@ -80,12 +89,13 @@ final class AppState: ObservableObject {
     self.workspaceOpener = workspaceOpener
     self.agentReportOpener = agentReportOpener
     self.taskPackCopier = taskPackCopier
-    self.taskPackRunner = taskPackRunner
+    self.taskPackRunner = taskPackRunner ?? CodexTaskPackRunner(resolver: cliResolver)
     self.terminalWorkspaceOpener = terminalWorkspaceOpener
-    self.projectInitializer = projectInitializer
-    self.interviewSchemaLoader = interviewSchemaLoader
-    self.interviewAnswerWriter = interviewAnswerWriter
-    self.strictCheckRunner = strictCheckRunner
+    self.projectInitializer = projectInitializer ?? JumaoProjectInitializer(resolver: cliResolver)
+    self.interviewSchemaLoader = interviewSchemaLoader ?? JumaoInterviewSchemaLoader(resolver: cliResolver)
+    self.interviewAnswerWriter = interviewAnswerWriter ?? JumaoInterviewAnswerWriter(resolver: cliResolver)
+    self.strictCheckRunner = strictCheckRunner ?? JumaoStrictCheckRunner(resolver: cliResolver)
+    self.interviewDraftStore = interviewDraftStore
     self.appTerminator = appTerminator
   }
 
@@ -143,8 +153,34 @@ final class AppState: ObservableObject {
     workspaceURL != nil && !canInitializeProject && !isLoadingInterviewSchema
   }
 
+  var hasUnfinishedInterviewDraft: Bool {
+    (!interviewAnswers.isEmpty || !skippedInterviewAnswerPaths.isEmpty)
+      && (!isInterviewComplete || !pendingInterviewQuestions.isEmpty)
+  }
+
+  var interviewStages: [JumaoInterviewStage] {
+    interviewSchema?.stages.sorted { $0.order < $1.order } ?? []
+  }
+
   var interviewQuestions: [JumaoInterviewQuestion] {
-    interviewSchema?.questions.sorted { $0.order < $1.order } ?? []
+    guard let interviewSchema else { return [] }
+    let stageOrder = Dictionary(uniqueKeysWithValues: interviewStages.map { ($0.id, $0.order) })
+    let fallbackStageID = interviewStages.first?.id
+    return interviewSchema.questions.sorted { left, right in
+      let leftOrder = left.stage.flatMap { stageOrder[$0] } ?? fallbackStageID.flatMap { stageOrder[$0] } ?? Int.max
+      let rightOrder = right.stage.flatMap { stageOrder[$0] } ?? fallbackStageID.flatMap { stageOrder[$0] } ?? Int.max
+      return leftOrder == rightOrder ? left.order < right.order : leftOrder < rightOrder
+    }
+  }
+
+  var currentInterviewStage: JumaoInterviewStage? {
+    let stageID = interviewCurrentStageID ?? interviewStages.first?.id
+    return interviewStages.first { $0.id == stageID }
+  }
+
+  var currentInterviewStageQuestions: [JumaoInterviewQuestion] {
+    guard let stageID = currentInterviewStage?.id else { return [] }
+    return interviewQuestions.filter { questionStageID(for: $0) == stageID }
   }
 
   var interviewCurrentQuestion: JumaoInterviewQuestion? {
@@ -153,15 +189,50 @@ final class AppState: ObservableObject {
   }
 
   var interviewCurrentQuestionNumber: Int {
-    interviewCurrentQuestionIndex + 1
+    guard let answerPath = interviewCurrentQuestion?.answerPath else { return 1 }
+    return (currentInterviewStageQuestions.firstIndex { $0.answerPath == answerPath } ?? 0) + 1
+  }
+
+  var interviewCurrentStageQuestionCount: Int {
+    currentInterviewStageQuestions.count
   }
 
   var canGoToPreviousInterviewQuestion: Bool {
-    interviewCurrentQuestionIndex > 0
+    interviewCurrentQuestionNumber > 1
+      || currentInterviewStage.flatMap { stage in
+        interviewStages.firstIndex(of: stage).map { $0 > 0 }
+      } == true
   }
 
   var isLastInterviewQuestion: Bool {
-    !interviewQuestions.isEmpty && interviewCurrentQuestionIndex == interviewQuestions.count - 1
+    !currentInterviewStageQuestions.isEmpty
+      && interviewCurrentQuestion?.answerPath == currentInterviewStageQuestions.last?.answerPath
+  }
+
+  var pendingInterviewQuestions: [JumaoInterviewQuestion] {
+    interviewQuestions.filter { question in
+      question.required && !isMeaningfulInterviewAnswer(interviewAnswers[question.answerPath] ?? "")
+    }
+  }
+
+  var pendingCurrentStageInterviewQuestions: [JumaoInterviewQuestion] {
+    currentInterviewStageQuestions.filter { question in
+      question.required && !isMeaningfulInterviewAnswer(interviewAnswers[question.answerPath] ?? "")
+    }
+  }
+
+  var canWriteCompletedInterview: Bool {
+    isInterviewComplete && pendingInterviewQuestions.isEmpty && !isWritingInterviewAnswers
+  }
+
+  var interviewResumeTitle: String {
+    "继续第 \(currentInterviewStage?.order ?? 1) 阶段"
+  }
+
+  var hasNextInterviewStage: Bool {
+    guard let currentInterviewStage,
+          let index = interviewStages.firstIndex(of: currentInterviewStage) else { return false }
+    return interviewStages.indices.contains(index + 1)
   }
 
   var interviewInputHint: String? {
@@ -218,6 +289,7 @@ final class AppState: ObservableObject {
       return
     }
 
+    saveInterviewDraftImmediately()
     statusWatcher.stop()
 
     do {
@@ -395,6 +467,9 @@ final class AppState: ObservableObject {
   }
 
   func shutdown() {
+    saveInterviewDraftImmediately()
+    interviewDraftSaveTask?.cancel()
+    interviewDraftSaveTask = nil
     statusWatcher.stop()
     workspaceBookmarkStore.stopAccessingWorkspace()
     taskPackRunner.cancel()
@@ -410,11 +485,37 @@ final class AppState: ObservableObject {
     interviewSchema = schema
     let validAnswerPaths = Set(schema.questions.map(\.answerPath))
     interviewAnswers = interviewAnswers.filter { validAnswerPaths.contains($0.key) }
-    interviewCurrentQuestionIndex = min(interviewCurrentQuestionIndex, max(schema.questions.count - 1, 0))
+    skippedInterviewAnswerPaths.formIntersection(validAnswerPaths)
+    if restoredInterviewDraftNeedsStageInference {
+      let legacyQuestions = schema.questions.sorted { $0.order < $1.order }
+      let legacyQuestion = legacyQuestions.indices.contains(interviewCurrentQuestionIndex)
+        ? legacyQuestions[interviewCurrentQuestionIndex]
+        : legacyQuestions.first
+      interviewCurrentStageID = legacyQuestion.map(questionStageID(for:))
+      if let legacyQuestion,
+         let orderedIndex = interviewQuestions.firstIndex(where: { $0.answerPath == legacyQuestion.answerPath }) {
+        interviewCurrentQuestionIndex = orderedIndex
+      }
+      isCurrentInterviewStageComplete = isInterviewComplete
+      restoredInterviewDraftNeedsStageInference = false
+    } else if !interviewStages.contains(where: { $0.id == interviewCurrentStageID }) {
+      interviewCurrentStageID = interviewStages.first?.id
+    }
+
+    if currentInterviewStage != nil,
+       let firstQuestion = currentInterviewStageQuestions.first,
+       !currentInterviewStageQuestions.contains(where: { $0.answerPath == interviewCurrentQuestion?.answerPath }) {
+      interviewCurrentQuestionIndex = interviewQuestions.firstIndex(where: { $0.answerPath == firstQuestion.answerPath }) ?? 0
+    }
     interviewValidationMessage = nil
     interviewWriteMessage = nil
     interviewWriteError = nil
     isInterviewPresented = true
+  }
+
+  func hideInterview() {
+    saveInterviewDraftImmediately()
+    isInterviewPresented = false
   }
 
   func interviewAnswerBinding(for answerPath: String) -> Binding<String> {
@@ -426,14 +527,72 @@ final class AppState: ObservableObject {
 
   func updateInterviewAnswer(_ answer: String, for answerPath: String) {
     interviewAnswers[answerPath] = answer
+    if !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      skippedInterviewAnswerPaths.remove(answerPath)
+    }
     interviewValidationMessage = nil
     interviewWriteError = nil
+    scheduleInterviewDraftSave()
   }
 
   func goToPreviousInterviewQuestion() {
     guard canGoToPreviousInterviewQuestion else { return }
-    interviewCurrentQuestionIndex -= 1
+    guard let currentQuestion = interviewCurrentQuestion,
+          let stageIndex = currentInterviewStageQuestions.firstIndex(where: { $0.answerPath == currentQuestion.answerPath }) else { return }
+
+    let previousQuestion: JumaoInterviewQuestion
+    if stageIndex > 0 {
+      previousQuestion = currentInterviewStageQuestions[stageIndex - 1]
+    } else if let currentStage = currentInterviewStage,
+              let currentStageIndex = interviewStages.firstIndex(of: currentStage),
+              currentStageIndex > 0 {
+      let previousStage = interviewStages[currentStageIndex - 1]
+      guard let lastQuestion = interviewQuestions.last(where: { questionStageID(for: $0) == previousStage.id }) else {
+        return
+      }
+      interviewCurrentStageID = previousStage.id
+      previousQuestion = lastQuestion
+      isCurrentInterviewStageComplete = false
+      isInterviewComplete = false
+    } else {
+      return
+    }
+
+    interviewCurrentQuestionIndex = interviewQuestions.firstIndex(where: { $0.answerPath == previousQuestion.answerPath }) ?? 0
     interviewValidationMessage = nil
+    scheduleInterviewDraftSave()
+  }
+
+  func skipCurrentInterviewQuestion() {
+    guard let question = interviewCurrentQuestion else { return }
+
+    skippedInterviewAnswerPaths.insert(question.answerPath)
+    interviewValidationMessage = nil
+    if isLastInterviewQuestion {
+      finishCurrentInterviewStage()
+    } else {
+      guard let stageIndex = currentInterviewStageQuestions.firstIndex(where: { $0.answerPath == question.answerPath }) else {
+        return
+      }
+      let nextQuestion = currentInterviewStageQuestions[stageIndex + 1]
+      interviewCurrentQuestionIndex = interviewQuestions.firstIndex(where: { $0.answerPath == nextQuestion.answerPath }) ?? 0
+    }
+    scheduleInterviewDraftSave()
+  }
+
+  func jumpToInterviewQuestion(_ question: JumaoInterviewQuestion) {
+    guard let index = interviewQuestions.firstIndex(where: { $0.answerPath == question.answerPath }) else { return }
+
+    interviewCurrentStageID = questionStageID(for: question)
+    interviewCurrentQuestionIndex = index
+    isCurrentInterviewStageComplete = false
+    isInterviewComplete = false
+    interviewValidationMessage = nil
+    scheduleInterviewDraftSave()
+  }
+
+  func isInterviewQuestionMarkedForCompletion(_ question: JumaoInterviewQuestion) -> Bool {
+    skippedInterviewAnswerPaths.contains(question.answerPath)
   }
 
   @discardableResult
@@ -441,16 +600,41 @@ final class AppState: ObservableObject {
     guard validateCurrentInterviewQuestion() else { return false }
 
     if isLastInterviewQuestion {
-      isInterviewComplete = true
+      finishCurrentInterviewStage()
     } else {
-      interviewCurrentQuestionIndex += 1
+      guard let currentQuestion = interviewCurrentQuestion,
+            let stageIndex = currentInterviewStageQuestions.firstIndex(where: { $0.answerPath == currentQuestion.answerPath }) else {
+        return false
+      }
+      let nextQuestion = currentInterviewStageQuestions[stageIndex + 1]
+      interviewCurrentQuestionIndex = interviewQuestions.firstIndex(where: { $0.answerPath == nextQuestion.answerPath }) ?? 0
       interviewValidationMessage = nil
     }
+    scheduleInterviewDraftSave()
     return true
+  }
+
+  func continueToNextInterviewStage() {
+    guard isCurrentInterviewStageComplete,
+          let currentInterviewStage,
+          let currentIndex = interviewStages.firstIndex(of: currentInterviewStage),
+          interviewStages.indices.contains(currentIndex + 1) else { return }
+
+    let nextStage = interviewStages[currentIndex + 1]
+    interviewCurrentStageID = nextStage.id
+    interviewCurrentQuestionIndex = interviewQuestions.firstIndex { questionStageID(for: $0) == nextStage.id } ?? 0
+    isCurrentInterviewStageComplete = false
+    isInterviewComplete = false
+    interviewValidationMessage = nil
+    scheduleInterviewDraftSave()
   }
 
   func requestInterviewWrite() {
     guard isInterviewComplete, !isWritingInterviewAnswers, workspaceURL != nil else { return }
+    guard pendingInterviewQuestions.isEmpty else {
+      interviewWriteError = "还有 \(pendingInterviewQuestions.count) 题需要补充。"
+      return
+    }
     interviewWriteError = nil
     isInterviewWriteConfirmationPresented = true
   }
@@ -511,6 +695,7 @@ final class AppState: ObservableObject {
     taskPackGenerationError = nil
     terminalOpenError = nil
     clearProjectInitializationFeedback()
+    restoreInterviewDraft(for: workspaceURL)
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
@@ -604,9 +789,13 @@ final class AppState: ObservableObject {
       interviewSchemaError = nil
       beginInterview(with: schema)
     case .failed(let exitCode, let message):
-      let code = exitCode.map(String.init) ?? "无法启动"
       interviewSchema = nil
-      interviewSchemaError = "读取项目问题失败（退出码 \(code)）：\(message)"
+      if message == JumaoCLIResolutionError.globalVersionOutdated.userFacingMessage {
+        interviewSchemaError = message
+      } else {
+        let code = exitCode.map(String.init) ?? "无法启动"
+        interviewSchemaError = "读取项目问题失败（退出码 \(code)）：\(message)"
+      }
     }
   }
 
@@ -634,6 +823,11 @@ final class AppState: ObservableObject {
     case .succeeded:
       interviewWriteError = nil
       interviewWriteMessage = "项目问题已写入\n下一步：开始检查"
+      if let workspaceURL {
+        interviewDraftStore.delete(for: workspaceURL)
+      }
+      interviewDraftSaveTask?.cancel()
+      interviewDraftSaveTask = nil
       interviewAnswers = [:]
       projectCheckMessage = nil
       projectCheckError = nil
@@ -676,6 +870,59 @@ final class AppState: ObservableObject {
     }
   }
 
+  private func scheduleInterviewDraftSave() {
+    interviewDraftSaveTask?.cancel()
+    interviewDraftSaveTask = Task { [weak self] in
+      try? await Task.sleep(nanoseconds: 400_000_000)
+      guard !Task.isCancelled else { return }
+      self?.saveInterviewDraftImmediately()
+    }
+  }
+
+  private func saveInterviewDraftImmediately() {
+    interviewDraftSaveTask?.cancel()
+    guard let workspaceURL, let interviewSchema else { return }
+
+    let draft = InterviewDraft(
+      schemaVersion: interviewSchema.schemaVersion,
+      workspaceIdentifier: InterviewDraftStore.workspaceIdentifier(for: workspaceURL),
+      currentQuestionIndex: interviewCurrentQuestionIndex,
+      answers: interviewAnswers,
+      skippedAnswerPaths: Array(skippedInterviewAnswerPaths),
+      isInterviewComplete: isInterviewComplete,
+      stageID: interviewCurrentStageID,
+      isCurrentStageComplete: isCurrentInterviewStageComplete,
+      updatedAt: Date()
+    )
+
+    do {
+      try interviewDraftStore.save(draft, for: workspaceURL)
+      interviewDraftError = nil
+    } catch {
+      interviewDraftError = "无法保存本地问答草稿。"
+    }
+  }
+
+  private func restoreInterviewDraft(for workspaceURL: URL) {
+    switch interviewDraftStore.load(for: workspaceURL) {
+    case .missing:
+      restoredInterviewDraftNeedsStageInference = false
+      interviewDraftError = nil
+    case .loaded(let draft):
+      interviewAnswers = draft.answers
+      skippedInterviewAnswerPaths = Set(draft.skippedAnswerPaths)
+      interviewCurrentQuestionIndex = max(draft.currentQuestionIndex, 0)
+      isInterviewComplete = draft.isInterviewComplete
+      interviewCurrentStageID = draft.stageID
+      isCurrentInterviewStageComplete = draft.isCurrentStageComplete
+      restoredInterviewDraftNeedsStageInference = draft.stageID == nil
+      interviewDraftError = nil
+    case .corrupted:
+      restoredInterviewDraftNeedsStageInference = false
+      interviewDraftError = "本地问答草稿无法读取，已忽略。"
+    }
+  }
+
   private func clearProjectInitializationFeedback() {
     isInitializingProject = false
     projectInitializationMessage = nil
@@ -686,8 +933,12 @@ final class AppState: ObservableObject {
     isLoadingInterviewSchema = false
     interviewSchema = nil
     interviewSchemaError = nil
+    interviewDraftError = nil
     interviewAnswers = [:]
+    skippedInterviewAnswerPaths = []
+    interviewCurrentStageID = nil
     interviewCurrentQuestionIndex = 0
+    isCurrentInterviewStageComplete = false
     interviewValidationMessage = nil
     isInterviewComplete = false
     isWritingInterviewAnswers = false
@@ -709,11 +960,32 @@ final class AppState: ObservableObject {
   private func validateCurrentInterviewQuestion() -> Bool {
     guard let question = interviewCurrentQuestion else { return false }
     guard question.required else { return true }
-    guard !(interviewAnswers[question.answerPath] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+    guard isMeaningfulInterviewAnswer(interviewAnswers[question.answerPath] ?? "") else {
       interviewValidationMessage = "请先填写这道必填问题。"
       return false
     }
     return true
+  }
+
+  private func finishCurrentInterviewStage() {
+    isCurrentInterviewStageComplete = true
+    isInterviewComplete = !hasNextInterviewStage
+    interviewValidationMessage = nil
+  }
+
+  private func questionStageID(for question: JumaoInterviewQuestion) -> String {
+    question.stage ?? interviewStages.first?.id ?? JumaoInterviewSchema.legacyStage.id
+  }
+
+  private func isMeaningfulInterviewAnswer(_ answer: String) -> Bool {
+    let normalized = answer
+      .lowercased()
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+      .replacingOccurrences(of: " ", with: "")
+
+    guard !normalized.isEmpty else { return false }
+    let placeholderAnswers = ["暂不确定", "不确定", "不知道", "不清楚", "待定", "以后再说", "n/a", "na"]
+    return !placeholderAnswers.contains(normalized)
   }
 
   private func isDirectory(_ url: URL) -> Bool {

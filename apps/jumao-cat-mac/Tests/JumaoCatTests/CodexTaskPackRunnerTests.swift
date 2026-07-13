@@ -7,7 +7,7 @@ final class CodexTaskPackRunnerTests: XCTestCase {
 
     XCTAssertEqual(
       CodexTaskPackRunner.arguments(for: workspaceURL),
-      ["jumao", "pack", "/tmp/My Jumao App", "--target", "codex"]
+      ["pack", "/tmp/My Jumao App", "--target", "codex"]
     )
   }
 

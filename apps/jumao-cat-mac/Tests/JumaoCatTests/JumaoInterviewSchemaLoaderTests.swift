@@ -5,20 +5,89 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
   func testUsesFixedSchemaArguments() {
     XCTAssertEqual(
       JumaoInterviewSchemaLoader.arguments(),
-      ["jumao", "interview", "--schema"]
+      ["interview", "--schema"]
     )
   }
 
-  func testDecodesTwentyTwoQuestionsFromSchemaJSON() throws {
-    let schema = try JumaoInterviewSchemaLoader.decodeSchema(from: makeSchemaData(questionCount: 22))
+  func testDecodesTwentyOneQuestionsFromSchemaJSON() throws {
+    let schema = try JumaoInterviewSchemaLoader.decodeSchema(from: makeSchemaData(questionCount: 21))
 
     XCTAssertEqual(schema.schemaVersion, 1)
-    XCTAssertEqual(schema.questions.count, 22)
+    XCTAssertEqual(schema.questions.count, 21)
     XCTAssertEqual(schema.questions.first?.title, "主要用户是谁？")
+  }
+
+  func testDecodesOptionalGuidanceAndExample() throws {
+    let data = Data(#"{"schemaVersion":1,"questions":[{"id":"primaryUser","answerPath":"primaryUser","title":"主要用户是谁？","description":"说明","guidance":"填写指引","example":"填写示例","placeholder":"输入例子","inputType":"text","required":true,"order":1}]}"#.utf8)
+
+    let schema = try JumaoInterviewSchemaLoader.decodeSchema(from: data)
+
+    XCTAssertEqual(schema.questions.first?.guidance, "填写指引")
+    XCTAssertEqual(schema.questions.first?.example, "填写示例")
+    XCTAssertEqual(schema.questions.first?.placeholder, "输入例子")
+  }
+
+  func testOldSchemaWithoutGuidanceAndExampleStillDecodes() throws {
+    let data = Data(#"{"schemaVersion":1,"questions":[{"id":"question1","answerPath":"question1","title":"旧问题","description":"说明","inputType":"text","required":true,"order":1}]}"#.utf8)
+    let schema = try JumaoInterviewSchemaLoader.decodeSchema(from: data)
+
+    XCTAssertNil(schema.questions.first?.guidance)
+    XCTAssertNil(schema.questions.first?.example)
+    XCTAssertNil(schema.questions.first?.placeholder)
+    XCTAssertEqual(schema.stages, [JumaoInterviewSchema.legacyStage])
   }
 
   func testRejectsInvalidSchemaJSON() {
     XCTAssertThrowsError(try JumaoInterviewSchemaLoader.decodeSchema(from: Data("不是 JSON".utf8)))
+  }
+
+  @MainActor
+  func testIncompatibleGlobalCLIShowsShortChineseError() async {
+    let loader = JumaoInterviewSchemaLoader(
+      resolver: FixedJumaoCLIResolver(.failed(.globalVersionOutdated))
+    )
+    let expectation = expectation(description: "schema result")
+
+    loader.run { result in
+      XCTAssertEqual(
+        result,
+        .failed(exitCode: nil, message: "当前安装的 Jumao 版本过旧，请更新后重试。")
+      )
+      expectation.fulfill()
+    }
+
+    await fulfillment(of: [expectation], timeout: 1)
+  }
+
+  @MainActor
+  func testRepositoryCLIReadsCurrentTwentyOneQuestionSchema() async {
+    let loader = JumaoInterviewSchemaLoader(
+      resolver: JumaoCLIResolver(repositoryRootURL: repositoryRootURL)
+    )
+    let expectation = expectation(description: "schema result")
+
+    loader.run { result in
+      guard case .succeeded(let schema) = result else {
+        XCTFail("仓库内 CLI 应返回问题 schema：\(result)")
+        expectation.fulfill()
+        return
+      }
+      XCTAssertEqual(schema.schemaVersion, 2)
+      XCTAssertEqual(schema.questions.count, 21)
+      let rawSchema = try? JSONSerialization.jsonObject(
+        with: Data(contentsOf: self.repositoryRootURL.appendingPathComponent("src/core/interview-schema.json"))
+      ) as? [String: Any]
+      XCTAssertEqual((rawSchema?["entryQuestionIds"] as? [String])?.count, 4)
+      XCTAssertNotNil(rawSchema?["routing"])
+      XCTAssertEqual(schema.questions.first?.title, "最先会来用的人是谁？")
+      XCTAssertEqual(schema.stages.map(\.id), ["idea", "prototype", "release"])
+      XCTAssertEqual(schema.stages.map { stage in
+        schema.questions.filter { $0.stage == stage.id }.count
+      }, [5, 10, 6])
+      expectation.fulfill()
+    }
+
+    await fulfillment(of: [expectation], timeout: 5)
   }
 
   @MainActor
@@ -57,6 +126,14 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
       )
     }
     return try JSONEncoder().encode(JumaoInterviewSchema(schemaVersion: 1, questions: questions))
+  }
+
+  private var repositoryRootURL: URL {
+    var url = URL(fileURLWithPath: #filePath)
+    for _ in 0..<5 {
+      url.deleteLastPathComponent()
+    }
+    return url
   }
 
   @MainActor

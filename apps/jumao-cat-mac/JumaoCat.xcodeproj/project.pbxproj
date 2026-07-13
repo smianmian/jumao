@@ -35,6 +35,12 @@
 		C10300000000000000000001 /* InterviewTaskPackFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10300000000000000000002 /* InterviewTaskPackFlowTests.swift */; };
 		C10400000000000000000001 /* MenuBarInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10400000000000000000002 /* MenuBarInteractionController.swift */; };
 		C10400000000000000000003 /* MenuBarInteractionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10400000000000000000004 /* MenuBarInteractionControllerTests.swift */; };
+		C10500000000000000000001 /* JumaoCLIResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10500000000000000000002 /* JumaoCLIResolver.swift */; };
+		C10500000000000000000003 /* JumaoCLIResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10500000000000000000004 /* JumaoCLIResolverTests.swift */; };
+		C10600000000000000000001 /* InterviewDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10600000000000000000002 /* InterviewDraftStore.swift */; };
+		C10600000000000000000003 /* InterviewDraftStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10600000000000000000004 /* InterviewDraftStoreTests.swift */; };
+		C10700000000000000000001 /* InterviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10700000000000000000002 /* InterviewWindowController.swift */; };
+		C10700000000000000000003 /* InterviewWindowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10700000000000000000004 /* InterviewWindowControllerTests.swift */; };
 		C10200000000000000000001 /* JumaoStrictCheckRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10200000000000000000002 /* JumaoStrictCheckRunner.swift */; };
 		C10200000000000000000003 /* JumaoStrictCheckRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10200000000000000000004 /* JumaoStrictCheckRunnerTests.swift */; };
 		C10100000000000000000001 /* JumaoInterviewAnswerWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10100000000000000000002 /* JumaoInterviewAnswerWriter.swift */; };
@@ -91,6 +97,12 @@
 		C10300000000000000000002 /* InterviewTaskPackFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewTaskPackFlowTests.swift; sourceTree = "<group>"; };
 		C10400000000000000000002 /* MenuBarInteractionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarInteractionController.swift; sourceTree = "<group>"; };
 		C10400000000000000000004 /* MenuBarInteractionControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarInteractionControllerTests.swift; sourceTree = "<group>"; };
+		C10500000000000000000002 /* JumaoCLIResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoCLIResolver.swift; sourceTree = "<group>"; };
+		C10500000000000000000004 /* JumaoCLIResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoCLIResolverTests.swift; sourceTree = "<group>"; };
+		C10600000000000000000002 /* InterviewDraftStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewDraftStore.swift; sourceTree = "<group>"; };
+		C10600000000000000000004 /* InterviewDraftStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewDraftStoreTests.swift; sourceTree = "<group>"; };
+		C10700000000000000000002 /* InterviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewWindowController.swift; sourceTree = "<group>"; };
+		C10700000000000000000004 /* InterviewWindowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewWindowControllerTests.swift; sourceTree = "<group>"; };
 		C10200000000000000000002 /* JumaoStrictCheckRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStrictCheckRunner.swift; sourceTree = "<group>"; };
 		C10200000000000000000004 /* JumaoStrictCheckRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStrictCheckRunnerTests.swift; sourceTree = "<group>"; };
 		C10100000000000000000002 /* JumaoInterviewAnswerWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoInterviewAnswerWriter.swift; sourceTree = "<group>"; };
@@ -117,6 +129,9 @@
 			isa = PBXGroup;
 			children = (
 				C10400000000000000000002 /* MenuBarInteractionController.swift */,
+				C10500000000000000000002 /* JumaoCLIResolver.swift */,
+				C10600000000000000000002 /* InterviewDraftStore.swift */,
+				C10700000000000000000002 /* InterviewWindowController.swift */,
 				C10200000000000000000002 /* JumaoStrictCheckRunner.swift */,
 				C10100000000000000000002 /* JumaoInterviewAnswerWriter.swift */,
 				C3FECF5824F796D0BB9C11C4 /* AgentReportOpener.swift */,
@@ -178,6 +193,9 @@
 				576658033E20D382AF6ADCAD /* InterviewNavigationTests.swift */,
 				C10300000000000000000002 /* InterviewTaskPackFlowTests.swift */,
 				C10400000000000000000004 /* MenuBarInteractionControllerTests.swift */,
+				C10500000000000000000004 /* JumaoCLIResolverTests.swift */,
+				C10600000000000000000004 /* InterviewDraftStoreTests.swift */,
+				C10700000000000000000004 /* InterviewWindowControllerTests.swift */,
 				C10100000000000000000004 /* JumaoInterviewAnswerWriterTests.swift */,
 				C10200000000000000000004 /* JumaoStrictCheckRunnerTests.swift */,
 				31BB3FBB91FBB16D793898C1 /* JumaoInterviewSchemaLoaderTests.swift */,
@@ -288,6 +306,9 @@
 				F6DC62A780AE0BB416920308 /* CodexTaskPackCopier.swift in Sources */,
 				BD7D859D35DD33513061160E /* CodexTaskPackRunner.swift in Sources */,
 				C10400000000000000000001 /* MenuBarInteractionController.swift in Sources */,
+				C10500000000000000000001 /* JumaoCLIResolver.swift in Sources */,
+				C10600000000000000000001 /* InterviewDraftStore.swift in Sources */,
+				C10700000000000000000001 /* InterviewWindowController.swift in Sources */,
 				C10200000000000000000001 /* JumaoStrictCheckRunner.swift in Sources */,
 				C10100000000000000000001 /* JumaoInterviewAnswerWriter.swift in Sources */,
 				84AB97C53E496DCCFDA22BCF /* InterviewForm.swift in Sources */,
@@ -316,6 +337,9 @@
 				742716F922BD27143ED88DAD /* InterviewNavigationTests.swift in Sources */,
 				C10300000000000000000001 /* InterviewTaskPackFlowTests.swift in Sources */,
 				C10400000000000000000003 /* MenuBarInteractionControllerTests.swift in Sources */,
+				C10500000000000000000003 /* JumaoCLIResolverTests.swift in Sources */,
+				C10600000000000000000003 /* InterviewDraftStoreTests.swift in Sources */,
+				C10700000000000000000003 /* InterviewWindowControllerTests.swift in Sources */,
 				C10100000000000000000003 /* JumaoInterviewAnswerWriterTests.swift in Sources */,
 				C10200000000000000000003 /* JumaoStrictCheckRunnerTests.swift in Sources */,
 				10B4A3E19CE620B8CB37AD47 /* JumaoInterviewSchemaLoaderTests.swift in Sources */,

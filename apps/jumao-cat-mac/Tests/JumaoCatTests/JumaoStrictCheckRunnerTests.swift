@@ -6,7 +6,7 @@ final class JumaoStrictCheckRunnerTests: XCTestCase {
   func testUsesStrictCheckArguments() {
     XCTAssertEqual(
       JumaoStrictCheckRunner.arguments(for: URL(fileURLWithPath: "/tmp/current-project")),
-      ["jumao", "check", "/tmp/current-project", "--strict"]
+      ["check", "/tmp/current-project", "--strict"]
     )
   }
 

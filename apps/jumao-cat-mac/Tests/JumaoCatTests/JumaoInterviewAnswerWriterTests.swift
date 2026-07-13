@@ -40,7 +40,7 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
         answersURL: URL(fileURLWithPath: "/tmp/answers.json"),
         force: true
       ),
-      ["jumao", "interview", "/tmp/current-project", "--answers", "/tmp/answers.json", "--force"]
+      ["interview", "/tmp/current-project", "--answers", "/tmp/answers.json", "--force"]
     )
   }
 
@@ -51,7 +51,7 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
   func testTemporaryAnswersAreDeletedAfterFailedProcess() async throws {
     try await assertTemporaryAnswersAreDeleted(
       executableURL: URL(fileURLWithPath: "/usr/bin/false"),
-      expectedResult: .failed(exitCode: 1, message: "jumao interview 未能完成。")
+      expectedResult: .failed(exitCode: 1, message: "无法写入项目问题。")
     )
   }
 

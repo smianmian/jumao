@@ -14,16 +14,25 @@ struct InterviewForm: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack(alignment: .firstTextBaseline) {
-        Text("回答项目问题")
+        Text(stageHeaderTitle)
           .font(.title3.weight(.semibold))
         Spacer()
-        Text("共 \(appState.interviewQuestions.count) 题")
+        Button("暂时隐藏") {
+          appState.hideInterview()
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        Text("共 \(appState.interviewCurrentStageQuestionCount) 题")
           .font(.caption.weight(.medium))
           .foregroundStyle(.secondary)
       }
 
-      if appState.isInterviewComplete {
-        completionCard
+      if appState.isCurrentInterviewStageComplete {
+        if appState.hasNextInterviewStage {
+          stageCompletionCard
+        } else {
+          completionCard
+        }
       } else if let question = appState.interviewCurrentQuestion {
         questionCard(question)
       }
@@ -66,10 +75,68 @@ struct InterviewForm: View {
     }
   }
 
+  private var stageHeaderTitle: String {
+    guard let stage = appState.currentInterviewStage else { return "回答项目问题" }
+    return "第 \(stage.order) 阶段：\(stage.title)"
+  }
+
+  private var stageCompletionCard: some View {
+    HStack(alignment: .top, spacing: 12) {
+      VStack(alignment: .leading, spacing: 10) {
+        if appState.currentInterviewStage?.id == "idea" {
+          Text("第一阶段完成")
+            .font(.headline)
+          Text("你已经把第一版要做什么说清楚了。")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        } else {
+          Text("第二阶段完成")
+            .font(.headline)
+          Text("页面、操作和常见情况已经补充好了。")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+
+        HStack {
+          Button("暂时结束") {
+            appState.hideInterview()
+          }
+          .buttonStyle(.bordered)
+
+          Button(appState.currentInterviewStage?.id == "idea" ? "继续完善第一版" : "继续准备给别人使用") {
+            appState.continueToNextInterviewStage()
+          }
+          .buttonStyle(.borderedProminent)
+          .tint(.orange)
+        }
+      }
+
+      Spacer(minLength: 0)
+      companionCat()
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
   private var completionCard: some View {
     HStack(alignment: .top, spacing: 12) {
       VStack(alignment: .leading, spacing: 10) {
-        if appState.isCheckingProject {
+        if !appState.pendingInterviewQuestions.isEmpty {
+          Text("还有 \(appState.pendingInterviewQuestions.count) 题需要补充")
+            .font(.headline)
+          Text("点下面的题目回去补答，补齐后才能写入项目。")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+
+          ForEach(appState.pendingInterviewQuestions, id: \.answerPath) { question in
+            Button("第 \(question.order) 题：\(question.title)") {
+              appState.jumpToInterviewQuestion(question)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+          }
+        } else if appState.isCheckingProject {
           Text("正在检查")
             .font(.headline)
           ProgressView()
@@ -138,7 +205,7 @@ struct InterviewForm: View {
           }
           .buttonStyle(.borderedProminent)
           .tint(.orange)
-          .disabled(appState.isWritingInterviewAnswers)
+          .disabled(!appState.canWriteCompletedInterview)
         }
 
         if let error = appState.interviewWriteError {
@@ -160,9 +227,14 @@ struct InterviewForm: View {
     VStack(alignment: .leading, spacing: 14) {
       HStack(alignment: .top, spacing: 12) {
         VStack(alignment: .leading, spacing: 5) {
-          Text("第 \(appState.interviewCurrentQuestionNumber) 题 / 共 \(appState.interviewQuestions.count) 题")
+          Text("第 \(appState.interviewCurrentQuestionNumber) 题 / 共 \(appState.interviewCurrentStageQuestionCount) 题")
             .font(.caption.weight(.semibold))
             .foregroundStyle(.orange)
+          if appState.isInterviewQuestionMarkedForCompletion(question) {
+            Text("待补充")
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(.orange)
+          }
           Text(question.title)
             .font(.headline)
             .fixedSize(horizontal: false, vertical: true)
@@ -170,13 +242,35 @@ struct InterviewForm: View {
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
+          if let guidance = question.guidance, !guidance.isEmpty {
+            Text("你可以这样想：")
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(.secondary)
+            Text(guidance)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+          if let example = question.example, !example.isEmpty {
+            Text("示例：")
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(.secondary)
+            Text(example)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .fixedSize(horizontal: false, vertical: true)
+          }
         }
 
         Spacer(minLength: 0)
         companionCat()
       }
 
-      TextField("请输入你的回答", text: appState.interviewAnswerBinding(for: question.answerPath), axis: .vertical)
+      TextField(
+        question.placeholder ?? "请输入你的回答",
+        text: appState.interviewAnswerBinding(for: question.answerPath),
+        axis: .vertical
+      )
         .textFieldStyle(.roundedBorder)
         .lineLimit(2...3)
         .onChange(of: appState.interviewAnswers[question.answerPath] ?? "") { _, _ in
@@ -203,7 +297,13 @@ struct InterviewForm: View {
         .disabled(!appState.canGoToPreviousInterviewQuestion || isCatActionAnimating)
 
         Spacer()
-        Button(appState.isLastInterviewQuestion ? "完成填写" : "下一题") {
+        Button("先跳过") {
+          appState.skipCurrentInterviewQuestion()
+        }
+        .buttonStyle(.bordered)
+        .disabled(isCatActionAnimating)
+
+        Button(appState.isLastInterviewQuestion ? (appState.hasNextInterviewStage ? "完成本阶段" : "完成填写") : "下一题") {
           advanceInterview()
         }
         .buttonStyle(.borderedProminent)
@@ -233,7 +333,7 @@ struct InterviewForm: View {
       return
     }
 
-    if appState.isLastInterviewQuestion {
+    if appState.isLastInterviewQuestion && !appState.hasNextInterviewStage {
       celebrateInterviewCompletion()
       return
     }

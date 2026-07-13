@@ -7,7 +7,7 @@ final class JumaoProjectInitializerTests: XCTestCase {
 
     XCTAssertEqual(
       JumaoProjectInitializer.arguments(projectName: "My Jumao App", workspaceURL: workspaceURL),
-      ["jumao", "new", "My Jumao App", "--dir", "/tmp/My Jumao App"]
+      ["new", "My Jumao App", "--dir", "/tmp/My Jumao App"]
     )
   }
 

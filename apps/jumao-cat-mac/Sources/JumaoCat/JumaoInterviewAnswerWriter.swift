@@ -19,7 +19,6 @@ protocol JumaoInterviewAnswerWriting {
 
 @MainActor
 final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
-  static let executableURL = URL(fileURLWithPath: "/usr/bin/env")
   static let coreDocumentPaths = [
     "product/product-brief.zh-CN.md",
     "product/scope-gate.zh-CN.md",
@@ -27,23 +26,33 @@ final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
     "product/data-safety.zh-CN.md"
   ]
 
-  private let executableURL: URL
-  private let command: String?
+  private let resolver: any JumaoCLIResolving
   private let temporaryDirectory: URL
   private var runningProcess: Process?
 
   init(
-    executableURL: URL = JumaoInterviewAnswerWriter.executableURL,
-    command: String? = "jumao",
+    resolver: any JumaoCLIResolving = JumaoCLIResolver(),
     temporaryDirectory: URL = FileManager.default.temporaryDirectory
   ) {
-    self.executableURL = executableURL
-    self.command = command
+    self.resolver = resolver
     self.temporaryDirectory = temporaryDirectory
   }
 
+  convenience init(
+    executableURL: URL,
+    command: String?,
+    temporaryDirectory: URL = FileManager.default.temporaryDirectory
+  ) {
+    let invocation = JumaoCLICommand(
+      source: .configured,
+      executableURL: executableURL,
+      prefixArguments: command.map { [$0] } ?? []
+    )
+    self.init(resolver: FixedJumaoCLIResolver(.resolved(invocation)), temporaryDirectory: temporaryDirectory)
+  }
+
   nonisolated static func arguments(workspaceURL: URL, answersURL: URL, force: Bool) -> [String] {
-    var arguments = ["jumao", "interview", workspaceURL.path, "--answers", answersURL.path]
+    var arguments = ["interview", workspaceURL.path, "--answers", answersURL.path]
     if force {
       arguments.append("--force")
     }
@@ -87,6 +96,33 @@ final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
     force: Bool,
     completion: @escaping @MainActor @Sendable (JumaoInterviewAnswerWriteResult) -> Void
   ) {
+    resolver.resolve { [weak self] resolution in
+      guard let self else { return }
+
+      switch resolution {
+      case .resolved(let command):
+        self.run(
+          workspaceURL: workspaceURL,
+          questions: questions,
+          answers: answers,
+          force: force,
+          command: command,
+          completion: completion
+        )
+      case .failed(let error):
+        completion(.failed(exitCode: nil, message: error.userFacingMessage))
+      }
+    }
+  }
+
+  private func run(
+    workspaceURL: URL,
+    questions: [JumaoInterviewQuestion],
+    answers: [String: String],
+    force: Bool,
+    command: JumaoCLICommand,
+    completion: @escaping @MainActor @Sendable (JumaoInterviewAnswerWriteResult) -> Void
+  ) {
     let answersURL: URL
     do {
       answersURL = try writeTemporaryAnswers(questions: questions, answers: answers)
@@ -97,8 +133,8 @@ final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
 
     let process = Process()
     let standardError = Pipe()
-    process.executableURL = executableURL
-    process.arguments = processArguments(workspaceURL: workspaceURL, answersURL: answersURL, force: force)
+    process.executableURL = command.executableURL
+    process.arguments = command.arguments(for: Self.arguments(workspaceURL: workspaceURL, answersURL: answersURL, force: force))
     process.standardOutput = FileHandle.nullDevice
     process.standardError = standardError
     process.terminationHandler = { [weak self] process in
@@ -124,16 +160,6 @@ final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
       try? FileManager.default.removeItem(at: answersURL)
       completion(.failed(exitCode: nil, message: "无法启动 jumao interview。"))
     }
-  }
-
-  private func processArguments(workspaceURL: URL, answersURL: URL, force: Bool) -> [String] {
-    var arguments = Self.arguments(workspaceURL: workspaceURL, answersURL: answersURL, force: force)
-    if let command {
-      arguments[0] = command
-    } else {
-      arguments.removeFirst()
-    }
-    return arguments
   }
 
   private func writeTemporaryAnswers(
@@ -163,14 +189,6 @@ final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
   }
 
   nonisolated private static func shortMessage(from data: Data) -> String {
-    guard let text = String(data: data, encoding: .utf8) else {
-      return "无法读取 Jumao 的错误信息。"
-    }
-
-    let normalized = text
-      .components(separatedBy: .whitespacesAndNewlines)
-      .filter { !$0.isEmpty }
-      .joined(separator: " ")
-    return String(normalized.prefix(240))
+    JumaoCLIErrorLog.userMessage(from: data, fallback: "无法写入项目问题。", operation: "interview --answers")
   }
 }
