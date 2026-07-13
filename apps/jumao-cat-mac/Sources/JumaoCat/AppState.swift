@@ -16,6 +16,9 @@ final class AppState: ObservableObject {
   @Published private(set) var isInitializingProject = false
   @Published private(set) var projectInitializationMessage: String?
   @Published private(set) var projectInitializationError: String?
+  @Published private(set) var isInspectingProject = false
+  @Published private(set) var projectInspection: JumaoProjectInspection?
+  @Published private(set) var projectInspectionError: String?
   @Published private(set) var isLoadingInterviewSchema = false
   @Published private(set) var interviewSchema: JumaoInterviewSchema?
   @Published private(set) var interviewSchemaError: String?
@@ -52,6 +55,7 @@ final class AppState: ObservableObject {
   private let taskPackRunner: any CodexTaskPackRunning
   private let terminalWorkspaceOpener: any TerminalWorkspaceOpening
   private let projectInitializer: any JumaoProjectInitializing
+  private let projectInspector: any JumaoProjectInspecting
   private let interviewSchemaLoader: any JumaoInterviewSchemaLoading
   private let interviewAnswerWriter: any JumaoInterviewAnswerWriting
   private let strictCheckRunner: any JumaoStrictChecking
@@ -78,6 +82,7 @@ final class AppState: ObservableObject {
     taskPackRunner: (any CodexTaskPackRunning)? = nil,
     terminalWorkspaceOpener: any TerminalWorkspaceOpening = MacTerminalWorkspaceOpener(),
     projectInitializer: (any JumaoProjectInitializing)? = nil,
+    projectInspector: (any JumaoProjectInspecting)? = nil,
     interviewSchemaLoader: (any JumaoInterviewSchemaLoading)? = nil,
     interviewAnswerWriter: (any JumaoInterviewAnswerWriting)? = nil,
     strictCheckRunner: (any JumaoStrictChecking)? = nil,
@@ -92,6 +97,7 @@ final class AppState: ObservableObject {
     self.taskPackRunner = taskPackRunner ?? CodexTaskPackRunner(resolver: cliResolver)
     self.terminalWorkspaceOpener = terminalWorkspaceOpener
     self.projectInitializer = projectInitializer ?? JumaoProjectInitializer(resolver: cliResolver)
+    self.projectInspector = projectInspector ?? JumaoProjectInspector(resolver: cliResolver)
     self.interviewSchemaLoader = interviewSchemaLoader ?? JumaoInterviewSchemaLoader(resolver: cliResolver)
     self.interviewAnswerWriter = interviewAnswerWriter ?? JumaoInterviewAnswerWriter(resolver: cliResolver)
     self.strictCheckRunner = strictCheckRunner ?? JumaoStrictCheckRunner(resolver: cliResolver)
@@ -105,6 +111,9 @@ final class AppState: ObservableObject {
 
   var projectName: String {
     if let name = status.snapshot?.status.workspace.name.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+      return name
+    }
+    if let name = projectInspection?.project.name.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
       return name
     }
 
@@ -153,6 +162,51 @@ final class AppState: ObservableObject {
     workspaceURL != nil && !canInitializeProject && !isLoadingInterviewSchema
   }
 
+  var shouldShowProjectInspection: Bool {
+    workspaceURL != nil && status.snapshot == nil
+  }
+
+  var projectInspectionKindTitle: String? {
+    switch projectInspection?.workspaceKind {
+    case "empty": return "空文件夹"
+    case "new": return "新项目资料"
+    case "existing": return "已有项目"
+    default: return nil
+    }
+  }
+
+  var projectInspectionPrimaryActionTitle: String? {
+    switch projectInspection?.workspaceKind {
+    case "empty", "new": return "开始规划新项目"
+    case "existing": return "开始梳理这次改动"
+    default: return nil
+    }
+  }
+
+  var projectInspectionPrimaryActionDescription: String? {
+    switch projectInspection?.workspaceKind {
+    case "empty", "new": return "先确认第一版要实现哪些功能。"
+    case "existing": return "橘猫已经查看了项目结构，接下来只确认这次要修改什么。"
+    default: return nil
+    }
+  }
+
+  var projectInspectionCapabilityMessage: String? {
+    guard let level = projectInspection?.capabilityFit.level else { return nil }
+    switch level {
+    case "high":
+      return "橘猫对这个项目类型比较熟悉，当前更擅长 Swift、SwiftUI 与 Xcode 项目。"
+    case "limited":
+      return "橘猫目前更擅长 iOS 原生 App。这个项目仍然可以梳理，但部分建议和检查可能不完整。"
+    default:
+      return nil
+    }
+  }
+
+  var canContinueFromProjectInspection: Bool {
+    projectInspection != nil
+  }
+
   var hasUnfinishedInterviewDraft: Bool {
     (!interviewAnswers.isEmpty || !skippedInterviewAnswerPaths.isEmpty)
       && (!isInterviewComplete || !pendingInterviewQuestions.isEmpty)
@@ -198,14 +252,14 @@ final class AppState: ObservableObject {
   }
 
   var canGoToPreviousInterviewQuestion: Bool {
-    interviewCurrentQuestionNumber > 1
+    return interviewCurrentQuestionNumber > 1
       || currentInterviewStage.flatMap { stage in
         interviewStages.firstIndex(of: stage).map { $0 > 0 }
       } == true
   }
 
   var isLastInterviewQuestion: Bool {
-    !currentInterviewStageQuestions.isEmpty
+    return !currentInterviewStageQuestions.isEmpty
       && interviewCurrentQuestion?.answerPath == currentInterviewStageQuestions.last?.answerPath
   }
 
@@ -314,6 +368,18 @@ final class AppState: ObservableObject {
     }
 
     status = statusReader.read(workspaceURL: workspaceURL)
+    if shouldShowProjectInspection {
+      startProjectInspectionIfNeeded(in: workspaceURL)
+    } else {
+      clearProjectInspection()
+    }
+  }
+
+  func rescanProject() {
+    guard let workspaceURL, shouldShowProjectInspection, !isInspectingProject else { return }
+    projectInspection = nil
+    projectInspectionError = nil
+    runProjectInspection(in: workspaceURL)
   }
 
   func openWorkspaceInFinder() {
@@ -474,6 +540,7 @@ final class AppState: ObservableObject {
     workspaceBookmarkStore.stopAccessingWorkspace()
     taskPackRunner.cancel()
     strictCheckRunner.cancel()
+    projectInspector.cancel()
   }
 
   func quit() {
@@ -695,6 +762,7 @@ final class AppState: ObservableObject {
     taskPackGenerationError = nil
     terminalOpenError = nil
     clearProjectInitializationFeedback()
+    clearProjectInspection()
     restoreInterviewDraft(for: workspaceURL)
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
@@ -738,6 +806,40 @@ final class AppState: ObservableObject {
       let code = exitCode.map(String.init) ?? "无法启动"
       taskPackGenerationError = "任务包生成失败（退出码 \(code)）：\(message)"
     }
+  }
+
+  private func startProjectInspectionIfNeeded(in workspaceURL: URL) {
+    guard !isInspectingProject, projectInspection == nil, projectInspectionError == nil else { return }
+    runProjectInspection(in: workspaceURL)
+  }
+
+  private func runProjectInspection(in workspaceURL: URL) {
+    isInspectingProject = true
+    projectInspectionError = nil
+    projectInspector.run(workspaceURL: workspaceURL) { [weak self] result in
+      self?.finishProjectInspection(result, for: workspaceURL)
+    }
+  }
+
+  private func finishProjectInspection(_ result: JumaoProjectInspectionResult, for workspaceURL: URL) {
+    guard self.workspaceURL == workspaceURL else { return }
+    isInspectingProject = false
+
+    switch result {
+    case .succeeded(let inspection):
+      projectInspection = inspection
+      projectInspectionError = nil
+    case .failed(_, let message):
+      projectInspection = nil
+      projectInspectionError = message
+    }
+  }
+
+  private func clearProjectInspection() {
+    projectInspector.cancel()
+    isInspectingProject = false
+    projectInspection = nil
+    projectInspectionError = nil
   }
 
   private func finishOpeningTerminal(_ result: TerminalWorkspaceOpenResult) {

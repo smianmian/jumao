@@ -5,7 +5,11 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
   let stages: [JumaoInterviewStage]
   let questions: [JumaoInterviewQuestion]
 
-  init(schemaVersion: Int, stages: [JumaoInterviewStage] = [Self.legacyStage], questions: [JumaoInterviewQuestion]) {
+  init(
+    schemaVersion: Int,
+    stages: [JumaoInterviewStage] = [Self.legacyStage],
+    questions: [JumaoInterviewQuestion]
+  ) {
     self.schemaVersion = schemaVersion
     self.stages = stages
     self.questions = questions

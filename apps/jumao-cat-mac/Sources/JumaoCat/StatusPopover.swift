@@ -66,25 +66,25 @@ struct StatusPopover: View {
 
   private var selectedWorkspace: some View {
     VStack(alignment: .leading, spacing: 14) {
-      VStack(alignment: .leading, spacing: 6) {
-        Text("橘猫状态")
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(.secondary)
-        Text(appState.status.label)
-          .font(.headline)
-        Text(appState.status.message)
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-
-      if let readiness = appState.status.projectReadiness {
-        projectReadiness(readiness)
-      }
-
-      if appState.status.isMissingStatusFile {
-        projectInitialization
+      if appState.shouldShowProjectInspection {
+        projectInspection
       } else {
+        VStack(alignment: .leading, spacing: 6) {
+          Text("橘猫状态")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+          Text(appState.status.label)
+            .font(.headline)
+          Text(appState.status.message)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
+        if let readiness = appState.status.projectReadiness {
+          projectReadiness(readiness)
+        }
+
         if let team = appState.status.agentTeamOverview {
           agentTeam(team)
           agentGroups(team.groups)
@@ -109,55 +109,60 @@ struct StatusPopover: View {
     }
   }
 
-  private var projectInitialization: some View {
+  @ViewBuilder
+  private var projectInspection: some View {
     VStack(alignment: .leading, spacing: 10) {
-      if appState.canInitializeProject {
-        Button {
-          appState.requestProjectInitialization()
-        } label: {
-          Label(
-            appState.isInitializingProject ? "正在建立项目" : "开始建立项目",
-            systemImage: "sparkles"
-          )
-          .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.borderedProminent)
-        .disabled(appState.isInitializingProject)
-      } else {
-        Text("项目框架已建立")
-          .font(.headline)
-        Button {
-          appState.answerProjectQuestions()
-        } label: {
-          Label(
-            appState.isLoadingInterviewSchema
-              ? "正在读取项目问题"
-              : (appState.hasUnfinishedInterviewDraft ? appState.interviewResumeTitle : "回答项目问题"),
-            systemImage: "list.bullet.rectangle"
-          )
-          .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.borderedProminent)
-        .disabled(!appState.canAnswerProjectQuestions)
-      }
+      Text("项目扫描")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
 
-      feedback
-    }
-    .alert("确认建立项目", isPresented: $appState.isProjectInitializationConfirmationPresented) {
-      Button("取消", role: .cancel) {}
-      Button("继续") {
-        appState.confirmProjectInitialization()
+      if appState.isInspectingProject {
+        ProgressView("橘猫正在查看项目结构")
+          .controlSize(.small)
+      } else if let inspection = appState.projectInspection {
+        inspectionDetails(inspection)
+
+        if let capabilityMessage = appState.projectInspectionCapabilityMessage {
+          Text(capabilityMessage)
+            .font(.caption)
+            .foregroundStyle(inspection.capabilityFit.level == "limited" ? .orange : .secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
+        if let title = appState.projectInspectionPrimaryActionTitle,
+           let description = appState.projectInspectionPrimaryActionDescription {
+          Button(title) {}
+            .buttonStyle(.borderedProminent)
+            .disabled(!appState.canContinueFromProjectInspection)
+          Text(description)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      } else if let error = appState.projectInspectionError {
+        Text(error)
+          .font(.subheadline)
+          .foregroundStyle(.red)
+        Button("重新扫描") {
+          appState.rescanProject()
+        }
+        .buttonStyle(.bordered)
+      } else {
+        ProgressView("橘猫正在查看项目结构")
+          .controlSize(.small)
       }
-    } message: {
-      Text("将在当前文件夹中创建 Jumao 项目文档，不会修改项目源代码。")
     }
-    .alert("发现同名文件", isPresented: $appState.isProjectInitializationConflictPresented) {
-      Button("取消", role: .cancel) {}
-      Button("仍然建立", role: .destructive) {
-        appState.confirmProjectInitializationWithConflicts()
-      }
-    } message: {
-      Text(appState.projectInitializationConflictMessage)
+  }
+
+  private func inspectionDetails(_ inspection: JumaoProjectInspection) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
+      detail("项目名称", inspection.project.name.isEmpty ? "未提供" : inspection.project.name)
+      detail("项目类型", appState.projectInspectionKindTitle ?? "未提供")
+      detail("已识别平台", inspection.project.platforms.isEmpty ? "未识别" : inspection.project.platforms.joined(separator: "、"))
+      detail("已识别语言", inspection.project.languages.isEmpty ? "未识别" : inspection.project.languages.joined(separator: "、"))
+      detail("构建方式", inspection.project.buildSystems.isEmpty ? "未识别" : inspection.project.buildSystems.joined(separator: "、"))
+      detail("源代码", inspection.project.hasSourceCode ? "有" : "没有")
+      detail("测试", inspection.project.hasTests ? "有" : "没有")
     }
   }
 

@@ -238,4 +238,5 @@ final class InterviewNavigationTests: XCTestCase {
       XCTAssertTrue(appState.advanceInterviewQuestion())
     }
   }
+
 }

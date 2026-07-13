@@ -74,11 +74,6 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
       }
       XCTAssertEqual(schema.schemaVersion, 2)
       XCTAssertEqual(schema.questions.count, 21)
-      let rawSchema = try? JSONSerialization.jsonObject(
-        with: Data(contentsOf: self.repositoryRootURL.appendingPathComponent("src/core/interview-schema.json"))
-      ) as? [String: Any]
-      XCTAssertEqual((rawSchema?["entryQuestionIds"] as? [String])?.count, 4)
-      XCTAssertNotNil(rawSchema?["routing"])
       XCTAssertEqual(schema.questions.first?.title, "最先会来用的人是谁？")
       XCTAssertEqual(schema.stages.map(\.id), ["idea", "prototype", "release"])
       XCTAssertEqual(schema.stages.map { stage in

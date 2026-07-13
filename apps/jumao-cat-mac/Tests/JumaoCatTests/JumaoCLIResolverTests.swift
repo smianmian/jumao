@@ -80,6 +80,10 @@ final class JumaoCLIResolverTests: XCTestCase {
       ["/tmp/jumao/bin/jumao.js", "check", "/tmp/project", "--strict"]
     )
     XCTAssertEqual(
+      command.arguments(for: JumaoProjectInspector.arguments(for: workspaceURL)),
+      ["/tmp/jumao/bin/jumao.js", "inspect", "/tmp/project", "--json"]
+    )
+    XCTAssertEqual(
       command.arguments(for: CodexTaskPackRunner.arguments(for: workspaceURL)),
       ["/tmp/jumao/bin/jumao.js", "pack", "/tmp/project", "--target", "codex"]
     )
