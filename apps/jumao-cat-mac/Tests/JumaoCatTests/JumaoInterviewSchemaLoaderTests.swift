@@ -62,7 +62,7 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
   @MainActor
   func testRepositoryCLIReadsCurrentTwentyOneQuestionSchema() async {
     let loader = JumaoInterviewSchemaLoader(
-      resolver: JumaoCLIResolver(repositoryRootURL: repositoryRootURL)
+      resolver: JumaoCLIResolver(bundledRuntimeURL: nil, repositoryRootURL: repositoryRootURL)
     )
     let expectation = expectation(description: "schema result")
 

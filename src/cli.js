@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { auditWorkspace } from './core/audit.js';
 import { runDoctor } from './core/doctor.js';
 import { inspectWorkspace } from './core/inspect.js';
@@ -8,7 +9,7 @@ import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
 import { isJumaoWorkspace, readJumaoStatus, renderStatus } from './core/status.js';
 
-const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
+const rootDir = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 const bilingualTemplates = [
   ['templates/product-brief.zh-CN.md', 'product/product-brief.zh-CN.md'],

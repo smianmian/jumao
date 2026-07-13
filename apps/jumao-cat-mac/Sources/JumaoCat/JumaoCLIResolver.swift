@@ -3,6 +3,7 @@ import Foundation
 struct JumaoCLICommand: Equatable, Sendable {
   enum Source: Equatable, Sendable {
     case configured
+    case bundled
     case repository
     case global
   }
@@ -35,6 +36,14 @@ struct JumaoCLICommand: Equatable, Sendable {
     )
   }
 
+  static func bundled(at runtimeURL: URL) -> JumaoCLICommand {
+    JumaoCLICommand(
+      source: .bundled,
+      executableURL: runtimeURL.appendingPathComponent("node/node"),
+      prefixArguments: [runtimeURL.appendingPathComponent("jumao/bin/jumao.js").path]
+    )
+  }
+
   static let global = JumaoCLICommand(
     source: .global,
     executableURL: URL(fileURLWithPath: "/usr/bin/env"),
@@ -52,10 +61,13 @@ struct JumaoCLICommand: Equatable, Sendable {
 }
 
 enum JumaoCLIResolutionError: Equatable, Sendable {
+  case bundledRuntimeInvalid
   case globalVersionOutdated
 
   var userFacingMessage: String {
     switch self {
+    case .bundledRuntimeInvalid:
+      return "Jumao 内置运行时无效，请重新生成后重试。"
     case .globalVersionOutdated:
       return "当前安装的 Jumao 版本过旧，请更新后重试。"
     }
@@ -109,20 +121,32 @@ protocol JumaoGlobalSchemaCapabilityChecking: AnyObject {
 
 @MainActor
 final class JumaoCLIResolver: JumaoCLIResolving {
+  private static let bundledRuntimeSchemaVersion = 1
+  private static let bundledNodeVersion = "24.18.0"
+
   private let explicitCLIURL: URL?
+  private let bundledRuntimeURL: URL?
   private let repositoryRootURL: URL?
   private let fileExists: @Sendable (URL) -> Bool
+  private let isExecutable: @Sendable (URL) -> Bool
+  private let runtimeArchitecture: @Sendable () -> String
   private let globalCapabilityChecker: any JumaoGlobalSchemaCapabilityChecking
 
   init(
     explicitCLIURL: URL? = JumaoCLIResolver.configuredCLIURL,
+    bundledRuntimeURL: URL? = JumaoCLIResolver.bundledRuntimeURL,
     repositoryRootURL: URL? = JumaoCLIResolver.developmentRepositoryRootURL,
     fileExists: @escaping @Sendable (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) },
+    isExecutable: @escaping @Sendable (URL) -> Bool = { FileManager.default.isExecutableFile(atPath: $0.path) },
+    runtimeArchitecture: @escaping @Sendable () -> String = { JumaoCLIResolver.currentArchitecture() },
     globalCapabilityChecker: any JumaoGlobalSchemaCapabilityChecking = JumaoGlobalSchemaCapabilityChecker()
   ) {
     self.explicitCLIURL = explicitCLIURL
+    self.bundledRuntimeURL = bundledRuntimeURL
     self.repositoryRootURL = repositoryRootURL
     self.fileExists = fileExists
+    self.isExecutable = isExecutable
+    self.runtimeArchitecture = runtimeArchitecture
     self.globalCapabilityChecker = globalCapabilityChecker
   }
 
@@ -130,6 +154,17 @@ final class JumaoCLIResolver: JumaoCLIResolving {
     if let explicitCLIURL {
       completion(.resolved(.configured(at: explicitCLIURL)))
       return
+    }
+
+    switch bundledRuntimeResolution() {
+    case .resolved(let command):
+      completion(.resolved(command))
+      return
+    case .invalid:
+      completion(.failed(.bundledRuntimeInvalid))
+      return
+    case .unavailable:
+      break
     }
 
     if let repositoryCLIURL = repositoryRootURL?.appendingPathComponent("bin/jumao.js"), fileExists(repositoryCLIURL) {
@@ -149,6 +184,20 @@ final class JumaoCLIResolver: JumaoCLIResolving {
     return URL(fileURLWithPath: path)
   }
 
+  private static var bundledRuntimeURL: URL? {
+    Bundle.main.resourceURL?.appendingPathComponent("BundledRuntime", isDirectory: true)
+  }
+
+  nonisolated private static func currentArchitecture() -> String {
+    #if arch(arm64)
+    return "arm64"
+    #elseif arch(x86_64)
+    return "x86_64"
+    #else
+    return "unsupported"
+    #endif
+  }
+
   private static var developmentRepositoryRootURL: URL? {
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0..<5 {
@@ -156,6 +205,38 @@ final class JumaoCLIResolver: JumaoCLIResolving {
     }
     return url
   }
+
+  private func bundledRuntimeResolution() -> BundledRuntimeResolution {
+    guard let bundledRuntimeURL else { return .unavailable }
+    guard fileExists(bundledRuntimeURL) else { return .unavailable }
+
+    let manifestURL = bundledRuntimeURL.appendingPathComponent("runtime-manifest.json")
+    let nodeURL = bundledRuntimeURL.appendingPathComponent("node/node")
+    let cliURL = bundledRuntimeURL.appendingPathComponent("jumao/bin/jumao.js")
+    guard fileExists(manifestURL),
+          isExecutable(nodeURL),
+          fileExists(cliURL),
+          let manifest = try? JSONDecoder().decode(BundledRuntimeManifest.self, from: Data(contentsOf: manifestURL)),
+          manifest.schemaVersion == Self.bundledRuntimeSchemaVersion,
+          manifest.nodeVersion == Self.bundledNodeVersion,
+          manifest.architecture == runtimeArchitecture() else {
+      return .invalid
+    }
+
+    return .resolved(.bundled(at: bundledRuntimeURL))
+  }
+}
+
+private struct BundledRuntimeManifest: Decodable {
+  let schemaVersion: Int
+  let nodeVersion: String
+  let architecture: String
+}
+
+private enum BundledRuntimeResolution {
+  case unavailable
+  case invalid
+  case resolved(JumaoCLICommand)
 }
 
 @MainActor

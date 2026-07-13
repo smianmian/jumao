@@ -20,6 +20,21 @@ targets:
     platform: macOS
     sources:
       - path: Sources/JumaoCat
+      - path: Resources/BundledRuntime
+        type: folder
+        buildPhase: resources
+    preBuildScripts:
+      - name: Verify Bundled Jumao Runtime
+        script: |
+          runtime_dir="${SRCROOT}/Resources/BundledRuntime"
+          prepare_script="${SRCROOT}/scripts/prepare-bundled-runtime.sh"
+          if [[ ! -d "${runtime_dir}" ]] || ! "${prepare_script}" --verify-only; then
+            echo "error: 缺少 Jumao 内置运行时，请先执行 prepare-bundled-runtime.sh --arch current"
+            exit 1
+          fi
+        showEnvVars: false
+        basedOnDependencyAnalysis: false
+        shell: /bin/bash
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.smianmian.JumaoCat
