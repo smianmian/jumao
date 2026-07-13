@@ -1,0 +1,8 @@
+# Relative repository paths required by Jumao Cat's bundled CLI runtime.
+bin
+src
+templates
+docs
+AGENTS.md
+CLAUDE.md
+LICENSE

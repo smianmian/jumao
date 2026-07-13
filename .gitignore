@@ -9,3 +9,4 @@ tmp/
 coverage/
 jumao-task-pack.md
 !examples/**/jumao-task-pack.md
+apps/jumao-cat-mac/Resources/BundledRuntime/
