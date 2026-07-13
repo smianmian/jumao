@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { auditWorkspace } from './core/audit.js';
 import { runDoctor } from './core/doctor.js';
+import { inspectWorkspace } from './core/inspect.js';
 import { collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
@@ -35,6 +36,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'check') return checkCommand(args, io);
   if (command === 'audit') return auditCommand(args, io);
   if (command === 'doctor') return doctorCommand(args, io);
+  if (command === 'inspect') return inspectCommand(args, io);
   if (command === 'interview') return interviewCommand(args, io);
   if (command === 'pack') return packCommand(args, io);
   if (command === 'status') return statusCommand(args, io);
@@ -53,6 +55,7 @@ function helpText() {
     '  jumao check [dir] [--strict]',
     '  jumao audit [dir] [--write]',
     '  jumao doctor [dir] --answers file [--write]',
+    '  jumao inspect <workspace> --json',
     '  jumao interview [dir] [--answers file] [--force]',
     '  jumao interview --schema',
     '  jumao pack [dir] [--target codex|claude|cursor]',
@@ -186,6 +189,27 @@ function doctorCommand(args, io) {
     io.stdout.write('\nWrote governance files:\n');
     for (const file of result.writtenFiles) io.stdout.write(`- ${file}\n`);
   }
+  return 0;
+}
+
+function inspectCommand(args, io) {
+  const { workspace, json, error } = parseInspectArgs(args);
+  if (error) {
+    io.stderr.write(`${error}\n`);
+    return 1;
+  }
+  if (!json) {
+    io.stderr.write('inspect requires --json.\n');
+    return 1;
+  }
+
+  const inspected = inspectWorkspace(workspace);
+  if (!inspected.ok) {
+    io.stderr.write(`${inspected.message}\n`);
+    return 1;
+  }
+  for (const warning of inspected.warnings) io.stderr.write(`inspect: ${warning}\n`);
+  io.stdout.write(`${JSON.stringify(inspected.result, null, 2)}\n`);
   return 0;
 }
 
@@ -333,6 +357,20 @@ function parseInterviewArgs(args) {
     force,
     schema
   };
+}
+
+function parseInspectArgs(args) {
+  let workspace;
+  let json = false;
+
+  for (const arg of args) {
+    if (arg === '--json') json = true;
+    else if (!workspace) workspace = arg;
+    else return { error: `Unexpected inspect argument: ${arg}` };
+  }
+
+  if (!workspace) return { error: 'Missing workspace path.' };
+  return { workspace: path.resolve(workspace), json };
 }
 
 function parsePackArgs(args) {
