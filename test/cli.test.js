@@ -5,7 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { PassThrough, Writable } from 'node:stream';
 import test from 'node:test';
-import { collectInterviewAnswers, runInterview } from '../src/core/interview.js';
+import { collectInterviewAnswers, orderedInterviewQuestions, runInterview } from '../src/core/interview.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const cli = path.join(repoRoot, 'bin', 'jumao.js');
@@ -16,7 +16,6 @@ const interviewAnswerPaths = [
   'firstVersionGoal',
   'userCanDo',
   'successEvidence',
-  'cannotPromise',
   'cannotCollect',
   'humanConfirmActions',
   'mustDo',
@@ -134,7 +133,6 @@ function minimalAnswers(overrides = {}) {
     firstVersionGoal: '用户能在写代码前把产品目标和首版范围讲清楚',
     userCanDo: '创建项目工作区、填写产品边界、生成给 AI 编程工具的任务包',
     successEvidence: '生成的任务包能被 Codex 读取，并且不会要求 AI 自己猜产品范围',
-    cannotPromise: '不能承诺一键生成完整 App',
     cannotCollect: '首版不收集用户账号、手机号、支付信息、隐私数据',
     humanConfirmActions: [
       '发布 npm 前必须人工确认',
@@ -183,30 +181,15 @@ function writeAnswersFile(answers = minimalAnswers()) {
 }
 
 function interviewInput(answers) {
-  return [
-    answers.primaryUser,
-    answers.firstVersionGoal,
-    answers.userCanDo,
-    answers.successEvidence,
-    answers.cannotPromise,
-    answers.cannotCollect,
-    answers.humanConfirmActions.join(','),
-    answers.mustDo.join(','),
-    answers.wontDo.join(','),
-    answers.aiMustNotAdd.join(','),
-    answers.mainScreen.name,
-    answers.mainScreen.userGoal,
-    answers.mainScreen.loading,
-    answers.mainScreen.empty,
-    answers.mainScreen.error,
-    answers.mainScreen.success,
-    answers.mainScreen.permissionDenied,
-    answers.dataSafety.collects,
-    answers.dataSafety.doesNotCollect,
-    answers.dataSafety.thirdParties,
-    answers.dataSafety.deletion,
-    answers.dataSafety.retention
-  ].join('\n') + '\n';
+  const schema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
+  return orderedInterviewQuestions(schema)
+    .map((question) => {
+      const value = question.answerPath
+        .split('.')
+        .reduce((current, key) => current[key], answers);
+      return question.inputType === 'list' ? value.join(',') : value;
+    })
+    .join('\n') + '\n';
 }
 
 function expectedInterviewFiles(answers) {
@@ -217,7 +200,6 @@ function expectedInterviewFiles(answers) {
 第一版先证明一件事：${answers.firstVersionGoal}
 用户能完成：${answers.userCanDo}
 我们能看到的证据：${answers.successEvidence}
-不能承诺：${answers.cannotPromise}
 不能收集：${answers.cannotCollect}
 会影响真实用户或钱的动作：${answers.humanConfirmActions.join('、')}
 `,
@@ -540,20 +522,83 @@ test('interview answers write the four core product files', () => {
   assertInterviewFiles(workspace, answers);
 });
 
-test('interview schema preserves the 22 ordered answer paths', () => {
+test('interview schema preserves the 21 ordered answer paths', () => {
   const schema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
 
-  assert.equal(schema.schemaVersion, 1);
-  assert.equal(schema.questions.length, 22);
-  assert.deepEqual(schema.questions.map((question) => question.order), Array.from({ length: 22 }, (_, index) => index + 1));
+  assert.equal(schema.schemaVersion, 2);
+  assert.equal(schema.questions.length, 21);
+  assert.deepEqual(schema.questions.map((question) => question.order), Array.from({ length: 22 }, (_, index) => index + 1).filter((order) => order !== 5));
   assert.deepEqual(schema.questions.map((question) => question.answerPath), interviewAnswerPaths);
   for (const question of schema.questions) {
     assert.equal(typeof question.id, 'string');
     assert.equal(typeof question.title, 'string');
     assert.equal(typeof question.description, 'string');
+    assert.equal(typeof question.guidance, 'string');
+    assert.ok(question.guidance.length > 0);
+    assert.equal(typeof question.example, 'string');
+    assert.ok(question.example.length > 0);
+    assert.equal(typeof question.placeholder, 'string');
+    assert.ok(question.placeholder.length > 0);
     assert.ok(['text', 'list'].includes(question.inputType));
-    assert.equal(question.required, true);
+    assert.equal(typeof question.required, 'boolean');
+    assert.equal(typeof question.ownerGroupId, 'string');
+    assert.ok(['start', 'build', 'release'].includes(question.phase));
+    assert.ok(['entry', 'conditional'].includes(question.askMode));
+    assert.equal(typeof question.requiredWhenActive, 'boolean');
   }
+});
+
+test('interview schema groups all questions into the three ordered stages', () => {
+  const schema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
+  const orderedStages = [...schema.stages].sort((left, right) => left.order - right.order);
+
+  assert.deepEqual(orderedStages.map((stage) => stage.id), ['idea', 'prototype', 'release']);
+  assert.deepEqual(
+    orderedStages.map((stage) => schema.questions.filter((question) => question.stage === stage.id).length),
+    [5, 10, 6]
+  );
+  assert.deepEqual(
+    [...new Set(schema.questions.map((question) => question.answerPath))].sort(),
+    [...interviewAnswerPaths].sort()
+  );
+  assert.deepEqual(
+    orderedInterviewQuestions(schema).map((question) => question.answerPath),
+    [
+      'primaryUser', 'firstVersionGoal', 'userCanDo', 'mustDo', 'wontDo',
+      'successEvidence', 'humanConfirmActions', 'aiMustNotAdd',
+      'mainScreen.name', 'mainScreen.userGoal', 'mainScreen.loading', 'mainScreen.empty',
+      'mainScreen.error', 'mainScreen.success', 'mainScreen.permissionDenied',
+      'cannotCollect', 'dataSafety.collects', 'dataSafety.doesNotCollect',
+      'dataSafety.thirdParties', 'dataSafety.deletion', 'dataSafety.retention'
+    ]
+  );
+});
+
+test('interview omits unanswered optional fields without breaking strict check', () => {
+  const workspace = createProductWorkspace();
+  const answers = {
+    primaryUser: '刚开始做个人项目、想把点子变成行动的独立开发者',
+    firstVersionGoal: '用户能把一个模糊想法整理成今天可以开始做的任务',
+    userCanDo: '写下一个点子并得到清晰的下一步任务',
+    mustDo: ['写下想法', '整理成下一步任务'],
+    wontDo: ['不做多人协作', '不自动发布内容'],
+    mainScreen: {
+      name: '想法整理页',
+      userGoal: '把一个点子整理成今天可以开始做的任务'
+    },
+    dataSafety: {
+      collects: '第一版只在用户自己的设备上保存写下的想法'
+    }
+  };
+
+  const result = runInterview(workspace, answers);
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.strictResult.errors, []);
+  const brief = fs.readFileSync(path.join(workspace, 'product', 'product-brief.zh-CN.md'), 'utf8');
+  assert.doesNotMatch(brief, /不能承诺|undefined/);
+  const scope = fs.readFileSync(path.join(workspace, 'product', 'scope-gate.zh-CN.md'), 'utf8');
+  assert.doesNotMatch(scope, /不要让 AI 自己加|需要人工确认的动作/);
 });
 
 test('interview --schema prints the source schema without writing project files', () => {
@@ -568,8 +613,8 @@ test('interview --schema prints the source schema without writing project files'
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
   assert.deepEqual(schema, sourceSchema);
-  assert.equal(schema.schemaVersion, 1);
-  assert.equal(schema.questions.length, 22);
+  assert.equal(schema.schemaVersion, 2);
+  assert.equal(schema.questions.length, 21);
   assert.deepEqual(fs.readdirSync(workspace), originalEntries);
 });
 
@@ -595,8 +640,8 @@ test('interactive interview still writes the existing core Markdown output', asy
   const result = runInterview(workspace, collectedAnswers);
 
   assert.equal(result.ok, true);
-  assert.match(prompts, /主要用户是谁？/);
-  assert.match(prompts, /删除后是否保留数据？没有就写“删除后无保留数据”。/);
+  assert.match(prompts, /最先会来用的人是谁？/);
+  assert.match(prompts, /清掉以后，内容会不会还在？/);
   assertInterviewFiles(workspace, answers);
 });
 

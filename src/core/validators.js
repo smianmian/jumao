@@ -54,24 +54,19 @@ const lowQualityLines = new Set([
 const productBriefRequiredLabels = [
   '主要用户',
   '第一版先证明一件事',
-  '用户能完成',
-  '我们能看到的证据',
-  '不能承诺',
-  '不能收集',
-  '会影响真实用户或钱的动作'
+  '用户能完成'
 ];
 
 const scopeRequiredSections = [
   '首版必须做',
-  '首版明确不做',
-  '不要让 AI 自己加',
-  '需要人工确认的动作'
+  '首版明确不做'
 ];
 
-const screenRequiredColumns = ['页面', '用户想做什么', '加载中', '空状态', '错误状态', '成功状态', '权限拒绝'];
+const screenRequiredColumns = ['页面', '用户想做什么'];
 
 export function validateCoreFile(file, text) {
   const errors = commonContentErrors(text);
+  let hasRequiredStructure = false;
 
   if (file === 'product/product-brief.zh-CN.md') {
     for (const label of productBriefRequiredLabels) {
@@ -82,22 +77,26 @@ export function validateCoreFile(file, text) {
   }
 
   if (file === 'product/scope-gate.zh-CN.md') {
+    hasRequiredStructure = true;
     for (const section of scopeRequiredSections) {
       if (countValidBullets(getSectionByHeading(text, section)) === 0) {
         errors.push(`section "${section}" needs at least one valid bullet`);
+        hasRequiredStructure = false;
       }
     }
   }
 
-  if (file === 'product/screen-states.zh-CN.md' && !hasValidScreenStateTable(text)) {
-    errors.push('needs at least one valid page state row');
+  if (file === 'product/screen-states.zh-CN.md') {
+    hasRequiredStructure = hasValidScreenStateTable(text);
+    if (!hasRequiredStructure) errors.push('needs at least one valid page state row');
   }
 
-  if (file === 'product/data-safety.zh-CN.md' && !hasValidDataSafetyContent(text)) {
-    errors.push('needs clear data collection, non-collection, third-party, deletion, and retention rules');
+  if (file === 'product/data-safety.zh-CN.md') {
+    hasRequiredStructure = hasValidDataSafetyContent(text);
+    if (!hasRequiredStructure) errors.push('needs a clear statement about what the first version keeps');
   }
 
-  if (!hasEnoughUsableContent(text)) {
+  if (!hasEnoughUsableContent(text) && !hasRequiredStructure) {
     errors.push('not enough usable content');
   }
 
@@ -217,14 +216,10 @@ function hasValidScreenStateTable(text) {
 }
 
 function hasValidDataSafetyContent(text) {
-  const lines = usableLines(text);
-  return [
-    (line) => /首版不收集用户数据|收集.+数据|数据.+来源/.test(line),
-    (line) => /不收集.+/.test(line),
-    (line) => /首版不使用第三方服务|第三方服务.+|不给第三方/.test(line),
-    (line) => /删除.+/.test(line),
-    (line) => /删除后无保留数据|保留.+/.test(line)
-  ].every((matcher) => lines.some((line) => matcher(line) && !containsPlaceholder(line)));
+  return usableLines(text).some((line) => {
+    return /不收集|收集|保存|留在|不记住/.test(line)
+      && isValidTextValue(line, { minCjk: 6, minEnglish: 3 });
+  });
 }
 
 function hasEnoughUsableContent(text) {

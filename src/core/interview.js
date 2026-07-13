@@ -20,7 +20,7 @@ export async function collectInterviewAnswers(input = defaultInput, output = def
   const rl = createInterface({ input, output });
   try {
     const answers = {};
-    for (const question of interviewSchema.questions) {
+    for (const question of orderedInterviewQuestions(interviewSchema)) {
       const value = await rl.question(`${question.title} `);
       setAnswerAtPath(
         answers,
@@ -32,6 +32,16 @@ export async function collectInterviewAnswers(input = defaultInput, output = def
   } finally {
     rl.close();
   }
+}
+
+export function orderedInterviewQuestions(schema) {
+  const stageOrder = new Map(schema.stages?.map((stage) => [stage.id, stage.order]) ?? []);
+  const fallbackStageID = schema.stages?.[0]?.id;
+  return [...schema.questions].sort((left, right) => {
+    const leftStageOrder = stageOrder.get(left.stage ?? fallbackStageID) ?? Number.MAX_SAFE_INTEGER;
+    const rightStageOrder = stageOrder.get(right.stage ?? fallbackStageID) ?? Number.MAX_SAFE_INTEGER;
+    return leftStageOrder - rightStageOrder || left.order - right.order;
+  });
 }
 
 export function readAnswersFile(file) {
@@ -82,59 +92,72 @@ function renderCoreFiles(answers) {
 }
 
 function renderProductBrief(answers) {
-  return [
+  const lines = [
     '# 产品简报',
     '',
     `主要用户：${answers.primaryUser}`,
     `第一版先证明一件事：${answers.firstVersionGoal}`,
-    `用户能完成：${answers.userCanDo}`,
-    `我们能看到的证据：${answers.successEvidence}`,
-    `不能承诺：${answers.cannotPromise}`,
-    `不能收集：${answers.cannotCollect}`,
-    `会影响真实用户或钱的动作：${listSentence(answers.humanConfirmActions)}`
-  ].join('\n') + '\n';
+    `用户能完成：${answers.userCanDo}`
+  ];
+
+  if (hasValue(answers.successEvidence)) lines.push(`我们能看到的证据：${answers.successEvidence}`);
+  if (hasValue(answers.cannotCollect)) lines.push(`不能收集：${answers.cannotCollect}`);
+  if (hasItems(answers.humanConfirmActions)) {
+    lines.push(`会影响真实用户或钱的动作：${listSentence(answers.humanConfirmActions)}`);
+  }
+  return lines.join('\n') + '\n';
 }
 
 function renderScopeGate(answers) {
-  return [
+  const lines = [
     '# 范围门禁',
     '',
     '## 首版必须做',
     bulletList(answers.mustDo),
     '',
     '## 首版明确不做',
-    bulletList(answers.wontDo),
-    '',
-    '## 不要让 AI 自己加',
-    bulletList(answers.aiMustNotAdd),
-    '',
-    '## 需要人工确认的动作',
-    bulletList(answers.humanConfirmActions)
-  ].join('\n') + '\n';
+    bulletList(answers.wontDo)
+  ];
+
+  if (hasItems(answers.aiMustNotAdd)) {
+    lines.push('', '## 不要让 AI 自己加', bulletList(answers.aiMustNotAdd));
+  }
+  if (hasItems(answers.humanConfirmActions)) {
+    lines.push('', '## 需要人工确认的动作', bulletList(answers.humanConfirmActions));
+  }
+  return lines.join('\n') + '\n';
 }
 
 function renderScreenStates(answers) {
-  const screen = answers.mainScreen;
+  const screen = answers.mainScreen ?? {};
+  const fields = [
+    ['页面', screen.name],
+    ['用户想做什么', screen.userGoal],
+    ['加载中', screen.loading],
+    ['空状态', screen.empty],
+    ['错误状态', screen.error],
+    ['成功状态', screen.success],
+    ['权限拒绝', screen.permissionDenied]
+  ].filter(([, value]) => hasValue(value));
   return [
     '# 页面状态',
     '',
-    '| 页面 | 用户想做什么 | 加载中 | 空状态 | 错误状态 | 成功状态 | 权限拒绝 |',
-    '|---|---|---|---|---|---|---|',
-    `| ${screen.name} | ${screen.userGoal} | ${screen.loading} | ${screen.empty} | ${screen.error} | ${screen.success} | ${screen.permissionDenied} |`
+    `| ${fields.map(([title]) => title).join(' | ')} |`,
+    `|${fields.map(() => '---').join('|')}|`,
+    `| ${fields.map(([, value]) => value).join(' | ')} |`
   ].join('\n') + '\n';
 }
 
 function renderDataSafety(answers) {
-  const data = answers.dataSafety;
-  return [
+  const data = answers.dataSafety ?? {};
+  const lines = [
     '# 数据安全',
-    '',
-    `${data.collects}。`,
-    `${data.thirdParties}。`,
-    `${data.doesNotCollect}。`,
-    `${data.deletion}。`,
-    `${data.retention}。`
-  ].join('\n') + '\n';
+    ''
+  ];
+  for (const value of [data.collects, data.thirdParties, data.doesNotCollect, data.deletion, data.retention]) {
+    if (hasValue(value)) lines.push(`${value}。`);
+  }
+  return lines.join('\n') + '\n';
 }
 
 function splitList(value) {
@@ -152,9 +175,17 @@ function setAnswerAtPath(answers, answerPath, value) {
 }
 
 function bulletList(items) {
-  return items.map((item) => `- ${item}`).join('\n');
+  return (items ?? []).map((item) => `- ${item}`).join('\n');
 }
 
 function listSentence(items) {
-  return items.join('、');
+  return (items ?? []).join('、');
+}
+
+function hasValue(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function hasItems(items) {
+  return Array.isArray(items) && items.length > 0;
 }
