@@ -22,12 +22,32 @@ struct InterviewForm: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.small)
-        Text("共 \(appState.interviewCurrentStageQuestionCount) 题")
-          .font(.caption.weight(.medium))
-          .foregroundStyle(.secondary)
+        if appState.interviewSchema != nil {
+          Text("共 \(appState.interviewCurrentStageQuestionCount) 题")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+        }
       }
 
-      if appState.isCurrentInterviewStageComplete {
+      if let summary = appState.interviewInspectionSummary {
+        Text(summary)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+          .padding(10)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+      }
+
+      if let draftError = appState.interviewDraftError {
+        compactError(draftError)
+      }
+
+      if appState.isLoadingInterviewSchema {
+        loadingCard
+      } else if let schemaError = appState.interviewSchemaError {
+        errorCard(title: "无法打开项目问答", message: schemaError)
+      } else if appState.isCurrentInterviewStageComplete {
         if appState.hasNextInterviewStage {
           stageCompletionCard
         } else {
@@ -76,8 +96,74 @@ struct InterviewForm: View {
   }
 
   private var stageHeaderTitle: String {
-    guard let stage = appState.currentInterviewStage else { return "回答项目问题" }
+    guard let stage = appState.currentInterviewStage else { return appState.interviewWindowTitle }
     return "第 \(stage.order) 阶段：\(stage.title)"
+  }
+
+  private var loadingCard: some View {
+    HStack(spacing: 12) {
+      ProgressView()
+        .controlSize(.small)
+      VStack(alignment: .leading, spacing: 3) {
+        Text("正在准备问题")
+          .font(.headline)
+        Text("正在读取 Jumao interview schema。")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private func errorCard(title: String, message: String) -> some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Text(title)
+        .font(.headline)
+      Text(message)
+        .font(.subheadline)
+        .foregroundStyle(.red)
+        .fixedSize(horizontal: false, vertical: true)
+      interviewErrorActions
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.red.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private func compactError(_ message: String) -> some View {
+    VStack(alignment: .leading, spacing: 7) {
+      Text(message)
+        .font(.caption)
+        .foregroundStyle(.red)
+      interviewErrorActions
+    }
+  }
+
+  private var interviewErrorActions: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      HStack {
+        Button("重试") {
+          appState.retryInterviewOperation()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+        .disabled(!appState.canRetryInterviewOperation)
+
+        Button("复制详细错误") {
+          appState.copyInterviewErrorDetails()
+        }
+        .buttonStyle(.bordered)
+        .disabled(appState.interviewErrorDetails == nil)
+      }
+
+      if let message = appState.interviewErrorDetailsCopiedMessage {
+        Text(message)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+    }
   }
 
   private var stageCompletionCard: some View {
@@ -163,6 +249,7 @@ struct InterviewForm: View {
           }
           .buttonStyle(.borderedProminent)
           .tint(.orange)
+          copyErrorDetailsButton
         } else if let message = appState.projectCheckMessage {
           Text(message)
             .font(.headline)
@@ -183,17 +270,26 @@ struct InterviewForm: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.orange)
+            copyErrorDetailsButton
           }
         } else if let message = appState.interviewWriteMessage {
           Text(message)
             .font(.headline)
             .fixedSize(horizontal: false, vertical: true)
-          Button("开始检查") {
-            appState.startProjectCheck()
+          if appState.isFocusedProjectInterview {
+            Button("完成") {
+              appState.hideInterview()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
+          } else {
+            Button("开始检查") {
+              appState.startProjectCheck()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
+            .disabled(!appState.canStartProjectCheck)
           }
-          .buttonStyle(.borderedProminent)
-          .tint(.orange)
-          .disabled(!appState.canStartProjectCheck)
         } else {
           Text("已完成 \(appState.interviewQuestions.count) 个问题")
             .font(.headline)
@@ -212,6 +308,7 @@ struct InterviewForm: View {
           Text(error)
             .font(.caption)
             .foregroundStyle(.red)
+          interviewErrorActions
         }
       }
 
@@ -316,6 +413,22 @@ struct InterviewForm: View {
     .overlay {
       RoundedRectangle(cornerRadius: 16, style: .continuous)
         .stroke(Color.orange.opacity(0.28), lineWidth: 1)
+    }
+  }
+
+  private var copyErrorDetailsButton: some View {
+    VStack(alignment: .leading, spacing: 5) {
+      Button("复制详细错误") {
+        appState.copyInterviewErrorDetails()
+      }
+      .buttonStyle(.bordered)
+      .disabled(appState.interviewErrorDetails == nil)
+
+      if let message = appState.interviewErrorDetailsCopiedMessage {
+        Text(message)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
     }
   }
 

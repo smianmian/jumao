@@ -134,6 +134,27 @@ final class InterviewDraftStoreTests: XCTestCase {
     XCTAssertEqual(appState.interviewCurrentQuestion?.answerPath, "question3")
   }
 
+  func testFocusedNewProjectDraftRestoresAnswersAndPosition() throws {
+    let fixture = try makeFixture()
+    defer { fixture.cleanUp() }
+    let focusedSchema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .newProject)
+    let firstAppState = fixture.makeAppState()
+    firstAppState.beginInterview(with: focusedSchema)
+    firstAppState.updateInterviewAnswer("客户跟进工具", for: "newProject.projectSummary")
+    XCTAssertTrue(firstAppState.advanceInterviewQuestion())
+    firstAppState.updateInterviewAnswer("记录客户，设置提醒", for: "newProject.coreFeatures")
+    firstAppState.hideInterview()
+    firstAppState.shutdown()
+
+    let restoredAppState = fixture.makeAppState()
+    defer { restoredAppState.shutdown() }
+    restoredAppState.beginInterview(with: focusedSchema)
+
+    XCTAssertEqual(restoredAppState.interviewCurrentQuestionNumber, 2)
+    XCTAssertEqual(restoredAppState.interviewAnswers["newProject.projectSummary"], "客户跟进工具")
+    XCTAssertEqual(restoredAppState.interviewAnswers["newProject.coreFeatures"], "记录客户，设置提醒")
+  }
+
   private func schema(questionCount: Int) -> JumaoInterviewSchema {
     JumaoInterviewSchema(
       schemaVersion: 1,

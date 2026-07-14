@@ -104,8 +104,33 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
     await Task.yield()
 
     XCTAssertFalse(appState.isLoadingInterviewSchema)
-    XCTAssertFalse(appState.isInterviewPresented)
+    XCTAssertTrue(appState.isInterviewPresented)
     XCTAssertEqual(appState.interviewSchemaError, "读取项目问题失败（退出码 1）：找不到 jumao")
+    XCTAssertEqual(appState.interviewErrorDetails, "操作：interview --schema\n退出码：1\n原因：找不到 jumao")
+    XCTAssertTrue(appState.canRetryInterviewOperation)
+
+    appState.retryInterviewOperation()
+    XCTAssertTrue(appState.isLoadingInterviewSchema)
+    XCTAssertEqual(loader.runCount, 2)
+  }
+
+  @MainActor
+  func testClosingWindowWhileSchemaLoadsDoesNotReopenIt() async throws {
+    let workspaceURL = try makeEstablishedWorkspace()
+    let loader = RecordingInterviewSchemaLoader()
+    let (appState, defaults, suiteName) = try makeAppState(workspaceURL: workspaceURL, loader: loader)
+    defer {
+      appState.shutdown()
+      defaults.removePersistentDomain(forName: suiteName)
+      try? FileManager.default.removeItem(at: workspaceURL)
+    }
+
+    appState.answerProjectQuestions()
+    appState.hideInterview()
+    loader.complete(.succeeded(JumaoInterviewSchema(schemaVersion: 2, questions: [])))
+    await Task.yield()
+
+    XCTAssertFalse(appState.isInterviewPresented)
   }
 
   private func makeSchemaData(questionCount: Int) throws -> Data {
@@ -166,9 +191,11 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
 
 @MainActor
 private final class RecordingInterviewSchemaLoader: JumaoInterviewSchemaLoading {
+  private(set) var runCount = 0
   private var completion: (@MainActor @Sendable (JumaoInterviewSchemaLoadResult) -> Void)?
 
   func run(completion: @escaping @MainActor @Sendable (JumaoInterviewSchemaLoadResult) -> Void) {
+    runCount += 1
     self.completion = completion
   }
 

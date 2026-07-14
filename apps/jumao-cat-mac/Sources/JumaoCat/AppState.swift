@@ -19,10 +19,14 @@ final class AppState: ObservableObject {
   @Published private(set) var isInspectingProject = false
   @Published private(set) var projectInspection: JumaoProjectInspection?
   @Published private(set) var projectInspectionError: String?
+  @Published private(set) var interviewMode: ProjectInterviewMode?
+  @Published private(set) var interviewInspectionContext: JumaoProjectInspection?
   @Published private(set) var isLoadingInterviewSchema = false
   @Published private(set) var interviewSchema: JumaoInterviewSchema?
   @Published private(set) var interviewSchemaError: String?
   @Published private(set) var interviewDraftError: String?
+  @Published private(set) var interviewErrorDetails: String?
+  @Published private(set) var interviewErrorDetailsCopiedMessage: String?
   @Published private(set) var interviewAnswers: [String: String] = [:]
   @Published private(set) var skippedInterviewAnswerPaths = Set<String>()
   @Published private(set) var interviewCurrentStageID: String?
@@ -66,6 +70,7 @@ final class AppState: ObservableObject {
   private var taskPackCopyFeedbackToken = UUID()
   private var interviewDraftSaveTask: Task<Void, Never>?
   private var restoredInterviewDraftNeedsStageInference = false
+  private var lastInterviewWriteUsedForce = false
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
       self?.refreshStatus()
@@ -207,6 +212,31 @@ final class AppState: ObservableObject {
     projectInspection != nil
   }
 
+  var interviewWindowTitle: String {
+    switch interviewMode {
+    case .newProject: return "规划新项目"
+    case .existingProject: return "梳理这次改动"
+    case nil: return "回答项目问题"
+    }
+  }
+
+  var interviewInspectionSummary: String? {
+    guard interviewMode == .existingProject, let inspection = interviewInspectionContext else { return nil }
+    var parts = [inspection.project.name].filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    if !inspection.project.platforms.isEmpty {
+      parts.append(inspection.project.platforms.joined(separator: "、"))
+    }
+    if !inspection.project.languages.isEmpty {
+      parts.append(inspection.project.languages.joined(separator: "、"))
+    }
+    return parts.isEmpty ? "已携带当前项目扫描结果。" : "已携带扫描结果：\(parts.joined(separator: " · "))"
+  }
+
+  var canRetryInterviewOperation: Bool {
+    !isLoadingInterviewSchema && !isWritingInterviewAnswers
+      && (interviewSchemaError != nil || interviewWriteError != nil || interviewDraftError != nil)
+  }
+
   var hasUnfinishedInterviewDraft: Bool {
     (!interviewAnswers.isEmpty || !skippedInterviewAnswerPaths.isEmpty)
       && (!isInterviewComplete || !pendingInterviewQuestions.isEmpty)
@@ -299,7 +329,13 @@ final class AppState: ObservableObject {
   }
 
   var canStartProjectCheck: Bool {
-    interviewWriteMessage != nil && !isCheckingProject && workspaceURL != nil
+    !isFocusedProjectInterview && interviewWriteMessage != nil && !isCheckingProject && workspaceURL != nil
+  }
+
+  var isFocusedProjectInterview: Bool {
+    interviewMode != nil || interviewQuestions.contains { question in
+      question.answerPath.hasPrefix("newProject.") || question.answerPath.hasPrefix("existingProject.")
+    }
   }
 
   var canGenerateInterviewTaskPack: Bool {
@@ -523,8 +559,65 @@ final class AppState: ObservableObject {
       return
     }
 
+    isInterviewPresented = true
+    loadInterviewSchema()
+  }
+
+  func startProjectInterview() {
+    guard let inspection = projectInspection, workspaceURL != nil else { return }
+
+    let mode: ProjectInterviewMode = inspection.recommendedIntake.mode == "existing_project"
+      ? .existingProject
+      : .newProject
+    let previousMode = interviewMode
+    if isInterviewPresented, interviewMode == mode {
+      return
+    }
+
+    interviewMode = mode
+    interviewInspectionContext = mode == .existingProject ? inspection : nil
+    interviewSchemaError = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
+    isInterviewPresented = true
+
+    if interviewSchema != nil, previousMode == mode {
+      return
+    }
+
+    interviewSchema = nil
+    loadInterviewSchema()
+  }
+
+  func retryInterviewOperation() {
+    guard canRetryInterviewOperation else { return }
+
+    if interviewSchemaError != nil {
+      loadInterviewSchema()
+    } else if interviewWriteError != nil,
+              let workspaceURL,
+              let interviewSchema {
+      runInterviewWrite(in: workspaceURL, schema: interviewSchema, force: lastInterviewWriteUsedForce)
+    } else if interviewDraftError != nil {
+      saveInterviewDraftImmediately()
+    }
+  }
+
+  func copyInterviewErrorDetails() {
+    guard let interviewErrorDetails else { return }
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    interviewErrorDetailsCopiedMessage = pasteboard.setString(interviewErrorDetails, forType: .string)
+      ? "错误详情已复制"
+      : "无法复制错误详情"
+  }
+
+  private func loadInterviewSchema() {
+    guard !isLoadingInterviewSchema else { return }
     isLoadingInterviewSchema = true
     interviewSchemaError = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
     interviewSchemaLoader.run { [weak self] result in
       Task { @MainActor [weak self] in
         self?.finishLoadingInterviewSchema(result)
@@ -732,6 +825,8 @@ final class AppState: ObservableObject {
     hasPassedProjectCheck = false
     projectCheckMessage = nil
     projectCheckError = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
 
     strictCheckRunner.run(workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
@@ -745,6 +840,8 @@ final class AppState: ObservableObject {
 
     isGeneratingInterviewTaskPack = true
     interviewTaskPackError = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
 
     taskPackRunner.run(workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
@@ -889,7 +986,12 @@ final class AppState: ObservableObject {
     switch result {
     case .succeeded(let schema):
       interviewSchemaError = nil
-      beginInterview(with: schema)
+      interviewErrorDetails = nil
+      let shouldRemainPresented = isInterviewPresented
+      beginInterview(with: interviewMode.map { schema.focused(for: $0) } ?? schema)
+      if !shouldRemainPresented {
+        isInterviewPresented = false
+      }
     case .failed(let exitCode, let message):
       interviewSchema = nil
       if message == JumaoCLIResolutionError.globalVersionOutdated.userFacingMessage {
@@ -898,13 +1000,21 @@ final class AppState: ObservableObject {
         let code = exitCode.map(String.init) ?? "无法启动"
         interviewSchemaError = "读取项目问题失败（退出码 \(code)）：\(message)"
       }
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "interview --schema",
+        exitCode: exitCode,
+        reason: message
+      )
     }
   }
 
   private func runInterviewWrite(in workspaceURL: URL, schema: JumaoInterviewSchema, force: Bool) {
+    lastInterviewWriteUsedForce = force
     isWritingInterviewAnswers = true
     interviewWriteMessage = nil
     interviewWriteError = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
 
     interviewAnswerWriter.run(
       workspaceURL: workspaceURL,
@@ -924,6 +1034,12 @@ final class AppState: ObservableObject {
     switch result {
     case .succeeded:
       interviewWriteError = nil
+      interviewErrorDetails = nil
+      if isFocusedProjectInterview {
+        interviewWriteMessage = "首轮答案已保存\n下一步：继续完善项目规划"
+        saveInterviewDraftImmediately()
+        return
+      }
       interviewWriteMessage = "项目问题已写入\n下一步：开始检查"
       if let workspaceURL {
         interviewDraftStore.delete(for: workspaceURL)
@@ -939,6 +1055,11 @@ final class AppState: ObservableObject {
     case .failed(let exitCode, let message):
       let code = exitCode.map(String.init) ?? "无法启动"
       interviewWriteError = "写入项目问题失败（退出码 \(code)）：\(message)"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "interview --answers",
+        exitCode: exitCode,
+        reason: message
+      )
     }
   }
 
@@ -951,10 +1072,16 @@ final class AppState: ObservableObject {
       hasPassedProjectCheck = true
       projectCheckMessage = "检查通过\n下一步：生成 Codex 任务包"
       projectCheckError = nil
-    case .failed:
+      interviewErrorDetails = nil
+    case .failed(let exitCode, let message):
       hasPassedProjectCheck = false
       projectCheckMessage = "发现需要补充的内容"
       projectCheckError = "请补充项目文档中的必要内容后重新检查。"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "check --strict",
+        exitCode: exitCode,
+        reason: message
+      )
     }
   }
 
@@ -967,8 +1094,14 @@ final class AppState: ObservableObject {
       isInterviewPresented = false
       interviewTaskPackMessage = "任务包已生成"
       interviewTaskPackError = nil
-    case .failed:
+      interviewErrorDetails = nil
+    case .failed(let exitCode, let message):
       interviewTaskPackError = "任务包生成失败，请确认项目内容后重试。"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "pack --target codex",
+        exitCode: exitCode,
+        reason: message
+      )
     }
   }
 
@@ -1000,8 +1133,16 @@ final class AppState: ObservableObject {
     do {
       try interviewDraftStore.save(draft, for: workspaceURL)
       interviewDraftError = nil
+      if interviewSchemaError == nil, interviewWriteError == nil {
+        interviewErrorDetails = nil
+      }
     } catch {
       interviewDraftError = "无法保存本地问答草稿。"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "保存问答草稿",
+        exitCode: nil,
+        reason: "本地草稿文件写入失败。"
+      )
     }
   }
 
@@ -1022,6 +1163,11 @@ final class AppState: ObservableObject {
     case .corrupted:
       restoredInterviewDraftNeedsStageInference = false
       interviewDraftError = "本地问答草稿无法读取，已忽略。"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "读取问答草稿",
+        exitCode: nil,
+        reason: "草稿文件格式无效或内容损坏。"
+      )
     }
   }
 
@@ -1036,6 +1182,10 @@ final class AppState: ObservableObject {
     interviewSchema = nil
     interviewSchemaError = nil
     interviewDraftError = nil
+    interviewMode = nil
+    interviewInspectionContext = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
     interviewAnswers = [:]
     skippedInterviewAnswerPaths = []
     interviewCurrentStageID = nil
@@ -1057,6 +1207,11 @@ final class AppState: ObservableObject {
     isInterviewOverwriteConfirmationPresented = false
     interviewDocumentsToOverwrite = []
     isInterviewPresented = false
+  }
+
+  private func interviewErrorDetailsText(operation: String, exitCode: Int32?, reason: String) -> String {
+    let code = exitCode.map(String.init) ?? "无法启动"
+    return "操作：\(operation)\n退出码：\(code)\n原因：\(reason)"
   }
 
   private func validateCurrentInterviewQuestion() -> Bool {

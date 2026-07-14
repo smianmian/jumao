@@ -49,6 +49,23 @@ export function readAnswersFile(file) {
 }
 
 export function runInterview(targetDir, answers, options = {}) {
+  const focusedIntake = focusedIntakeFrom(answers);
+  if (focusedIntake) {
+    const outputPath = path.join(targetDir, '.jumao', 'intake-answers.json');
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, `${JSON.stringify({
+      schemaVersion: 1,
+      mode: focusedIntake.mode,
+      answers: focusedIntake.answers,
+      updatedAt: new Date().toISOString()
+    }, null, 2)}\n`, 'utf8');
+    return {
+      ok: true,
+      intakeOnly: true,
+      writtenFiles: ['.jumao/intake-answers.json']
+    };
+  }
+
   const force = options.force === true;
   const filledFiles = filledCoreFiles(targetDir);
 
@@ -71,6 +88,16 @@ export function runInterview(targetDir, answers, options = {}) {
     writtenFiles: Object.keys(files),
     strictResult: validateStrictWorkspace(targetDir)
   };
+}
+
+function focusedIntakeFrom(answers) {
+  if (answers?.newProject && typeof answers.newProject === 'object') {
+    return { mode: 'new_project', answers: answers.newProject };
+  }
+  if (answers?.existingProject && typeof answers.existingProject === 'object') {
+    return { mode: 'existing_project', answers: answers.existingProject };
+  }
+  return null;
 }
 
 function filledCoreFiles(targetDir) {

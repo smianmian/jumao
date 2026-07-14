@@ -61,6 +61,68 @@ final class JumaoProjectInspectorTests: XCTestCase {
     XCTAssertEqual(appState.projectInspectionPrimaryActionDescription, "橘猫已经查看了项目结构，接下来只确认这次要修改什么。")
   }
 
+  func testNewProjectEntryOpensFocusedInterviewImmediately() async throws {
+    let inspector = DeferredProjectInspector()
+    let loader = DeferredProjectInterviewSchemaLoader()
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector, interviewSchemaLoader: loader)
+    defer { cleanUp(appState, defaults, suiteName, workspaceURL) }
+
+    inspector.complete(.succeeded(try inspection(kind: "new", level: "limited")))
+    appState.startProjectInterview()
+
+    XCTAssertTrue(appState.isInterviewPresented)
+    XCTAssertTrue(appState.isLoadingInterviewSchema)
+    XCTAssertEqual(loader.runCount, 1)
+
+    loader.complete(.succeeded(sourceSchema()))
+    await Task.yield()
+
+    XCTAssertEqual(appState.interviewMode, .newProject)
+    XCTAssertEqual(appState.interviewQuestions.map(\.title), [
+      "你想做一个什么项目？",
+      "最核心的功能有哪些？",
+      "当前最重要的目标是什么？",
+      "准备运行在哪个平台？"
+    ])
+    XCTAssertNil(appState.interviewInspectionContext)
+  }
+
+  func testExistingProjectEntryUsesDifferentQuestionsAndCarriesInspection() async throws {
+    let inspector = DeferredProjectInspector()
+    let loader = DeferredProjectInterviewSchemaLoader()
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector, interviewSchemaLoader: loader)
+    defer { cleanUp(appState, defaults, suiteName, workspaceURL) }
+
+    let existingInspection = try inspection(kind: "existing", level: "high")
+    inspector.complete(.succeeded(existingInspection))
+    appState.startProjectInterview()
+    loader.complete(.succeeded(sourceSchema()))
+    await Task.yield()
+
+    XCTAssertEqual(appState.interviewMode, .existingProject)
+    XCTAssertEqual(appState.interviewQuestions.map(\.title), [
+      "这次准备修改什么？",
+      "当前遇到了什么问题或阻塞？",
+      "哪些现有功能绝对不能被破坏？"
+    ])
+    XCTAssertEqual(appState.interviewInspectionContext, existingInspection)
+    XCTAssertEqual(appState.interviewInspectionSummary, "已携带扫描结果：Sample · iOS · Swift")
+  }
+
+  func testRepeatedProjectEntryClickDoesNotLoadOrOpenDuplicateInterview() throws {
+    let inspector = DeferredProjectInspector()
+    let loader = DeferredProjectInterviewSchemaLoader()
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector, interviewSchemaLoader: loader)
+    defer { cleanUp(appState, defaults, suiteName, workspaceURL) }
+
+    inspector.complete(.succeeded(try inspection(kind: "new", level: "limited")))
+    appState.startProjectInterview()
+    appState.startProjectInterview()
+
+    XCTAssertTrue(appState.isInterviewPresented)
+    XCTAssertEqual(loader.runCount, 1)
+  }
+
   func testIOSAndNonIOSCapabilityMessagesDoNotBlockContinuation() throws {
     let inspector = DeferredProjectInspector()
     let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector)
@@ -109,6 +171,7 @@ final class JumaoProjectInspectorTests: XCTestCase {
 
   private func makeAppState(
     inspector: DeferredProjectInspector,
+    interviewSchemaLoader: any JumaoInterviewSchemaLoading = ImmediateProjectInterviewSchemaLoader(),
     writesStatus: Bool = false,
     invalidStatus: Bool = false
   ) throws -> (AppState, UserDefaults, String, URL) {
@@ -125,7 +188,11 @@ final class JumaoProjectInspectorTests: XCTestCase {
     }
     let bookmarkStore = WorkspaceBookmarkStore(defaults: defaults, bookmarkKey: "workspace-bookmark")
     _ = try bookmarkStore.save(workspaceURL: workspaceURL)
-    let appState = AppState(workspaceBookmarkStore: bookmarkStore, projectInspector: inspector)
+    let appState = AppState(
+      workspaceBookmarkStore: bookmarkStore,
+      projectInspector: inspector,
+      interviewSchemaLoader: interviewSchemaLoader
+    )
     appState.loadSavedWorkspace()
     return (appState, defaults, suiteName, workspaceURL)
   }
@@ -150,8 +217,15 @@ final class JumaoProjectInspectorTests: XCTestCase {
       "capabilityFit": ["level": level, "primaryFocus": "ios_native", "message": "CLI message"],
       "evidence": [["kind": "project_file", "file": "Sample.xcodeproj", "detail": "检测到 Xcode 工程"]],
       "unknowns": [],
-      "recommendedIntake": ["mode": "existing_project", "questions": []]
+      "recommendedIntake": [
+        "mode": kind == "existing" ? "existing_project" : "new_project",
+        "questions": []
+      ]
     ])
+  }
+
+  private func sourceSchema() -> JumaoInterviewSchema {
+    JumaoInterviewSchema(schemaVersion: 2, questions: [])
   }
 
   private func writeStatus(in workspaceURL: URL) throws {
@@ -194,4 +268,26 @@ private final class DeferredProjectInspector: JumaoProjectInspecting {
   }
 
   func cancel() {}
+}
+
+@MainActor
+private final class DeferredProjectInterviewSchemaLoader: JumaoInterviewSchemaLoading {
+  private(set) var runCount = 0
+  private var completion: (@MainActor @Sendable (JumaoInterviewSchemaLoadResult) -> Void)?
+
+  func run(completion: @escaping @MainActor @Sendable (JumaoInterviewSchemaLoadResult) -> Void) {
+    runCount += 1
+    self.completion = completion
+  }
+
+  func complete(_ result: JumaoInterviewSchemaLoadResult) {
+    completion?(result)
+  }
+}
+
+@MainActor
+private final class ImmediateProjectInterviewSchemaLoader: JumaoInterviewSchemaLoading {
+  func run(completion: @escaping @MainActor @Sendable (JumaoInterviewSchemaLoadResult) -> Void) {
+    completion(.succeeded(JumaoInterviewSchema(schemaVersion: 2, questions: [])))
+  }
 }

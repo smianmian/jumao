@@ -117,6 +117,47 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
 
     XCTAssertEqual(appState.interviewAnswers["primaryUser"], "创作者")
     XCTAssertEqual(appState.interviewWriteError, "写入项目问题失败（退出码 1）：权限不足")
+    XCTAssertEqual(appState.interviewErrorDetails, "操作：interview --answers\n退出码：1\n原因：权限不足")
+    XCTAssertTrue(appState.canRetryInterviewOperation)
+
+    appState.retryInterviewOperation()
+    XCTAssertEqual(writer.calls.count, 2)
+  }
+
+  func testFocusedNewProjectAnswersUseExistingInterviewAnswersWriter() async throws {
+    let writer = RecordingInterviewAnswerWriter()
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(writer: writer)
+    defer {
+      appState.shutdown()
+      defaults.removePersistentDomain(forName: suiteName)
+      try? FileManager.default.removeItem(at: workspaceURL)
+    }
+
+    let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .newProject)
+    appState.beginInterview(with: schema)
+    for question in schema.questions {
+      appState.updateInterviewAnswer("回答 \(question.order)", for: question.answerPath)
+      XCTAssertTrue(appState.advanceInterviewQuestion())
+    }
+
+    appState.requestInterviewWrite()
+    appState.confirmInterviewWrite()
+
+    XCTAssertEqual(writer.calls.count, 1)
+    XCTAssertEqual(writer.calls[0].questions.map(\.answerPath), [
+      "newProject.projectSummary",
+      "newProject.coreFeatures",
+      "newProject.primaryGoal",
+      "newProject.targetPlatform"
+    ])
+    XCTAssertEqual(writer.calls[0].answers["newProject.projectSummary"], "回答 1")
+
+    writer.complete(.succeeded)
+    await Task.yield()
+
+    XCTAssertEqual(appState.interviewWriteMessage, "首轮答案已保存\n下一步：继续完善项目规划")
+    XCTAssertEqual(appState.interviewAnswers["newProject.projectSummary"], "回答 1")
+    XCTAssertFalse(appState.canStartProjectCheck)
   }
 
   private func assertTemporaryAnswersAreDeleted(

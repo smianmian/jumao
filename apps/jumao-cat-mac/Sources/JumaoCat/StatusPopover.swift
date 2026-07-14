@@ -131,7 +131,9 @@ struct StatusPopover: View {
 
         if let title = appState.projectInspectionPrimaryActionTitle,
            let description = appState.projectInspectionPrimaryActionDescription {
-          Button(title) {}
+          Button(title) {
+            appState.startProjectInterview()
+          }
             .buttonStyle(.borderedProminent)
             .disabled(!appState.canContinueFromProjectInspection)
           Text(description)

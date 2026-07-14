@@ -231,8 +231,11 @@ async function interviewCommand(args, io) {
     return 1;
   }
 
-  io.stdout.write(`Jumao interview wrote core product files in ${targetDir}\n`);
+  io.stdout.write(result.intakeOnly
+    ? `Jumao interview saved focused intake in ${targetDir}\n`
+    : `Jumao interview wrote core product files in ${targetDir}\n`);
   for (const file of result.writtenFiles) io.stdout.write(`- ${file}\n`);
+  if (result.intakeOnly) return 0;
   return writeStrictGateResult(targetDir, result.strictResult, io);
 }
 

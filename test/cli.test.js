@@ -522,6 +522,32 @@ test('interview answers write the four core product files', () => {
   assertInterviewFiles(workspace, answers);
 });
 
+test('focused interview answers save structured intake without inventing full project documents', () => {
+  const workspace = tempDir();
+  const answers = {
+    existingProject: {
+      requestedChange: '修复两个入口按钮',
+      currentBlockers: '点击后没有任何反应',
+      protectedFeatures: ['项目扫描', '草稿恢复']
+    }
+  };
+  const answersPath = writeAnswersFile(answers);
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  const savedPath = path.join(workspace, '.jumao', 'intake-answers.json');
+  assert.ok(fs.existsSync(savedPath));
+  const saved = JSON.parse(fs.readFileSync(savedPath, 'utf8'));
+  assert.equal(saved.schemaVersion, 1);
+  assert.equal(saved.mode, 'existing_project');
+  assert.deepEqual(saved.answers, answers.existingProject);
+  assert.equal(typeof saved.updatedAt, 'string');
+  assert.equal(fs.existsSync(path.join(workspace, 'product', 'product-brief.zh-CN.md')), false);
+});
+
 test('interview schema preserves the 21 ordered answer paths', () => {
   const schema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
 

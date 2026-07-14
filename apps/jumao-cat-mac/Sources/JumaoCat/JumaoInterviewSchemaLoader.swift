@@ -1,5 +1,10 @@
 import Foundation
 
+enum ProjectInterviewMode: String, Equatable, Sendable {
+  case newProject
+  case existingProject
+}
+
 struct JumaoInterviewSchema: Codable, Equatable, Sendable {
   let schemaVersion: Int
   let stages: [JumaoInterviewStage]
@@ -21,6 +26,109 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
     description: "按顺序回答项目问题。",
     order: 1
   )
+
+  func focused(for mode: ProjectInterviewMode) -> JumaoInterviewSchema {
+    let stage = JumaoInterviewStage(
+      id: "intake",
+      title: mode == .newProject ? "规划新项目" : "梳理这次改动",
+      description: mode == .newProject
+        ? "先回答四个最重要的问题。"
+        : "扫描结果已经确认的内容不会重复询问。",
+      order: 1
+    )
+
+    let questions: [JumaoInterviewQuestion]
+    switch mode {
+    case .newProject:
+      questions = [
+        focusedQuestion(
+          id: "projectSummary",
+          answerPath: "newProject.projectSummary",
+          title: "你想做一个什么项目？",
+          description: "用自己的话说清楚这个项目要解决什么问题。",
+          placeholder: "例如：一个帮助我整理客户跟进记录的工具",
+          order: 1
+        ),
+        focusedQuestion(
+          id: "coreFeatures",
+          answerPath: "newProject.coreFeatures",
+          title: "最核心的功能有哪些？",
+          description: "只列第一版不能缺少的功能。",
+          placeholder: "例如：记录客户，设置提醒，查看跟进状态",
+          inputType: "list",
+          order: 2
+        ),
+        focusedQuestion(
+          id: "primaryGoal",
+          answerPath: "newProject.primaryGoal",
+          title: "当前最重要的目标是什么？",
+          description: "先确定这一版最需要达成的结果。",
+          placeholder: "例如：先让自己每天能稳定完成客户跟进",
+          order: 3
+        ),
+        focusedQuestion(
+          id: "targetPlatform",
+          answerPath: "newProject.targetPlatform",
+          title: "准备运行在哪个平台？",
+          description: "填写第一版准备使用的平台。",
+          placeholder: "例如：macOS、iPhone、网页",
+          order: 4
+        )
+      ]
+    case .existingProject:
+      questions = [
+        focusedQuestion(
+          id: "requestedChange",
+          answerPath: "existingProject.requestedChange",
+          title: "这次准备修改什么？",
+          description: "只说明这一次要新增、调整或修复的内容。",
+          placeholder: "例如：修复导入项目后入口按钮无反应",
+          order: 1
+        ),
+        focusedQuestion(
+          id: "currentBlockers",
+          answerPath: "existingProject.currentBlockers",
+          title: "当前遇到了什么问题或阻塞？",
+          description: "说明现在看见的现象，或导致无法继续的原因。",
+          placeholder: "例如：点击后没有打开任何窗口",
+          order: 2
+        ),
+        focusedQuestion(
+          id: "protectedFeatures",
+          answerPath: "existingProject.protectedFeatures",
+          title: "哪些现有功能绝对不能被破坏？",
+          description: "列出本次修改必须保持正常的功能。",
+          placeholder: "例如：项目扫描，草稿恢复，任务包生成",
+          inputType: "list",
+          order: 3
+        )
+      ]
+    }
+
+    return JumaoInterviewSchema(schemaVersion: schemaVersion, stages: [stage], questions: questions)
+  }
+
+  private func focusedQuestion(
+    id: String,
+    answerPath: String,
+    title: String,
+    description: String,
+    placeholder: String,
+    inputType: String = "text",
+    order: Int
+  ) -> JumaoInterviewQuestion {
+    JumaoInterviewQuestion(
+      id: id,
+      answerPath: answerPath,
+      title: title,
+      description: description,
+      placeholder: placeholder,
+      stage: "intake",
+      inputType: inputType,
+      required: true,
+      order: order
+    )
+  }
 
   enum CodingKeys: String, CodingKey {
     case schemaVersion, stages, questions
