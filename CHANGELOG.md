@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 - Unreleased
+
+### Added
+
+- Add the Jumao Cat macOS menu bar app.
+- Add read-only project inspection with `inspect`.
+- Distinguish new projects from existing projects.
+- Show grouped Agent status and project readiness.
+- Add the native interview window with draft recovery.
+- Bundle the Jumao CLI and Node runtime for standalone use.
+- Add Developer ID signing and Apple notarization support.
+
 ## 0.2.4 - Unreleased
 
 ### Added
