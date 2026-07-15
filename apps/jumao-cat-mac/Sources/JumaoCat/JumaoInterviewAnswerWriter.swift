@@ -71,6 +71,11 @@ final class JumaoInterviewAnswerWriter: JumaoInterviewAnswerWriting {
       setAnswer(value, at: question.answerPath, in: &nestedAnswers)
     }
 
+    // Keep the legacy field when present so older planning files remain readable.
+    if let firstVersion = answers["newProject.firstVersion"] {
+      setAnswer(firstVersion, at: "newProject.firstVersion", in: &nestedAnswers)
+    }
+
     return nestedAnswers
   }
 

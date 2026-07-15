@@ -50,8 +50,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         contextMenu: contextMenu
       )
     }
-    configureQuitShortcut()
-
     appState.$status
       .receive(on: RunLoop.main)
       .sink { [weak self] status in
@@ -72,19 +70,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   @objc private func quitFromMenu() {
     menuBarInteraction?.quitFromMenu()
-  }
-
-  private func configureQuitShortcut() {
-    let mainMenu = NSMenu()
-    let appMenuItem = NSMenuItem()
-    let appMenu = NSMenu()
-    let quitItem = NSMenuItem(title: "退出 Jumao Cat", action: #selector(quitFromMenu), keyEquivalent: "q")
-    quitItem.keyEquivalentModifierMask = .command
-    quitItem.target = self
-    appMenu.addItem(quitItem)
-    appMenuItem.submenu = appMenu
-    mainMenu.addItem(appMenuItem)
-    NSApp.mainMenu = mainMenu
   }
 
   func applicationWillTerminate(_ notification: Notification) {

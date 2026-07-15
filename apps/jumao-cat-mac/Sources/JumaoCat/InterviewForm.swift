@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct InterviewForm: View {
@@ -10,6 +11,7 @@ struct InterviewForm: View {
   @State private var isCatJumping = false
   @State private var catCelebrationPhase = 0
   @State private var lastCatNodAt = Date.distantPast
+  @State private var isEditingUnderstanding = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
@@ -47,9 +49,15 @@ struct InterviewForm: View {
         loadingCard
       } else if let schemaError = appState.interviewSchemaError {
         errorCard(title: "无法打开项目问答", message: schemaError)
+      } else if appState.shouldOfferInterviewDraftRecovery {
+        draftRecoveryCard
+      } else if let planningResult = appState.focusedPlanningResult {
+        focusedPlanningResultCard(planningResult)
       } else if appState.isCurrentInterviewStageComplete {
         if appState.hasNextInterviewStage {
           stageCompletionCard
+        } else if appState.isFocusedProjectInterview {
+          focusedUnderstandingCard
         } else {
           completionCard
         }
@@ -83,7 +91,7 @@ struct InterviewForm: View {
         appState.confirmInterviewWrite()
       }
     } message: {
-      Text("将生成或更新 4 份项目文档，不修改项目源代码。")
+      Text("将生成项目资料和开发任务包，不修改项目源代码。")
     }
     .alert("将覆盖已有项目文档", isPresented: $appState.isInterviewOverwriteConfirmationPresented) {
       Button("取消", role: .cancel) {}
@@ -110,6 +118,32 @@ struct InterviewForm: View {
         Text("正在读取 Jumao interview schema。")
           .font(.caption)
           .foregroundStyle(.secondary)
+      }
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private var draftRecoveryCard: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("发现这个项目上次没有填完")
+        .font(.headline)
+      Text("你可以继续上次填写，或者清除旧草稿后从第一题重新开始。")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+      HStack {
+        Button("继续填写") {
+          appState.continueInterviewDraftRecovery()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+
+        Button("重新开始") {
+          appState.restartInterviewDraftRecovery()
+        }
+        .buttonStyle(.bordered)
       }
     }
     .padding(16)
@@ -163,7 +197,90 @@ struct InterviewForm: View {
           .font(.caption)
           .foregroundStyle(.secondary)
       }
+
+      Button("打开项目文件夹") {
+        appState.openWorkspaceInFinder()
+      }
+      .buttonStyle(.bordered)
     }
+  }
+
+  private func focusedPlanningResultCard(_ result: FocusedPlanningResult) -> some View {
+    HStack(alignment: .top, spacing: 12) {
+      VStack(alignment: .leading, spacing: 10) {
+        Text(result.mode == .newProject ? "规划完成" : "本次改动资料已准备")
+          .font(.headline)
+        Text("项目：\(result.projectName)")
+          .font(.subheadline.weight(.medium))
+        if result.mode == .newProject {
+          Text("你想做的：\(result.idea)")
+            .font(.subheadline)
+            .fixedSize(horizontal: false, vertical: true)
+          Text("你希望它能做的事：\(result.firstVersion ?? "待确认")")
+            .font(.subheadline)
+            .fixedSize(horizontal: false, vertical: true)
+          Text(platformUsageDescription(result.platform))
+            .font(.subheadline)
+        } else {
+          Text("本次想改的：\(result.idea)")
+            .font(.subheadline)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
+        Text("已生成的资料")
+          .font(.subheadline.weight(.semibold))
+          .padding(.top, 2)
+        if result.files.isEmpty {
+          Text("正在确认生成文件；可先在 Finder 中检查项目资料。")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else {
+          ForEach(result.files, id: \.self) { file in
+            Label(file, systemImage: "doc.text")
+              .font(.caption)
+              .lineLimit(1)
+          }
+        }
+
+        Text("未回答的信息都已标为“待确认”，不会自动假设登录、支付或云服务。")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+
+        Button("打开任务包") {
+          appState.openFocusedPlanningTaskPack()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+
+        Button("复制给 Codex") {
+          appState.copyFocusedPlanningCodexInstruction()
+        }
+        .buttonStyle(.bordered)
+
+        Button("在 Finder 中查看全部资料") {
+          appState.openWorkspaceInFinder()
+        }
+        .buttonStyle(.bordered)
+
+        if let feedback = appState.focusedPlanningCopyFeedback {
+          Text(feedback)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        if let error = appState.focusedPlanningOpenError {
+          Text(error)
+            .font(.caption)
+            .foregroundStyle(.red)
+        }
+      }
+
+      Spacer(minLength: 0)
+      companionCat()
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
   }
 
   private var stageCompletionCard: some View {
@@ -320,6 +437,166 @@ struct InterviewForm: View {
     .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
   }
 
+  private var focusedUnderstandingCard: some View {
+    HStack(alignment: .top, spacing: 12) {
+      VStack(alignment: .leading, spacing: 12) {
+        if appState.isFocusedNewProjectInterview {
+          newProjectUnderstanding
+        } else {
+          existingProjectUnderstanding
+        }
+      }
+
+      Spacer(minLength: 0)
+      companionCat()
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(16)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  @ViewBuilder
+  private var newProjectUnderstanding: some View {
+    let features = (appState.interviewAnswers["newProject.features"] ?? appState.interviewAnswers["newProject.firstVersion"] ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if isEditingUnderstanding {
+      Text("直接改成你的意思")
+        .font(.headline)
+      Text("你想做的是")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      nativeTextEditor(
+        placeholder: "说说你想做什么",
+        answerPath: "newProject.idea"
+      )
+      Text("你希望它能做哪些事")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      nativeTextEditor(
+        placeholder: "想到什么就写什么",
+        answerPath: "newProject.features"
+      )
+      Text("你想先在哪儿用它")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      platformButtons
+      Button("改好了") {
+        isEditingUnderstanding = false
+      }
+      .buttonStyle(.borderedProminent)
+      .tint(.orange)
+    } else {
+      Text("Jumao 是这样理解的")
+        .font(.headline)
+      Text("我理解你想做的是：\(appState.interviewAnswers["newProject.idea"] ?? "待确认")")
+        .font(.subheadline)
+        .fixedSize(horizontal: false, vertical: true)
+      Text("你希望它能做的事：\(features)")
+        .font(.subheadline)
+        .fixedSize(horizontal: false, vertical: true)
+      Text(platformUsageDescription(appState.interviewAnswers["newProject.platform"]))
+        .font(.subheadline)
+      HStack {
+        Button("对，就是这个意思") {
+          appState.confirmFocusedInterviewUnderstanding()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+        .disabled(appState.isWritingInterviewAnswers)
+
+        Button("改一下") {
+          isEditingUnderstanding = true
+        }
+        .buttonStyle(.bordered)
+      }
+    }
+
+    if appState.isWritingInterviewAnswers {
+      ProgressView("正在整理项目资料")
+        .controlSize(.small)
+    }
+    if let error = appState.interviewWriteError {
+      Text(error)
+        .font(.caption)
+        .foregroundStyle(.red)
+      interviewErrorActions
+    }
+  }
+
+  @ViewBuilder
+  private var existingProjectUnderstanding: some View {
+    if isEditingUnderstanding {
+      Text("直接改成你的意思")
+        .font(.headline)
+      nativeTextEditor(
+        placeholder: "描述这次想增加、调整或修复的地方",
+        answerPath: "existingProject.requestedChange"
+      )
+      Button("改好了") {
+        isEditingUnderstanding = false
+      }
+      .buttonStyle(.borderedProminent)
+      .tint(.orange)
+    } else {
+      Text("Jumao 是这样理解的")
+        .font(.headline)
+      Text("这次你想让它：\(appState.interviewAnswers["existingProject.requestedChange"] ?? "待确认")")
+        .font(.subheadline)
+        .fixedSize(horizontal: false, vertical: true)
+      Text("Jumao 会结合当前扫描结果整理影响区域、保护项、测试和发布检查，不再把这些专业判断变成问卷。")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+      HStack {
+        Button("对，就是这个意思") {
+          appState.confirmFocusedInterviewUnderstanding()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+        .disabled(appState.isWritingInterviewAnswers)
+
+        Button("改一下") {
+          isEditingUnderstanding = true
+        }
+        .buttonStyle(.bordered)
+      }
+    }
+
+    if appState.isWritingInterviewAnswers {
+      ProgressView("正在整理本次改动")
+        .controlSize(.small)
+    }
+    if let error = appState.interviewWriteError {
+      Text(error)
+        .font(.caption)
+        .foregroundStyle(.red)
+      interviewErrorActions
+    }
+  }
+
+  private func platformUsageDescription(_ platform: String?) -> String {
+    NewProjectPlatformWording.usageDescription(for: platform)
+  }
+
+  private var platformButtons: some View {
+    VStack(alignment: .leading, spacing: 7) {
+      ForEach(["iPhone", "Mac", "网页", "还没想好"], id: \.self) { option in
+        Button {
+          appState.updateInterviewAnswer(option, for: "newProject.platform")
+        } label: {
+          HStack {
+            Image(systemName: appState.interviewAnswers["newProject.platform"] == option ? "largecircle.fill.circle" : "circle")
+            Text(option)
+            Spacer()
+          }
+        }
+        .buttonStyle(.bordered)
+        .tint(.orange)
+      }
+    }
+  }
+
   private func questionCard(_ question: JumaoInterviewQuestion) -> some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack(alignment: .top, spacing: 12) {
@@ -327,11 +604,6 @@ struct InterviewForm: View {
           Text("第 \(appState.interviewCurrentQuestionNumber) 题 / 共 \(appState.interviewCurrentStageQuestionCount) 题")
             .font(.caption.weight(.semibold))
             .foregroundStyle(.orange)
-          if appState.isInterviewQuestionMarkedForCompletion(question) {
-            Text("待补充")
-              .font(.caption.weight(.semibold))
-              .foregroundStyle(.orange)
-          }
           Text(question.title)
             .font(.headline)
             .fixedSize(horizontal: false, vertical: true)
@@ -363,16 +635,36 @@ struct InterviewForm: View {
         companionCat()
       }
 
-      TextField(
-        question.placeholder ?? "请输入你的回答",
-        text: appState.interviewAnswerBinding(for: question.answerPath),
-        axis: .vertical
-      )
-        .textFieldStyle(.roundedBorder)
-        .lineLimit(2...3)
-        .onChange(of: appState.interviewAnswers[question.answerPath] ?? "") { _, _ in
-          nodForTyping()
+      if question.inputType == "choice" {
+        VStack(alignment: .leading, spacing: 8) {
+          ForEach(question.options ?? [], id: \.self) { option in
+            Button {
+              appState.updateInterviewAnswer(option, for: question.answerPath)
+              _ = appState.advanceInterviewQuestion()
+            } label: {
+              HStack {
+                Image(systemName: appState.interviewAnswers[question.answerPath] == option ? "largecircle.fill.circle" : "circle")
+                Text(option)
+                Spacer()
+              }
+            }
+            .buttonStyle(.bordered)
+            .tint(.orange)
+          }
+
+          if question.answerPath == "newProject.platform",
+             let message = appState.interviewPlatformMigrationMessage {
+            Text(message)
+              .font(.caption)
+              .foregroundStyle(.orange)
+          }
         }
+      } else {
+        nativeTextEditor(
+          placeholder: question.placeholder ?? "请输入你的回答",
+          answerPath: question.answerPath
+        )
+      }
 
       if let hint = appState.interviewInputHint {
         Text(hint)
@@ -393,19 +685,15 @@ struct InterviewForm: View {
         .buttonStyle(.bordered)
         .disabled(!appState.canGoToPreviousInterviewQuestion || isCatActionAnimating)
 
-        Spacer()
-        Button("先跳过") {
-          appState.skipCurrentInterviewQuestion()
+        if question.inputType != "choice" {
+          Spacer()
+          Button(appState.isLastInterviewQuestion ? (appState.hasNextInterviewStage ? "完成本阶段" : "完成填写") : "下一题") {
+            advanceInterview()
+          }
+          .buttonStyle(.borderedProminent)
+          .tint(.orange)
+          .disabled(isCatActionAnimating)
         }
-        .buttonStyle(.bordered)
-        .disabled(isCatActionAnimating)
-
-        Button(appState.isLastInterviewQuestion ? (appState.hasNextInterviewStage ? "完成本阶段" : "完成填写") : "下一题") {
-          advanceInterview()
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(.orange)
-        .disabled(isCatActionAnimating)
       }
     }
     .padding(16)
@@ -413,6 +701,31 @@ struct InterviewForm: View {
     .overlay {
       RoundedRectangle(cornerRadius: 16, style: .continuous)
         .stroke(Color.orange.opacity(0.28), lineWidth: 1)
+    }
+  }
+
+  private func nativeTextEditor(placeholder: String, answerPath: String) -> some View {
+    ZStack(alignment: .topLeading) {
+      NativeInterviewTextView(
+        text: appState.interviewAnswerBinding(for: answerPath),
+        onTextChange: nodForTyping
+      )
+        .padding(1)
+        .frame(minHeight: 84)
+
+      if (appState.interviewAnswers[answerPath] ?? "").isEmpty {
+        Text(placeholder)
+          .font(.body)
+          .foregroundStyle(.tertiary)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 13)
+          .allowsHitTesting(false)
+      }
+    }
+    .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: 7, style: .continuous)
+        .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
     }
   }
 
@@ -511,6 +824,113 @@ struct InterviewForm: View {
     isCatNodding = false
     isCatJumping = false
     catCelebrationPhase = 0
+  }
+}
+
+enum InterviewTextSynchronization {
+  static func shouldApplyModelValue(isFirstResponder: Bool, hasMarkedText: Bool) -> Bool {
+    !(isFirstResponder && hasMarkedText)
+  }
+}
+
+enum NewProjectPlatformWording {
+  static func usageDescription(for platform: String?) -> String {
+    switch platform {
+    case "iPhone": "先在 iPhone 上使用"
+    case "Mac": "先在 Mac 上使用"
+    case "网页": "先通过网页使用"
+    default: "使用方式暂未确定"
+    }
+  }
+}
+
+private struct NativeInterviewTextView: NSViewRepresentable {
+  @Binding var text: String
+  let onTextChange: () -> Void
+
+  func makeCoordinator() -> Coordinator {
+    Coordinator(text: $text, onTextChange: onTextChange)
+  }
+
+  func makeNSView(context: Context) -> NSScrollView {
+    let scrollView = NSScrollView()
+    scrollView.hasVerticalScroller = true
+    scrollView.autohidesScrollers = true
+    scrollView.borderType = .noBorder
+    scrollView.drawsBackground = false
+
+    let textView = NSTextView()
+    textView.delegate = context.coordinator
+    textView.string = text
+    textView.font = .preferredFont(forTextStyle: .body)
+    textView.textColor = .textColor
+    textView.backgroundColor = .textBackgroundColor
+    textView.drawsBackground = true
+    textView.isEditable = true
+    textView.isSelectable = true
+    textView.isRichText = false
+    textView.importsGraphics = false
+    textView.allowsUndo = true
+    textView.isAutomaticQuoteSubstitutionEnabled = false
+    textView.isAutomaticDashSubstitutionEnabled = false
+    textView.isAutomaticTextReplacementEnabled = false
+    textView.isAutomaticSpellingCorrectionEnabled = false
+    textView.textContainerInset = NSSize(width: 8, height: 8)
+    textView.isVerticallyResizable = true
+    textView.isHorizontallyResizable = false
+    textView.autoresizingMask = [.width]
+    textView.textContainer?.widthTracksTextView = true
+    textView.textContainer?.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+    scrollView.documentView = textView
+
+    DispatchQueue.main.async { [weak scrollView, weak textView] in
+      guard let window = scrollView?.window,
+            window.isKeyWindow,
+            let textView,
+            !(window.firstResponder is NSTextView) else { return }
+      window.makeFirstResponder(textView)
+    }
+    return scrollView
+  }
+
+  func updateNSView(_ scrollView: NSScrollView, context: Context) {
+    context.coordinator.update(text: $text, onTextChange: onTextChange)
+    guard let textView = scrollView.documentView as? NSTextView,
+          textView.string != text else { return }
+    let isFirstResponder = textView.window?.firstResponder === textView
+    guard InterviewTextSynchronization.shouldApplyModelValue(
+      isFirstResponder: isFirstResponder,
+      hasMarkedText: textView.hasMarkedText()
+    ) else { return }
+
+    let selection = textView.selectedRange()
+    context.coordinator.isApplyingModelValue = true
+    textView.string = text
+    textView.setSelectedRange(NSRange(location: min(selection.location, text.utf16.count), length: 0))
+    context.coordinator.isApplyingModelValue = false
+  }
+
+  final class Coordinator: NSObject, NSTextViewDelegate {
+    var isApplyingModelValue = false
+    private var text: Binding<String>
+    private var onTextChange: () -> Void
+
+    init(text: Binding<String>, onTextChange: @escaping () -> Void) {
+      self.text = text
+      self.onTextChange = onTextChange
+    }
+
+    func update(text: Binding<String>, onTextChange: @escaping () -> Void) {
+      self.text = text
+      self.onTextChange = onTextChange
+    }
+
+    func textDidChange(_ notification: Notification) {
+      guard !isApplyingModelValue,
+            let textView = notification.object as? NSTextView else { return }
+      text.wrappedValue = textView.string
+      onTextChange()
+    }
   }
 }
 

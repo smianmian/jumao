@@ -44,13 +44,52 @@ test('inspect identifies an empty directory without writing files', () => {
   assert.equal(result.json.workspaceKind, 'empty');
   assert.equal(result.json.recommendedIntake.mode, 'new_project');
   assert.deepEqual(result.json.recommendedIntake.questions, [
-    '你想做一个什么东西？',
-    '第一版要让用户能完成哪些功能？',
-    '这些功能里，哪一个最重要？',
-    '第一版先做在哪个平台？'
+    '你想做个什么？',
+    '你希望它能做哪些事？',
+    '你想先在哪儿用它？'
   ]);
   assert.deepEqual(fs.readdirSync(root), before);
   assert.ok(result.json.evidence.some((item) => item.kind === 'workspace_kind'));
+});
+
+test('inspect treats system files, an empty Git directory, and Jumao metadata as a new project', () => {
+  const root = workspace();
+  write(root, '.DS_Store');
+  mkdir(root, '.git');
+  mkdir(root, '.jumao');
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.workspaceKind, 'empty');
+  assert.equal(result.json.recommendedIntake.mode, 'new_project');
+  assert.equal(result.json.project.hasSourceCode, false);
+});
+
+test('inspect leaves an unclassified folder for the project owner to choose', () => {
+  const root = workspace();
+  write(root, 'notes.txt', '暂时只是一些想法');
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.workspaceKind, 'unknown');
+  assert.equal(result.json.recommendedIntake.mode, 'choose_project_type');
+  assert.deepEqual(result.json.recommendedIntake.questions, []);
+});
+
+test('inspect never reads project markers from the parent directory', () => {
+  const parent = workspace();
+  write(parent, 'package.json', JSON.stringify({ name: 'parent-project' }));
+  const root = path.join(parent, 'empty-child');
+  fs.mkdirSync(root);
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.workspaceKind, 'empty');
+  assert.equal(result.json.project.name, '');
+  assert.equal(result.json.project.buildSystems.length, 0);
 });
 
 test('inspect identifies Jumao planning files as a new project', () => {
@@ -207,9 +246,7 @@ test('inspect has stable parseable JSON and existing-project questions only ask 
   assert.equal(first.json.schemaVersion, 1);
   assert.equal(first.json.recommendedIntake.mode, 'existing_project');
   assert.deepEqual(first.json.recommendedIntake.questions, [
-    '这次你最想新增或修改什么？',
-    '现在最卡你的问题是什么？',
-    '哪些已经正常工作的部分不能改坏？'
+    '这次你想让它变成什么样？'
   ]);
   assert.equal(first.json.recommendedIntake.questions.some((question) => /平台|语言|工程类型/.test(question)), false);
   assert.ok(first.json.evidence.some((item) => item.kind === 'project_file' && item.file === 'package.json'));

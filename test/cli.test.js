@@ -522,13 +522,14 @@ test('interview answers write the four core product files', () => {
   assertInterviewFiles(workspace, answers);
 });
 
-test('focused interview answers save structured intake without inventing full project documents', () => {
+test('existing-project focused intake saves independent change materials without overwriting product documents', () => {
   const workspace = tempDir();
+  const existingBrief = path.join(workspace, 'product', 'product-brief.md');
+  fs.mkdirSync(path.dirname(existingBrief), { recursive: true });
+  fs.writeFileSync(existingBrief, '# 用户已有的产品资料\n', 'utf8');
   const answers = {
     existingProject: {
-      requestedChange: '修复两个入口按钮',
-      currentBlockers: '点击后没有任何反应',
-      protectedFeatures: ['项目扫描', '草稿恢复']
+      requestedChange: '修复两个入口按钮'
     }
   };
   const answersPath = writeAnswersFile(answers);
@@ -545,7 +546,194 @@ test('focused interview answers save structured intake without inventing full pr
   assert.equal(saved.mode, 'existing_project');
   assert.deepEqual(saved.answers, answers.existingProject);
   assert.equal(typeof saved.updatedAt, 'string');
-  assert.equal(fs.existsSync(path.join(workspace, 'product', 'product-brief.zh-CN.md')), false);
+  assert.equal(fs.readFileSync(existingBrief, 'utf8'), '# 用户已有的产品资料\n');
+  const changeBrief = fs.readFileSync(path.join(workspace, 'changes', 'current-change.md'), 'utf8');
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-change-task-pack.md'), 'utf8');
+  assert.match(changeBrief, /修复两个入口按钮/);
+  assert.match(changeBrief, /自动识别出的保护项/);
+  assert.match(taskPack, /受影响的页面和代码区域/);
+  assert.match(taskPack, /测试与发布检查/);
+  assert.match(taskPack, /不要覆盖已有用户文档/);
+});
+
+test('existing-project focused intake only needs the user desired change', () => {
+  const workspace = tempDir();
+  fs.writeFileSync(path.join(workspace, 'package.json'), '{"name":"sample","scripts":{"test":"node --test"}}\n', 'utf8');
+  const answersPath = writeAnswersFile({
+    existingProject: { requestedChange: '让导入后的项目可以继续规划' }
+  });
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  const changeBrief = fs.readFileSync(path.join(workspace, 'changes', 'current-change.md'), 'utf8');
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-change-task-pack.md'), 'utf8');
+  assert.match(changeBrief, /让导入后的项目可以继续规划/);
+  assert.match(changeBrief, /构建方式：npm/);
+  assert.match(taskPack, /保持现有 npm 构建方式可用/);
+  assert.doesNotMatch(taskPack, /当前阻塞/);
+  assert.doesNotMatch(taskPack, /不可破坏项/);
+});
+
+test('new-project focused intake generates safe planning materials and task pack from the three user answers', () => {
+  const workspace = tempDir();
+  const answers = {
+    newProject: {
+      idea: '帮助用户记录每日喝水的小工具',
+      features: '记录一次喝水，并查看今天的记录。',
+      platform: 'iPhone'
+    }
+  };
+  const answersPath = writeAnswersFile(answers);
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  for (const file of [
+    'AGENTS.md',
+    'product/product-brief.md',
+    'product/scope-gate.md',
+    'product/screen-states.md',
+    'product/data-safety.md',
+    'tasks/codex-task-pack.md'
+  ]) {
+    assert.ok(fs.existsSync(path.join(workspace, file)), file);
+  }
+
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-task-pack.md'), 'utf8');
+  assert.match(taskPack, /帮助用户记录每日喝水的小工具/);
+  assert.match(taskPack, /记录一次喝水，并查看今天的记录/);
+  assert.match(taskPack, /你想先在哪儿用它/);
+  assert.match(taskPack, /先在 iPhone 上使用/);
+  assert.doesNotMatch(taskPack, /目标平台|运行平台|第一版平台/);
+  assert.match(taskPack, /受影响的页面和代码区域/);
+  assert.match(taskPack, /自动识别出的保护项/);
+  assert.match(taskPack, /测试与发布检查/);
+  assert.match(taskPack, /iPhone App 的 Xcode 工程/);
+  assert.doesNotMatch(taskPack, /iPad|Android|跨平台/);
+  assert.match(taskPack, /Jumao 整理出的第一阶段开发步骤/);
+  assert.match(taskPack, /开发前确实需要确认的事/);
+  assert.doesNotMatch(taskPack, /第一版核心功能|当前最重要目标|明确不做/);
+  assert.doesNotMatch(taskPack, /ai-note-helper|doctor-answers/i);
+
+  const dataSafety = fs.readFileSync(path.join(workspace, 'product', 'data-safety.md'), 'utf8');
+  assert.match(dataSafety, /待确认/);
+  assert.match(dataSafety, /不要实现数据收集、上传或第三方 SDK/);
+});
+
+test('focused new-project generation keeps user-authored documents and marks only blocking details pending', () => {
+  const workspace = tempDir();
+  const productBrief = path.join(workspace, 'product', 'product-brief.md');
+  fs.mkdirSync(path.dirname(productBrief), { recursive: true });
+  fs.writeFileSync(productBrief, '# 用户自己的产品资料\n', 'utf8');
+  const answersPath = writeAnswersFile({
+    newProject: {
+      idea: '一个简单计时器',
+      features: '',
+      platform: '网页'
+    }
+  });
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  assert.equal(fs.readFileSync(productBrief, 'utf8'), '# 用户自己的产品资料\n');
+  const scopeGate = fs.readFileSync(path.join(workspace, 'product', 'scope-gate.md'), 'utf8');
+  assert.match(scopeGate, /待确认/);
+  assert.match(scopeGate, /先别自己加/);
+  const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-task-pack.md'), 'utf8');
+  assert.match(taskPack, /还没有说清楚希望它能做哪些事/);
+  assert.doesNotMatch(taskPack, /登录功能|支付功能|订阅功能|云服务功能/);
+});
+
+test('focused new-project intake migrates legacy project features goal and platform into the new answer shape', () => {
+  const workspace = tempDir();
+  const answersPath = writeAnswersFile({
+    newProject: {
+      projectSummary: '一个记录心情的软件',
+      coreFeatures: ['记录一次心情'],
+      primaryGoal: '查看今天的记录',
+      targetPlatform: 'Mac'
+    }
+  });
+
+  const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+    encoding: 'utf8'
+  });
+
+  assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+  const saved = JSON.parse(fs.readFileSync(path.join(workspace, '.jumao', 'intake-answers.json'), 'utf8'));
+  assert.deepEqual(saved.answers, {
+    idea: '一个记录心情的软件',
+    features: '记录一次心情',
+    firstVersion: '记录一次心情',
+    platform: 'Mac'
+  });
+});
+
+test('focused task packs keep Mac and web guidance platform-specific', () => {
+  const cases = [
+    {
+      platform: 'Mac',
+      expected: /macOS App 的 Xcode 工程/,
+      expectedUsage: /先在 Mac 上使用/,
+      excluded: /iPhone|iPad|Android|跨平台/
+    },
+    {
+      platform: '网页',
+      expected: /确认当前目录是否已有网页工程/,
+      expectedUsage: /先通过网页使用/,
+      excluded: /React|Vue|Angular|Svelte|Next\.js|Nuxt/
+    }
+  ];
+
+  for (const item of cases) {
+    const workspace = tempDir();
+    const answersPath = writeAnswersFile({
+      newProject: {
+        idea: '一个简单工具',
+        features: '完成一次最简单的操作。',
+        platform: item.platform
+      }
+    });
+    const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+      encoding: 'utf8'
+    });
+
+    assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+    const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-task-pack.md'), 'utf8');
+    assert.match(taskPack, item.expected);
+    assert.match(taskPack, item.expectedUsage);
+    assert.doesNotMatch(taskPack, item.excluded);
+  }
+});
+
+test('undecided or retired platforms stay pending without blocking task-pack generation', () => {
+  for (const platform of ['还没想好', 'iPhone / iPad', 'iPad', 'Android', 'Windows']) {
+    const workspace = tempDir();
+    const answersPath = writeAnswersFile({
+      newProject: {
+        idea: '一个简单工具',
+        features: '完成一次最简单的操作。',
+        platform
+      }
+    });
+    const interviewed = spawnSync(process.execPath, [cli, 'interview', workspace, '--answers', answersPath], {
+      encoding: 'utf8'
+    });
+
+    assert.equal(interviewed.status, 0, interviewed.stdout + interviewed.stderr);
+    const taskPack = fs.readFileSync(path.join(workspace, 'tasks', 'codex-task-pack.md'), 'utf8');
+    assert.match(taskPack, /## 你想先在哪儿用它\n使用方式暂未确定/);
+    assert.match(taskPack, /先确认你想先在哪儿用它/);
+    assert.doesNotMatch(taskPack, /iPad|Android 工程|Windows 工程/);
+  }
 });
 
 test('interview schema preserves the 21 ordered answer paths', () => {

@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 @testable import JumaoCat
 
@@ -51,6 +52,14 @@ final class MenuBarInteractionControllerTests: XCTestCase {
     controller.quitFromMenu()
 
     XCTAssertEqual(events.values, ["cancel pack", "terminate app"])
+  }
+
+  func testTextEditingCommandsInstallCommandVInTheRunningMainMenu() {
+    let menuItems = NSApp.mainMenu?.items.flatMap { $0.submenu?.items ?? [] } ?? []
+    XCTAssertTrue(
+      menuItems.contains { $0.keyEquivalent == "v" && $0.keyEquivalentModifierMask.contains(.command) },
+      "主菜单必须实际安装 Command + V；当前菜单：\(menuItems.map { "\($0.title)[\($0.keyEquivalent)]" })"
+    )
   }
 
   private func makeController(popover: RecordingPopover) -> MenuBarInteractionController {

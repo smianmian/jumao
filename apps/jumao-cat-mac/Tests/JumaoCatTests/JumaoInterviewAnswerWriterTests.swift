@@ -33,6 +33,26 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     )
   }
 
+  func testFeaturesAndCompatibleFirstVersionAreWrittenFromTheThreeQuestions() {
+    let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .newProject)
+    let answers = JumaoInterviewAnswerWriter.makeAnswers(
+      questions: schema.questions,
+      answers: [
+        "newProject.idea": "记录心情的软件",
+        "newProject.features": "记录一次心情，并查看今天的记录。",
+        "newProject.platform": "iPhone",
+        "newProject.firstVersion": "记录一次心情，并查看今天的记录。"
+      ]
+    )
+
+    let newProject = answers["newProject"] as? [String: Any]
+    XCTAssertEqual(newProject?["idea"] as? String, "记录心情的软件")
+    XCTAssertEqual(newProject?["features"] as? String, "记录一次心情，并查看今天的记录。")
+    XCTAssertEqual(newProject?["platform"] as? String, "iPhone")
+    XCTAssertEqual(newProject?["firstVersion"] as? String, "记录一次心情，并查看今天的记录。")
+    XCTAssertEqual(schema.questions.count, 3)
+  }
+
   func testForceAddsForceArgumentToInterviewProcess() {
     XCTAssertEqual(
       JumaoInterviewAnswerWriter.arguments(
@@ -135,6 +155,49 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
 
     let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .newProject)
     appState.beginInterview(with: schema)
+    appState.updateInterviewAnswer("记录心情的软件", for: "newProject.idea")
+    XCTAssertTrue(appState.advanceInterviewQuestion())
+    appState.updateInterviewAnswer("记录一次心情，并查看今天的记录。", for: "newProject.features")
+    XCTAssertTrue(appState.advanceInterviewQuestion())
+    appState.updateInterviewAnswer("iPhone", for: "newProject.platform")
+    XCTAssertTrue(appState.advanceInterviewQuestion())
+
+    appState.confirmFocusedInterviewUnderstanding()
+
+    XCTAssertEqual(writer.calls.count, 1)
+    XCTAssertEqual(writer.calls[0].questions.map(\.answerPath), [
+      "newProject.idea",
+      "newProject.features",
+      "newProject.platform"
+    ])
+    XCTAssertEqual(writer.calls[0].answers["newProject.idea"], "记录心情的软件")
+    XCTAssertEqual(writer.calls[0].answers["newProject.features"], "记录一次心情，并查看今天的记录。")
+    XCTAssertEqual(writer.calls[0].answers["newProject.firstVersion"], "记录一次心情，并查看今天的记录。")
+
+    writer.complete(.succeeded)
+    await Task.yield()
+
+    XCTAssertEqual(appState.interviewWriteMessage, "规划资料和开发任务包已生成")
+    XCTAssertTrue(appState.interviewAnswers.isEmpty)
+    XCTAssertEqual(appState.focusedPlanningResult?.mode, .newProject)
+    XCTAssertEqual(appState.focusedPlanningResult?.idea, "记录心情的软件")
+    XCTAssertEqual(appState.focusedPlanningResult?.firstVersion, "记录一次心情，并查看今天的记录。")
+    XCTAssertEqual(appState.focusedPlanningResult?.platform, "iPhone")
+    XCTAssertEqual(appState.focusedPlanningResult?.taskPackPath, "tasks/codex-task-pack.md")
+    XCTAssertFalse(appState.canStartProjectCheck)
+  }
+
+  func testFocusedExistingProjectSkipsLegacyOverwritePrompt() async throws {
+    let writer = RecordingInterviewAnswerWriter(documentsWithContent: ["product/product-brief.zh-CN.md"])
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(writer: writer)
+    defer {
+      appState.shutdown()
+      defaults.removePersistentDomain(forName: suiteName)
+      try? FileManager.default.removeItem(at: workspaceURL)
+    }
+
+    let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .existingProject)
+    appState.beginInterview(with: schema)
     for question in schema.questions {
       appState.updateInterviewAnswer("回答 \(question.order)", for: question.answerPath)
       XCTAssertTrue(appState.advanceInterviewQuestion())
@@ -143,21 +206,30 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     appState.requestInterviewWrite()
     appState.confirmInterviewWrite()
 
-    XCTAssertEqual(writer.calls.count, 1)
-    XCTAssertEqual(writer.calls[0].questions.map(\.answerPath), [
-      "newProject.projectSummary",
-      "newProject.coreFeatures",
-      "newProject.primaryGoal",
-      "newProject.targetPlatform"
-    ])
-    XCTAssertEqual(writer.calls[0].answers["newProject.projectSummary"], "回答 1")
-
+    XCTAssertFalse(appState.isInterviewOverwriteConfirmationPresented)
+    XCTAssertEqual(writer.calls.map(\.force), [false])
     writer.complete(.succeeded)
     await Task.yield()
 
-    XCTAssertEqual(appState.interviewWriteMessage, "首轮答案已保存\n下一步：继续完善项目规划")
-    XCTAssertEqual(appState.interviewAnswers["newProject.projectSummary"], "回答 1")
-    XCTAssertFalse(appState.canStartProjectCheck)
+    XCTAssertEqual(appState.focusedPlanningResult?.mode, .existingProject)
+    XCTAssertEqual(appState.focusedPlanningResult?.taskPackPath, "tasks/codex-change-task-pack.md")
+  }
+
+  func testFocusedPlanningCodexInstructionsListOnlyPlanningFiles() {
+    let instruction = AppState.focusedPlanningCodexInstruction(for: .newProject)
+
+    XCTAssertEqual(instruction, """
+    请读取当前项目中的：
+    - AGENTS.md
+    - product/product-brief.md
+    - product/scope-gate.md
+    - product/screen-states.md
+    - product/data-safety.md
+    - tasks/codex-task-pack.md
+
+    先总结你想做什么、希望它能做哪些事、需要确认的事和第一阶段任务。
+    在我确认前，不要修改代码。
+    """)
   }
 
   private func assertTemporaryAnswersAreDeleted(

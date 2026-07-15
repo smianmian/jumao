@@ -25,6 +25,7 @@ final class InterviewWindowController: NSObject, InterviewWindowControlling, NSW
     panel.title = "回答项目问题"
     panel.isReleasedWhenClosed = false
     panel.hidesOnDeactivate = false
+    panel.becomesKeyOnlyIfNeeded = false
     panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
     panel.delegate = self
     panel.contentViewController = NSHostingController(rootView: InterviewForm(appState: appState))
@@ -36,8 +37,8 @@ final class InterviewWindowController: NSObject, InterviewWindowControlling, NSW
 
   func show() {
     panel.center()
-    panel.makeKeyAndOrderFront(nil)
     NSApp.activate(ignoringOtherApps: true)
+    panel.makeKeyAndOrderFront(nil)
   }
 
   func hide() {

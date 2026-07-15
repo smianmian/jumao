@@ -41,6 +41,36 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
     XCTAssertThrowsError(try JumaoInterviewSchemaLoader.decodeSchema(from: Data("不是 JSON".utf8)))
   }
 
+  func testFocusedNewProjectOnlyAsksForThreePlainLanguageQuestions() {
+    let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .newProject)
+
+    XCTAssertEqual(schema.questions.map(\.title), ["你想做个什么？", "你希望它能做哪些事？", "你想先在哪儿用它？"])
+    XCTAssertEqual(schema.questions.map(\.answerPath), ["newProject.idea", "newProject.features", "newProject.platform"])
+    XCTAssertEqual(schema.questions.last?.options, ["iPhone", "Mac", "网页", "还没想好"])
+    XCTAssertFalse(schema.questions.contains { $0.title.contains("目标") || $0.title.contains("MVP") || $0.title.contains("优先级") || $0.title.contains("验收") })
+  }
+
+  func testFocusedExistingProjectOnlyAsksForDesiredChange() {
+    let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .existingProject)
+
+    XCTAssertEqual(schema.questions.map(\.title), ["这次你想让它变成什么样？"])
+    XCTAssertEqual(schema.questions.map(\.answerPath), ["existingProject.requestedChange"])
+    XCTAssertFalse(schema.questions.contains { $0.title.contains("卡在哪") || $0.title.contains("不能弄坏") })
+  }
+
+  func testMarkedTextIsNeverReplacedByAViewRefresh() {
+    XCTAssertFalse(InterviewTextSynchronization.shouldApplyModelValue(isFirstResponder: true, hasMarkedText: true))
+    XCTAssertTrue(InterviewTextSynchronization.shouldApplyModelValue(isFirstResponder: true, hasMarkedText: false))
+    XCTAssertTrue(InterviewTextSynchronization.shouldApplyModelValue(isFirstResponder: false, hasMarkedText: true))
+  }
+
+  func testNewProjectPlatformUsesPlainLanguageEverywhere() {
+    XCTAssertEqual(NewProjectPlatformWording.usageDescription(for: "iPhone"), "先在 iPhone 上使用")
+    XCTAssertEqual(NewProjectPlatformWording.usageDescription(for: "Mac"), "先在 Mac 上使用")
+    XCTAssertEqual(NewProjectPlatformWording.usageDescription(for: "网页"), "先通过网页使用")
+    XCTAssertEqual(NewProjectPlatformWording.usageDescription(for: "还没想好"), "使用方式暂未确定")
+  }
+
   @MainActor
   func testIncompatibleGlobalCLIShowsShortChineseError() async {
     let loader = JumaoInterviewSchemaLoader(

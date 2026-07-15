@@ -1,6 +1,6 @@
 import Foundation
 
-enum ProjectInterviewMode: String, Equatable, Sendable {
+enum ProjectInterviewMode: String, Codable, Equatable, Sendable {
   case newProject
   case existingProject
 }
@@ -32,7 +32,7 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
       id: "intake",
       title: mode == .newProject ? "规划新项目" : "梳理这次改动",
       description: mode == .newProject
-        ? "先回答四个最重要的问题。"
+        ? "随便说说你的想法，我们一起整理第一版。"
         : "扫描结果已经确认的内容不会重复询问。",
       order: 1
     )
@@ -42,37 +42,30 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
     case .newProject:
       questions = [
         focusedQuestion(
-          id: "projectSummary",
-          answerPath: "newProject.projectSummary",
-          title: "你想做一个什么项目？",
-          description: "用自己的话说清楚这个项目要解决什么问题。",
-          placeholder: "例如：一个帮助我整理客户跟进记录的工具",
+          id: "idea",
+          answerPath: "newProject.idea",
+          title: "你想做个什么？",
+          description: "直接说人话就行，可以说它是干什么的、谁会用，或者你希望它能发生什么。",
+          placeholder: "例如：一个帮我记录每天喝水的小工具",
           order: 1
         ),
         focusedQuestion(
-          id: "coreFeatures",
-          answerPath: "newProject.coreFeatures",
-          title: "最核心的功能有哪些？",
-          description: "只列第一版不能缺少的功能。",
-          placeholder: "例如：记录客户，设置提醒，查看跟进状态",
-          inputType: "list",
+          id: "features",
+          answerPath: "newProject.features",
+          title: "你希望它能做哪些事？",
+          description: "想到什么就写什么，不用排序。",
+          placeholder: "例如：记录每天喝水、查看今天喝了多少",
           order: 2
         ),
         focusedQuestion(
-          id: "primaryGoal",
-          answerPath: "newProject.primaryGoal",
-          title: "当前最重要的目标是什么？",
-          description: "先确定这一版最需要达成的结果。",
-          placeholder: "例如：先让自己每天能稳定完成客户跟进",
+          id: "platform",
+          answerPath: "newProject.platform",
+          title: "你想先在哪儿用它？",
+          description: "先选一个，之后还可以再增加其他版本。",
+          placeholder: "",
+          inputType: "choice",
+          options: ["iPhone", "Mac", "网页", "还没想好"],
           order: 3
-        ),
-        focusedQuestion(
-          id: "targetPlatform",
-          answerPath: "newProject.targetPlatform",
-          title: "准备运行在哪个平台？",
-          description: "填写第一版准备使用的平台。",
-          placeholder: "例如：macOS、iPhone、网页",
-          order: 4
         )
       ]
     case .existingProject:
@@ -80,27 +73,10 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
         focusedQuestion(
           id: "requestedChange",
           answerPath: "existingProject.requestedChange",
-          title: "这次准备修改什么？",
-          description: "只说明这一次要新增、调整或修复的内容。",
+          title: "这次你想让它变成什么样？",
+          description: "可以直接描述想增加、调整或修复的地方，也可以粘贴截图对应的问题。",
           placeholder: "例如：修复导入项目后入口按钮无反应",
           order: 1
-        ),
-        focusedQuestion(
-          id: "currentBlockers",
-          answerPath: "existingProject.currentBlockers",
-          title: "当前遇到了什么问题或阻塞？",
-          description: "说明现在看见的现象，或导致无法继续的原因。",
-          placeholder: "例如：点击后没有打开任何窗口",
-          order: 2
-        ),
-        focusedQuestion(
-          id: "protectedFeatures",
-          answerPath: "existingProject.protectedFeatures",
-          title: "哪些现有功能绝对不能被破坏？",
-          description: "列出本次修改必须保持正常的功能。",
-          placeholder: "例如：项目扫描，草稿恢复，任务包生成",
-          inputType: "list",
-          order: 3
         )
       ]
     }
@@ -115,6 +91,7 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
     description: String,
     placeholder: String,
     inputType: String = "text",
+    options: [String]? = nil,
     order: Int
   ) -> JumaoInterviewQuestion {
     JumaoInterviewQuestion(
@@ -125,6 +102,7 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
       placeholder: placeholder,
       stage: "intake",
       inputType: inputType,
+      options: options,
       required: true,
       order: order
     )
@@ -159,6 +137,7 @@ struct JumaoInterviewQuestion: Codable, Equatable, Sendable {
   let placeholder: String?
   let stage: String?
   let inputType: String
+  let options: [String]?
   let required: Bool
   let order: Int
 
@@ -172,6 +151,7 @@ struct JumaoInterviewQuestion: Codable, Equatable, Sendable {
     placeholder: String? = nil,
     stage: String? = nil,
     inputType: String,
+    options: [String]? = nil,
     required: Bool,
     order: Int
   ) {
@@ -184,12 +164,13 @@ struct JumaoInterviewQuestion: Codable, Equatable, Sendable {
     self.placeholder = placeholder
     self.stage = stage
     self.inputType = inputType
+    self.options = options
     self.required = required
     self.order = order
   }
 
   enum CodingKeys: String, CodingKey {
-    case id, answerPath, title, description, guidance, example, placeholder, stage, inputType, required, order
+    case id, answerPath, title, description, guidance, example, placeholder, stage, inputType, options, required, order
   }
 
   init(from decoder: any Decoder) throws {
@@ -203,6 +184,7 @@ struct JumaoInterviewQuestion: Codable, Equatable, Sendable {
     placeholder = try container.decodeIfPresent(String.self, forKey: .placeholder)
     stage = try container.decodeIfPresent(String.self, forKey: .stage)
     inputType = try container.decode(String.self, forKey: .inputType)
+    options = try container.decodeIfPresent([String].self, forKey: .options)
     required = try container.decode(Bool.self, forKey: .required)
     order = try container.decode(Int.self, forKey: .order)
   }

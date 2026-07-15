@@ -42,7 +42,7 @@ final class JumaoProjectInspectorTests: XCTestCase {
 
     inspector.complete(.succeeded(try inspection(kind: "empty", level: "limited")))
     XCTAssertEqual(appState.projectInspectionPrimaryActionTitle, "开始规划新项目")
-    XCTAssertEqual(appState.projectInspectionPrimaryActionDescription, "先确认第一版要实现哪些功能。")
+    XCTAssertEqual(appState.projectInspectionPrimaryActionDescription, "先用几句白话整理要做的第一版。")
 
     appState.rescanProject()
     inspector.complete(.succeeded(try inspection(kind: "new", level: "limited")))
@@ -58,7 +58,110 @@ final class JumaoProjectInspectorTests: XCTestCase {
 
     XCTAssertEqual(appState.projectInspectionKindTitle, "已有项目")
     XCTAssertEqual(appState.projectInspectionPrimaryActionTitle, "开始梳理这次改动")
-    XCTAssertEqual(appState.projectInspectionPrimaryActionDescription, "橘猫已经查看了项目结构，接下来只确认这次要修改什么。")
+    XCTAssertEqual(appState.projectInspectionPrimaryActionDescription, "橘猫已经查看了当前文件夹，接下来只确认这次要修改什么。")
+  }
+
+  func testAmbiguousFolderRequiresAnExplicitProjectTypeChoice() throws {
+    let inspector = DeferredProjectInspector()
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector)
+    defer { cleanUp(appState, defaults, suiteName, workspaceURL) }
+
+    inspector.complete(.succeeded(try inspection(kind: "unknown", level: "limited")))
+
+    XCTAssertTrue(appState.needsProjectInterviewModeSelection)
+    XCTAssertNil(appState.projectInspectionPrimaryActionTitle)
+    appState.chooseProjectInterviewMode(.newProject)
+    XCTAssertEqual(appState.projectInspectionPrimaryActionTitle, "开始规划新项目")
+    appState.chooseProjectInterviewMode(.existingProject)
+    XCTAssertEqual(appState.projectInspectionPrimaryActionTitle, "开始梳理这次改动")
+  }
+
+  func testSwitchingPythonProjectToEmptyFolderClearsOldInspectionAndInterview() async throws {
+    let inspector = DeferredProjectInspector()
+    let loader = DeferredProjectInterviewSchemaLoader()
+    let fixture = try makeWorkspaceSwitchFixture(inspector: inspector, interviewSchemaLoader: loader)
+    defer { fixture.cleanUp() }
+
+    inspector.complete(.succeeded(try inspection(
+      kind: "existing",
+      level: "limited",
+      platforms: ["Backend"],
+      languages: ["Python"],
+      buildSystems: ["pip"]
+    )), at: 0)
+    fixture.appState.startProjectInterview()
+    loader.complete(.succeeded(sourceSchema()))
+    await Task.yield()
+    fixture.appState.updateInterviewAnswer("修复导入", for: "existingProject.requestedChange")
+
+    fixture.chooser.select(fixture.emptyWorkspaceURL)
+    fixture.appState.chooseWorkspace()
+
+    XCTAssertTrue(fixture.appState.isInspectingProject)
+    XCTAssertNil(fixture.appState.projectInspection)
+    XCTAssertNil(fixture.appState.interviewSchema)
+    XCTAssertNil(fixture.appState.interviewMode)
+    XCTAssertTrue(fixture.appState.interviewAnswers.isEmpty)
+    XCTAssertEqual(fixture.appState.interviewCurrentQuestionIndex, 0)
+
+    inspector.complete(.succeeded(try inspection(kind: "empty", level: "limited")), at: 1)
+    XCTAssertEqual(fixture.appState.projectInspectionPrimaryActionTitle, "开始规划新项目")
+    XCTAssertFalse(fixture.appState.projectInspection?.project.platforms.contains("Backend") ?? true)
+    XCTAssertFalse(fixture.appState.projectInspection?.project.languages.contains("Python") ?? true)
+
+    fixture.appState.startProjectInterview()
+    loader.complete(.succeeded(sourceSchema()))
+    await Task.yield()
+    XCTAssertEqual(fixture.appState.interviewCurrentQuestion?.title, "你想做个什么？")
+  }
+
+  func testLateInspectionResultCannotOverrideTheCurrentWorkspace() throws {
+    let inspector = DeferredProjectInspector()
+    let fixture = try makeWorkspaceSwitchFixture(inspector: inspector)
+    defer { fixture.cleanUp() }
+
+    fixture.chooser.select(fixture.emptyWorkspaceURL)
+    fixture.appState.chooseWorkspace()
+    inspector.complete(.succeeded(try inspection(kind: "empty", level: "limited")), at: 1)
+    inspector.complete(.succeeded(try inspection(kind: "existing", level: "limited", platforms: ["Backend"], languages: ["Python"])), at: 0)
+
+    XCTAssertEqual(fixture.appState.workspaceURL?.standardizedFileURL, fixture.emptyWorkspaceURL.standardizedFileURL)
+    XCTAssertEqual(fixture.appState.projectInspection?.workspaceKind, "empty")
+    XCTAssertFalse(fixture.appState.projectInspection?.project.languages.contains("Python") ?? true)
+  }
+
+  func testSwitchingIOSProjectToEmptyFolderDoesNotKeepIOSOrSwift() throws {
+    let inspector = DeferredProjectInspector()
+    let fixture = try makeWorkspaceSwitchFixture(inspector: inspector)
+    defer { fixture.cleanUp() }
+
+    inspector.complete(.succeeded(try inspection(kind: "existing", level: "high", platforms: ["iOS"], languages: ["Swift"])), at: 0)
+    fixture.chooser.select(fixture.emptyWorkspaceURL)
+    fixture.appState.chooseWorkspace()
+    inspector.complete(.succeeded(try inspection(kind: "empty", level: "limited", platforms: [], languages: [], buildSystems: [])), at: 1)
+
+    XCTAssertEqual(fixture.appState.projectInspection?.workspaceKind, "empty")
+    XCTAssertTrue(fixture.appState.projectInspection?.project.platforms.isEmpty ?? false)
+    XCTAssertTrue(fixture.appState.projectInspection?.project.languages.isEmpty ?? false)
+  }
+
+  func testRapidWorkspaceSwitchesOnlyAcceptTheNewestInspection() throws {
+    let inspector = DeferredProjectInspector()
+    let fixture = try makeWorkspaceSwitchFixture(inspector: inspector)
+    defer { fixture.cleanUp() }
+
+    fixture.chooser.select(fixture.emptyWorkspaceURL)
+    fixture.appState.chooseWorkspace()
+    fixture.chooser.select(fixture.thirdWorkspaceURL)
+    fixture.appState.chooseWorkspace()
+
+    inspector.complete(.succeeded(try inspection(kind: "existing", level: "high", platforms: ["iOS"], languages: ["Swift"])), at: 2)
+    inspector.complete(.succeeded(try inspection(kind: "empty", level: "limited")), at: 1)
+    inspector.complete(.succeeded(try inspection(kind: "existing", level: "limited", platforms: ["Backend"], languages: ["Python"])), at: 0)
+
+    XCTAssertEqual(fixture.appState.workspaceURL?.standardizedFileURL, fixture.thirdWorkspaceURL.standardizedFileURL)
+    XCTAssertEqual(fixture.appState.projectInspection?.project.platforms, ["iOS"])
+    XCTAssertEqual(fixture.appState.projectInspection?.project.languages, ["Swift"])
   }
 
   func testNewProjectEntryOpensFocusedInterviewImmediately() async throws {
@@ -79,11 +182,15 @@ final class JumaoProjectInspectorTests: XCTestCase {
 
     XCTAssertEqual(appState.interviewMode, .newProject)
     XCTAssertEqual(appState.interviewQuestions.map(\.title), [
-      "你想做一个什么项目？",
-      "最核心的功能有哪些？",
-      "当前最重要的目标是什么？",
-      "准备运行在哪个平台？"
+      "你想做个什么？",
+      "你希望它能做哪些事？",
+      "你想先在哪儿用它？"
     ])
+    XCTAssertFalse(appState.interviewQuestions.map(\.title).contains("最核心的功能有哪些？"))
+    XCTAssertFalse(appState.interviewQuestions.map(\.title).contains("当前最重要的目标是什么？"))
+    XCTAssertEqual(appState.interviewQuestions.last?.description, "先选一个，之后还可以再增加其他版本。")
+    XCTAssertEqual(appState.interviewQuestions.last?.options, ["iPhone", "Mac", "网页", "还没想好"])
+    XCTAssertNil(appState.interviewAnswers["newProject.platform"])
     XCTAssertNil(appState.interviewInspectionContext)
   }
 
@@ -101,9 +208,7 @@ final class JumaoProjectInspectorTests: XCTestCase {
 
     XCTAssertEqual(appState.interviewMode, .existingProject)
     XCTAssertEqual(appState.interviewQuestions.map(\.title), [
-      "这次准备修改什么？",
-      "当前遇到了什么问题或阻塞？",
-      "哪些现有功能绝对不能被破坏？"
+      "这次你想让它变成什么样？"
     ])
     XCTAssertEqual(appState.interviewInspectionContext, existingInspection)
     XCTAssertEqual(appState.interviewInspectionSummary, "已携带扫描结果：Sample · iOS · Swift")
@@ -197,19 +302,73 @@ final class JumaoProjectInspectorTests: XCTestCase {
     return (appState, defaults, suiteName, workspaceURL)
   }
 
-  private func inspection(kind: String, level: String) throws -> JumaoProjectInspection {
-    try JumaoProjectInspector.decodeInspection(from: try inspectionData(kind: kind, level: level))
+  private func makeWorkspaceSwitchFixture(
+    inspector: DeferredProjectInspector,
+    interviewSchemaLoader: any JumaoInterviewSchemaLoading = ImmediateProjectInterviewSchemaLoader()
+  ) throws -> WorkspaceSwitchFixture {
+    let rootURL = FileManager.default.temporaryDirectory
+      .appendingPathComponent("jumao-cat-workspace-switch-tests")
+      .appendingPathComponent(UUID().uuidString)
+    let existingWorkspaceURL = rootURL.appendingPathComponent("existing")
+    let emptyWorkspaceURL = rootURL.appendingPathComponent("empty")
+    let thirdWorkspaceURL = rootURL.appendingPathComponent("third")
+    try FileManager.default.createDirectory(at: existingWorkspaceURL, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: emptyWorkspaceURL, withIntermediateDirectories: true)
+    try FileManager.default.createDirectory(at: thirdWorkspaceURL, withIntermediateDirectories: true)
+
+    let suiteName = "JumaoCatWorkspaceSwitchTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      throw NSError(domain: "JumaoCatTests", code: 1)
+    }
+    let bookmarkStore = WorkspaceBookmarkStore(defaults: defaults, bookmarkKey: "workspace-bookmark")
+    _ = try bookmarkStore.save(workspaceURL: existingWorkspaceURL)
+    let chooser = MutableWorkspaceChooser()
+    let appState = AppState(
+      workspaceBookmarkStore: bookmarkStore,
+      workspaceChooser: chooser,
+      projectInspector: inspector,
+      interviewSchemaLoader: interviewSchemaLoader
+    )
+    appState.loadSavedWorkspace()
+    return WorkspaceSwitchFixture(
+      rootURL: rootURL,
+      existingWorkspaceURL: existingWorkspaceURL,
+      emptyWorkspaceURL: emptyWorkspaceURL,
+      thirdWorkspaceURL: thirdWorkspaceURL,
+      defaults: defaults,
+      suiteName: suiteName,
+      appState: appState,
+      chooser: chooser
+    )
   }
 
-  private func inspectionData(kind: String, level: String) throws -> Data {
+  private func inspection(
+    kind: String,
+    level: String,
+    platforms: [String] = ["iOS"],
+    languages: [String] = ["Swift"],
+    buildSystems: [String] = ["Xcode"]
+  ) throws -> JumaoProjectInspection {
+    try JumaoProjectInspector.decodeInspection(
+      from: try inspectionData(kind: kind, level: level, platforms: platforms, languages: languages, buildSystems: buildSystems)
+    )
+  }
+
+  private func inspectionData(
+    kind: String,
+    level: String,
+    platforms: [String] = ["iOS"],
+    languages: [String] = ["Swift"],
+    buildSystems: [String] = ["Xcode"]
+  ) throws -> Data {
     try JSONSerialization.data(withJSONObject: [
       "schemaVersion": 1,
       "workspaceKind": kind,
       "project": [
         "name": "Sample",
-        "platforms": ["iOS"],
-        "languages": ["Swift"],
-        "buildSystems": ["Xcode"],
+        "platforms": platforms,
+        "languages": languages,
+        "buildSystems": buildSystems,
         "hasSourceCode": true,
         "hasTests": true,
         "hasJumaoFiles": false
@@ -251,20 +410,73 @@ final class JumaoProjectInspectorTests: XCTestCase {
 }
 
 @MainActor
+private final class WorkspaceSwitchFixture {
+  let rootURL: URL
+  let existingWorkspaceURL: URL
+  let emptyWorkspaceURL: URL
+  let thirdWorkspaceURL: URL
+  let defaults: UserDefaults
+  let suiteName: String
+  let appState: AppState
+  let chooser: MutableWorkspaceChooser
+
+  init(
+    rootURL: URL,
+    existingWorkspaceURL: URL,
+    emptyWorkspaceURL: URL,
+    thirdWorkspaceURL: URL,
+    defaults: UserDefaults,
+    suiteName: String,
+    appState: AppState,
+    chooser: MutableWorkspaceChooser
+  ) {
+    self.rootURL = rootURL
+    self.existingWorkspaceURL = existingWorkspaceURL
+    self.emptyWorkspaceURL = emptyWorkspaceURL
+    self.thirdWorkspaceURL = thirdWorkspaceURL
+    self.defaults = defaults
+    self.suiteName = suiteName
+    self.appState = appState
+    self.chooser = chooser
+  }
+
+  func cleanUp() {
+    appState.shutdown()
+    defaults.removePersistentDomain(forName: suiteName)
+    try? FileManager.default.removeItem(at: rootURL)
+  }
+}
+
+@MainActor
+private final class MutableWorkspaceChooser: WorkspaceChoosing {
+  private var selection: URL?
+
+  func select(_ workspaceURL: URL) {
+    selection = workspaceURL
+  }
+
+  func chooseWorkspace(startingAt url: URL) -> URL? {
+    selection
+  }
+}
+
+@MainActor
 private final class DeferredProjectInspector: JumaoProjectInspecting {
   private(set) var workspaceURLs: [URL] = []
-  private var completion: (@MainActor @Sendable (JumaoProjectInspectionResult) -> Void)?
+  private var completions: [(@MainActor @Sendable (JumaoProjectInspectionResult) -> Void)] = []
 
   func run(
     workspaceURL: URL,
     completion: @escaping @MainActor @Sendable (JumaoProjectInspectionResult) -> Void
   ) {
     workspaceURLs.append(workspaceURL)
-    self.completion = completion
+    completions.append(completion)
   }
 
-  func complete(_ result: JumaoProjectInspectionResult) {
-    completion?(result)
+  func complete(_ result: JumaoProjectInspectionResult, at index: Int? = nil) {
+    let target = index ?? completions.indices.last
+    guard let target, completions.indices.contains(target) else { return }
+    completions[target](result)
   }
 
   func cancel() {}

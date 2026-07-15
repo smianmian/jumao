@@ -84,34 +84,6 @@ final class InterviewNavigationTests: XCTestCase {
     XCTAssertEqual(appState.interviewQuestions.count, 1)
   }
 
-  func testSkippedQuestionIsMarkedAndCanBeCompletedLater() {
-    let appState = AppState()
-    let schema = makeSchema(questionCount: 2, required: true)
-    appState.beginInterview(with: schema)
-
-    appState.skipCurrentInterviewQuestion()
-
-    XCTAssertEqual(appState.interviewCurrentQuestionNumber, 2)
-    XCTAssertTrue(appState.isInterviewQuestionMarkedForCompletion(schema.questions[0]))
-    XCTAssertEqual(appState.pendingInterviewQuestions.map(\.answerPath), ["question1", "question2"])
-
-    appState.updateInterviewAnswer("第二题答案", for: "question2")
-    XCTAssertTrue(appState.advanceInterviewQuestion())
-    XCTAssertTrue(appState.isInterviewComplete)
-    XCTAssertEqual(appState.pendingInterviewQuestions.map(\.answerPath), ["question1"])
-    XCTAssertFalse(appState.canWriteCompletedInterview)
-
-    appState.jumpToInterviewQuestion(schema.questions[0])
-    XCTAssertEqual(appState.interviewCurrentQuestionNumber, 1)
-    XCTAssertFalse(appState.isInterviewComplete)
-    appState.updateInterviewAnswer("第一题答案", for: "question1")
-    XCTAssertFalse(appState.isInterviewQuestionMarkedForCompletion(schema.questions[0]))
-    XCTAssertTrue(appState.advanceInterviewQuestion())
-    XCTAssertTrue(appState.advanceInterviewQuestion())
-    XCTAssertTrue(appState.pendingInterviewQuestions.isEmpty)
-    XCTAssertTrue(appState.canWriteCompletedInterview)
-  }
-
   func testPlaceholderAnswerDoesNotCountAsCompletedAnswer() {
     let appState = AppState()
     appState.beginInterview(with: makeSchema(questionCount: 1, required: true))
@@ -157,12 +129,16 @@ final class InterviewNavigationTests: XCTestCase {
 
   func testPendingQuestionsOnlyCountWithinCurrentStage() {
     let appState = AppState()
-    appState.beginInterview(with: makeThreeStageSchema())
+    let schema = makeThreeStageSchema()
+    appState.beginInterview(with: schema)
     completeCurrentStage(in: appState)
     appState.continueToNextInterviewStage()
 
-    appState.skipCurrentInterviewQuestion()
-    completeCurrentStage(in: appState)
+    for question in schema.questions where question.stage == "prototype" && question.answerPath != "question6" {
+      appState.updateInterviewAnswer("已填写 \(question.id)", for: question.answerPath)
+    }
+    appState.jumpToInterviewQuestion(schema.questions[14])
+    XCTAssertTrue(appState.advanceInterviewQuestion())
 
     XCTAssertEqual(appState.currentInterviewStage?.id, "prototype")
     XCTAssertEqual(appState.pendingCurrentStageInterviewQuestions.map(\.answerPath), ["question6"])

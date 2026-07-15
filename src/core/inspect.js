@@ -24,7 +24,6 @@ const skippedDirectories = new Set([
   'xcuserdata'
 ]);
 
-const systemHiddenNames = new Set(['.DS_Store', '.localized', '.git', '.gitkeep']);
 const sensitiveNamePattern = /(^\.env(?:\.|$)|secret|token|credential|private[-_]?key)/i;
 const sensitiveExtensions = new Set(['.pem', '.key', '.p12', '.pfx', '.cer', '.crt', '.der', '.db', '.sqlite', '.sqlite3', '.mdb']);
 const binaryExtensions = new Set([
@@ -57,6 +56,7 @@ const manifestFacts = new Map([
   ['requirements.txt', { language: 'Python', platform: 'Backend', buildSystem: 'pip' }],
   ['pyproject.toml', { language: 'Python', platform: 'Backend', buildSystem: 'pip' }],
   ['Cargo.toml', { language: 'Rust', platform: 'Backend', buildSystem: 'Cargo' }],
+  ['go.mod', { language: 'Go', platform: 'Backend', buildSystem: 'Go modules' }],
   ['build.gradle', { platform: 'Android', buildSystem: 'Gradle' }],
   ['settings.gradle', { platform: 'Android', buildSystem: 'Gradle' }],
   ['pubspec.yaml', { language: 'Dart', platform: 'Flutter', buildSystem: 'Flutter' }],
@@ -64,16 +64,13 @@ const manifestFacts = new Map([
 ]);
 
 const newProjectQuestions = [
-  '你想做一个什么东西？',
-  '第一版要让用户能完成哪些功能？',
-  '这些功能里，哪一个最重要？',
-  '第一版先做在哪个平台？'
+  '你想做个什么？',
+  '你希望它能做哪些事？',
+  '你想先在哪儿用它？'
 ];
 
 const existingProjectQuestions = [
-  '这次你最想新增或修改什么？',
-  '现在最卡你的问题是什么？',
-  '哪些已经正常工作的部分不能改坏？'
+  '这次你想让它变成什么样？'
 ];
 
 export function inspectWorkspace(workspace) {
@@ -112,6 +109,7 @@ function createScanState(workspacePath) {
     hasTests: false,
     hasJumaoFiles: false,
     hasExistingEvidence: false,
+    hasUnclassifiedVisibleFile: false,
     projectName: ''
   };
 }
@@ -139,16 +137,22 @@ function scanDirectory(directory, relativeDirectory, depth, state) {
     state.scannedEntries += 1;
     const relativePath = relativeDirectory ? path.posix.join(relativeDirectory, entry.name) : entry.name;
     const fullPath = path.join(directory, entry.name);
-    const hiddenSystemEntry = systemHiddenNames.has(entry.name) || entry.name.startsWith('._');
-    if (!hiddenSystemEntry) state.visibleEntries += 1;
+    const hiddenEntry = entry.name.startsWith('.');
+    if (hiddenEntry) {
+      if (entry.isDirectory() && entry.name === '.jumao') markJumao(state, relativePath);
+      continue;
+    }
+    state.visibleEntries += 1;
 
     if (entry.isSymbolicLink()) continue;
     if (entry.isDirectory()) {
       if (shouldSkipDirectory(entry.name)) continue;
-      if (entry.name.endsWith('.xcodeproj')) {
+      if (entry.name.endsWith('.xcodeproj') || entry.name.endsWith('.xcworkspace')) {
         addEvidence(state, 'project_file', relativePath, '检测到 Xcode 工程');
         if (!state.projectName) {
-          state.projectName = path.basename(entry.name, '.xcodeproj');
+          state.projectName = entry.name.endsWith('.xcodeproj')
+            ? path.basename(entry.name, '.xcodeproj')
+            : path.basename(entry.name, '.xcworkspace');
           addEvidence(state, 'project_name', relativePath, '项目名称来自 Xcode 工程文件名');
         }
         addFact(state, { platform: 'iOS', buildSystem: 'Xcode' });
@@ -166,7 +170,10 @@ function scanDirectory(directory, relativeDirectory, depth, state) {
 }
 
 function inspectFile(fullPath, relativePath, name, state) {
-  if (isJumaoFile(name, relativePath)) markJumao(state, relativePath);
+  if (isJumaoFile(name, relativePath)) {
+    markJumao(state, relativePath);
+    return;
+  }
   if (isTestFile(name, relativePath)) {
     state.hasTests = true;
     addEvidence(state, 'test_file', relativePath, '检测到测试代码或测试目录中的文件');
@@ -194,7 +201,10 @@ function inspectFile(fullPath, relativePath, name, state) {
     state.hasExistingEvidence = true;
     addFact(state, manifestFact);
     addEvidence(state, 'project_file', relativePath, `检测到 ${name} 工程配置`);
+    return;
   }
+
+  state.hasUnclassifiedVisibleFile = true;
 }
 
 function inspectPackageManifest(fullPath, relativePath, state) {
@@ -242,7 +252,7 @@ function readSmallTextFile(fullPath, relativePath, state) {
 function buildResult(state) {
   const workspaceKind = state.visibleEntries === 0
     ? 'empty'
-    : (state.hasExistingEvidence ? 'existing' : 'new');
+    : (state.hasExistingEvidence ? 'existing' : (state.hasUnclassifiedVisibleFile ? 'unknown' : 'new'));
   const isIOSNative = state.platforms.has('iOS') || state.languages.has('Swift') || state.buildSystems.has('Xcode');
   const capabilityFit = isIOSNative
     ? {
@@ -262,7 +272,9 @@ function buildResult(state) {
     '.',
     workspaceKind === 'empty'
       ? '目录为空或仅包含系统隐藏文件'
-      : (workspaceKind === 'new' ? '未检测到工程、清单、源代码或测试证据' : '检测到真实开发证据')
+      : (workspaceKind === 'new'
+          ? '仅发现空目录结构或 Jumao 初始化文件'
+          : (workspaceKind === 'unknown' ? '未找到足够的工程或源代码证据，等待用户选择用途' : '检测到真实开发证据'))
   );
   addEvidence(state, 'capability_fit', '.', isIOSNative ? '检测到 iOS、Swift 或 Xcode 证据' : '未检测到 iOS、Swift 或 Xcode 证据');
 
@@ -282,14 +294,19 @@ function buildResult(state) {
     evidence: state.evidence,
     unknowns: unknownsFor(state, workspaceKind),
     recommendedIntake: {
-      mode: workspaceKind === 'existing' ? 'existing_project' : 'new_project',
-      questions: workspaceKind === 'existing' ? existingProjectQuestions : newProjectQuestions
+      mode: workspaceKind === 'existing'
+        ? 'existing_project'
+        : (workspaceKind === 'unknown' ? 'choose_project_type' : 'new_project'),
+      questions: workspaceKind === 'existing'
+        ? existingProjectQuestions
+        : (workspaceKind === 'unknown' ? [] : newProjectQuestions)
     }
   };
 }
 
 function unknownsFor(state, workspaceKind) {
   if (workspaceKind === 'empty') return ['尚未发现项目文件，因此平台、技术栈和现有功能未知。'];
+  if (workspaceKind === 'unknown') return ['未找到足够证据判断这是新项目还是已有项目，请先由项目主人选择。'];
   const unknowns = ['未读取业务代码内容，现有功能细节仍未知。'];
   if (state.platforms.size === 0 && state.languages.size === 0) {
     unknowns.unshift('未检测到可安全读取的工程配置，平台和语言仍未知。');

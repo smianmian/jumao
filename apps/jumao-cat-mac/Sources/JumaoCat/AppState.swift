@@ -1,6 +1,16 @@
 import AppKit
 import SwiftUI
 
+struct FocusedPlanningResult: Equatable {
+  let mode: ProjectInterviewMode
+  let projectName: String
+  let idea: String
+  let firstVersion: String?
+  let platform: String?
+  let files: [String]
+  let taskPackPath: String
+}
+
 @MainActor
 final class AppState: ObservableObject {
   @Published private(set) var workspaceURL: URL?
@@ -19,10 +29,12 @@ final class AppState: ObservableObject {
   @Published private(set) var isInspectingProject = false
   @Published private(set) var projectInspection: JumaoProjectInspection?
   @Published private(set) var projectInspectionError: String?
+  @Published private(set) var projectInterviewModeOverride: ProjectInterviewMode?
   @Published private(set) var interviewMode: ProjectInterviewMode?
   @Published private(set) var interviewInspectionContext: JumaoProjectInspection?
   @Published private(set) var isLoadingInterviewSchema = false
   @Published private(set) var interviewSchema: JumaoInterviewSchema?
+  @Published private(set) var hasPendingInterviewDraftRecovery = false
   @Published private(set) var interviewSchemaError: String?
   @Published private(set) var interviewDraftError: String?
   @Published private(set) var interviewErrorDetails: String?
@@ -33,6 +45,7 @@ final class AppState: ObservableObject {
   @Published private(set) var interviewCurrentQuestionIndex = 0
   @Published private(set) var isCurrentInterviewStageComplete = false
   @Published private(set) var interviewValidationMessage: String?
+  @Published private(set) var interviewPlatformMigrationMessage: String?
   @Published private(set) var isInterviewComplete = false
   @Published private(set) var isWritingInterviewAnswers = false
   @Published private(set) var interviewWriteMessage: String?
@@ -44,6 +57,9 @@ final class AppState: ObservableObject {
   @Published private(set) var interviewTaskPackMessage: String?
   @Published private(set) var interviewTaskPackError: String?
   @Published private(set) var hasPassedProjectCheck = false
+  @Published private(set) var focusedPlanningResult: FocusedPlanningResult?
+  @Published private(set) var focusedPlanningCopyFeedback: String?
+  @Published private(set) var focusedPlanningOpenError: String?
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
   @Published var isInterviewPresented = false
@@ -65,11 +81,16 @@ final class AppState: ObservableObject {
   private let strictCheckRunner: any JumaoStrictChecking
   private let interviewDraftStore: any InterviewDraftStoring
   private let appTerminator: any AppTerminating
+  private var projectInspectionGeneration = 0
+  private var activeProjectInspectionWorkspaceIdentifier: String?
   private var projectInitializationConflicts: [String] = []
   private var interviewDocumentsToOverwrite: [String] = []
   private var taskPackCopyFeedbackToken = UUID()
+  private var focusedPlanningCopyFeedbackToken = UUID()
   private var interviewDraftSaveTask: Task<Void, Never>?
   private var restoredInterviewDraftNeedsStageInference = false
+  private var pendingInterviewDraft: InterviewDraft?
+  private var pendingInterviewDraftIsLegacy = false
   private var lastInterviewWriteUsedForce = false
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
@@ -180,19 +201,41 @@ final class AppState: ObservableObject {
     }
   }
 
+  var projectInspectionMode: ProjectInterviewMode? {
+    projectInterviewModeOverride ?? {
+      switch projectInspection?.workspaceKind {
+      case "empty", "new": return .newProject
+      case "existing": return .existingProject
+      default: return nil
+      }
+    }()
+  }
+
+  var projectInspectionModeTitle: String? {
+    switch projectInspectionMode {
+    case .newProject: return "新项目"
+    case .existingProject: return "已有项目"
+    case nil: return nil
+    }
+  }
+
+  var needsProjectInterviewModeSelection: Bool {
+    projectInspection?.workspaceKind == "unknown" && projectInspectionMode == nil
+  }
+
   var projectInspectionPrimaryActionTitle: String? {
-    switch projectInspection?.workspaceKind {
-    case "empty", "new": return "开始规划新项目"
-    case "existing": return "开始梳理这次改动"
-    default: return nil
+    switch projectInspectionMode {
+    case .newProject: return "开始规划新项目"
+    case .existingProject: return "开始梳理这次改动"
+    case nil: return nil
     }
   }
 
   var projectInspectionPrimaryActionDescription: String? {
-    switch projectInspection?.workspaceKind {
-    case "empty", "new": return "先确认第一版要实现哪些功能。"
-    case "existing": return "橘猫已经查看了项目结构，接下来只确认这次要修改什么。"
-    default: return nil
+    switch projectInspectionMode {
+    case .newProject: return "先用几句白话整理要做的第一版。"
+    case .existingProject: return "橘猫已经查看了当前文件夹，接下来只确认这次要修改什么。"
+    case nil: return nil
     }
   }
 
@@ -209,7 +252,7 @@ final class AppState: ObservableObject {
   }
 
   var canContinueFromProjectInspection: Bool {
-    projectInspection != nil
+    projectInspection != nil && projectInspectionMode != nil && !isInspectingProject
   }
 
   var interviewWindowTitle: String {
@@ -240,6 +283,10 @@ final class AppState: ObservableObject {
   var hasUnfinishedInterviewDraft: Bool {
     (!interviewAnswers.isEmpty || !skippedInterviewAnswerPaths.isEmpty)
       && (!isInterviewComplete || !pendingInterviewQuestions.isEmpty)
+  }
+
+  var shouldOfferInterviewDraftRecovery: Bool {
+    hasPendingInterviewDraftRecovery
   }
 
   var interviewStages: [JumaoInterviewStage] {
@@ -329,13 +376,21 @@ final class AppState: ObservableObject {
   }
 
   var canStartProjectCheck: Bool {
-    !isFocusedProjectInterview && interviewWriteMessage != nil && !isCheckingProject && workspaceURL != nil
+    focusedPlanningResult == nil
+      && !isFocusedProjectInterview
+      && interviewWriteMessage != nil
+      && !isCheckingProject
+      && workspaceURL != nil
   }
 
   var isFocusedProjectInterview: Bool {
     interviewMode != nil || interviewQuestions.contains { question in
       question.answerPath.hasPrefix("newProject.") || question.answerPath.hasPrefix("existingProject.")
     }
+  }
+
+  var isFocusedNewProjectInterview: Bool {
+    interviewMode == .newProject || interviewQuestions.contains { $0.answerPath.hasPrefix("newProject.") }
   }
 
   var canGenerateInterviewTaskPack: Bool {
@@ -416,6 +471,11 @@ final class AppState: ObservableObject {
     projectInspection = nil
     projectInspectionError = nil
     runProjectInspection(in: workspaceURL)
+  }
+
+  func chooseProjectInterviewMode(_ mode: ProjectInterviewMode) {
+    guard projectInspection != nil else { return }
+    projectInterviewModeOverride = mode
   }
 
   func openWorkspaceInFinder() {
@@ -566,27 +626,45 @@ final class AppState: ObservableObject {
   func startProjectInterview() {
     guard let inspection = projectInspection, workspaceURL != nil else { return }
 
-    let mode: ProjectInterviewMode = inspection.recommendedIntake.mode == "existing_project"
-      ? .existingProject
-      : .newProject
-    let previousMode = interviewMode
-    if isInterviewPresented, interviewMode == mode {
+    guard let mode = projectInspectionMode else { return }
+    if isLoadingInterviewSchema || (isInterviewPresented && interviewMode == mode) {
       return
     }
 
+    saveInterviewDraftImmediately()
+    clearInterviewProgress()
     interviewMode = mode
     interviewInspectionContext = mode == .existingProject ? inspection : nil
-    interviewSchemaError = nil
-    interviewErrorDetails = nil
-    interviewErrorDetailsCopiedMessage = nil
     isInterviewPresented = true
-
-    if interviewSchema != nil, previousMode == mode {
-      return
-    }
-
-    interviewSchema = nil
     loadInterviewSchema()
+  }
+
+  func continueInterviewDraftRecovery() {
+    guard let draft = pendingInterviewDraft, let schema = interviewSchema else { return }
+
+    hasPendingInterviewDraftRecovery = false
+    pendingInterviewDraft = nil
+    let requiresFocusedMigration = pendingInterviewDraftIsLegacy
+    pendingInterviewDraftIsLegacy = false
+    applyInterviewDraft(draft, forceIncomplete: requiresFocusedMigration)
+    if requiresFocusedMigration {
+      interviewCurrentQuestionIndex = 0
+    }
+    beginInterview(with: schema)
+  }
+
+  func restartInterviewDraftRecovery() {
+    guard let workspaceURL, let mode = interviewMode, let schema = interviewSchema else { return }
+
+    interviewDraftStore.delete(for: workspaceURL, mode: mode, schemaVersion: schema.schemaVersion)
+    if pendingInterviewDraftIsLegacy {
+      interviewDraftStore.deleteLegacy(for: workspaceURL)
+    }
+    hasPendingInterviewDraftRecovery = false
+    pendingInterviewDraft = nil
+    pendingInterviewDraftIsLegacy = false
+    clearInterviewProgress(keepingMode: true)
+    beginInterview(with: schema)
   }
 
   func retryInterviewOperation() {
@@ -610,6 +688,61 @@ final class AppState: ObservableObject {
     interviewErrorDetailsCopiedMessage = pasteboard.setString(interviewErrorDetails, forType: .string)
       ? "错误详情已复制"
       : "无法复制错误详情"
+  }
+
+  func openFocusedPlanningTaskPack() {
+    guard let workspaceURL, let focusedPlanningResult else { return }
+    let taskPackURL = workspaceURL.appendingPathComponent(focusedPlanningResult.taskPackPath)
+    guard FileManager.default.fileExists(atPath: taskPackURL.path) else {
+      focusedPlanningOpenError = "找不到任务包，请重新生成规划资料。"
+      return
+    }
+    focusedPlanningOpenError = NSWorkspace.shared.open(taskPackURL) ? nil : "无法打开任务包。"
+  }
+
+  func copyFocusedPlanningCodexInstruction() {
+    guard let mode = focusedPlanningResult?.mode else { return }
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    let instruction = Self.focusedPlanningCodexInstruction(for: mode)
+    let copied = pasteboard.setString(instruction, forType: .string)
+    focusedPlanningCopyFeedback = copied ? "已复制给 Codex 的启动指令" : "无法复制启动指令"
+
+    let token = UUID()
+    focusedPlanningCopyFeedbackToken = token
+    Task { [weak self] in
+      try? await Task.sleep(nanoseconds: 1_500_000_000)
+      guard !Task.isCancelled, self?.focusedPlanningCopyFeedbackToken == token else { return }
+      self?.focusedPlanningCopyFeedback = nil
+    }
+  }
+
+  static func focusedPlanningCodexInstruction(for mode: ProjectInterviewMode) -> String {
+    switch mode {
+    case .newProject:
+      return """
+      请读取当前项目中的：
+      - AGENTS.md
+      - product/product-brief.md
+      - product/scope-gate.md
+      - product/screen-states.md
+      - product/data-safety.md
+      - tasks/codex-task-pack.md
+
+      先总结你想做什么、希望它能做哪些事、需要确认的事和第一阶段任务。
+      在我确认前，不要修改代码。
+      """
+    case .existingProject:
+      return """
+      请先读取当前项目中的：
+      - AGENTS.md
+      - changes/current-change.md
+      - tasks/codex-change-task-pack.md
+
+      先总结这次想改哪里、可能影响什么、还需要确认的事和第一阶段任务。
+      在我确认前，不要修改代码。
+      """
+    }
   }
 
   private func loadInterviewSchema() {
@@ -642,8 +775,18 @@ final class AppState: ObservableObject {
   }
 
   func beginInterview(with schema: JumaoInterviewSchema) {
+    if interviewMode == nil,
+       interviewAnswers.isEmpty,
+       !schema.questions.contains(where: { $0.answerPath.hasPrefix("newProject.") || $0.answerPath.hasPrefix("existingProject.") }),
+       let workspaceURL {
+      restoreLegacyInterviewDraftForGenericInterview(for: workspaceURL, schema: schema)
+    }
     interviewSchema = schema
-    let validAnswerPaths = Set(schema.questions.map(\.answerPath))
+    migrateLegacyNewProjectDraftIfNeeded(for: schema)
+    var validAnswerPaths = Set(schema.questions.map(\.answerPath))
+    if schema.questions.contains(where: { $0.answerPath == "newProject.idea" }) {
+      validAnswerPaths.insert("newProject.firstVersion")
+    }
     interviewAnswers = interviewAnswers.filter { validAnswerPaths.contains($0.key) }
     skippedInterviewAnswerPaths.formIntersection(validAnswerPaths)
     if restoredInterviewDraftNeedsStageInference {
@@ -667,6 +810,9 @@ final class AppState: ObservableObject {
        !currentInterviewStageQuestions.contains(where: { $0.answerPath == interviewCurrentQuestion?.answerPath }) {
       interviewCurrentQuestionIndex = interviewQuestions.firstIndex(where: { $0.answerPath == firstQuestion.answerPath }) ?? 0
     }
+    if !interviewQuestions.isEmpty {
+      interviewCurrentQuestionIndex = min(interviewCurrentQuestionIndex, interviewQuestions.count - 1)
+    }
     interviewValidationMessage = nil
     interviewWriteMessage = nil
     interviewWriteError = nil
@@ -687,6 +833,9 @@ final class AppState: ObservableObject {
 
   func updateInterviewAnswer(_ answer: String, for answerPath: String) {
     interviewAnswers[answerPath] = answer
+    if answerPath == "newProject.platform", Self.supportedNewProjectPlatforms.contains(answer) {
+      interviewPlatformMigrationMessage = nil
+    }
     if !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       skippedInterviewAnswerPaths.remove(answerPath)
     }
@@ -723,23 +872,6 @@ final class AppState: ObservableObject {
     scheduleInterviewDraftSave()
   }
 
-  func skipCurrentInterviewQuestion() {
-    guard let question = interviewCurrentQuestion else { return }
-
-    skippedInterviewAnswerPaths.insert(question.answerPath)
-    interviewValidationMessage = nil
-    if isLastInterviewQuestion {
-      finishCurrentInterviewStage()
-    } else {
-      guard let stageIndex = currentInterviewStageQuestions.firstIndex(where: { $0.answerPath == question.answerPath }) else {
-        return
-      }
-      let nextQuestion = currentInterviewStageQuestions[stageIndex + 1]
-      interviewCurrentQuestionIndex = interviewQuestions.firstIndex(where: { $0.answerPath == nextQuestion.answerPath }) ?? 0
-    }
-    scheduleInterviewDraftSave()
-  }
-
   func jumpToInterviewQuestion(_ question: JumaoInterviewQuestion) {
     guard let index = interviewQuestions.firstIndex(where: { $0.answerPath == question.answerPath }) else { return }
 
@@ -749,10 +881,6 @@ final class AppState: ObservableObject {
     isInterviewComplete = false
     interviewValidationMessage = nil
     scheduleInterviewDraftSave()
-  }
-
-  func isInterviewQuestionMarkedForCompletion(_ question: JumaoInterviewQuestion) -> Bool {
-    skippedInterviewAnswerPaths.contains(question.answerPath)
   }
 
   @discardableResult
@@ -799,9 +927,29 @@ final class AppState: ObservableObject {
     isInterviewWriteConfirmationPresented = true
   }
 
+  func confirmFocusedInterviewUnderstanding() {
+    guard isFocusedProjectInterview,
+          isInterviewComplete,
+          !isWritingInterviewAnswers,
+          pendingInterviewQuestions.isEmpty,
+          let workspaceURL,
+          let interviewSchema else { return }
+    if isFocusedNewProjectInterview,
+       !isMeaningfulInterviewAnswer(interviewAnswers["newProject.features"] ?? "") {
+      interviewValidationMessage = "请先说说你希望它能做哪些事。"
+      return
+    }
+    runInterviewWrite(in: workspaceURL, schema: interviewSchema, force: false)
+  }
+
   func confirmInterviewWrite() {
     isInterviewWriteConfirmationPresented = false
     guard let workspaceURL, let interviewSchema else { return }
+
+    if isFocusedProjectInterview {
+      runInterviewWrite(in: workspaceURL, schema: interviewSchema, force: false)
+      return
+    }
 
     interviewDocumentsToOverwrite = interviewAnswerWriter.documentsWithContent(in: workspaceURL)
     if !interviewDocumentsToOverwrite.isEmpty {
@@ -860,7 +1008,6 @@ final class AppState: ObservableObject {
     terminalOpenError = nil
     clearProjectInitializationFeedback()
     clearProjectInspection()
-    restoreInterviewDraft(for: workspaceURL)
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
@@ -913,13 +1060,32 @@ final class AppState: ObservableObject {
   private func runProjectInspection(in workspaceURL: URL) {
     isInspectingProject = true
     projectInspectionError = nil
+    projectInspectionGeneration &+= 1
+    let generation = projectInspectionGeneration
+    let workspaceIdentifier = Self.workspaceIdentifier(for: workspaceURL)
+    activeProjectInspectionWorkspaceIdentifier = workspaceIdentifier
     projectInspector.run(workspaceURL: workspaceURL) { [weak self] result in
-      self?.finishProjectInspection(result, for: workspaceURL)
+      self?.finishProjectInspection(
+        result,
+        workspaceIdentifier: workspaceIdentifier,
+        generation: generation
+      )
     }
   }
 
-  private func finishProjectInspection(_ result: JumaoProjectInspectionResult, for workspaceURL: URL) {
-    guard self.workspaceURL == workspaceURL else { return }
+  private func finishProjectInspection(
+    _ result: JumaoProjectInspectionResult,
+    workspaceIdentifier: String,
+    generation: Int
+  ) {
+    guard generation == projectInspectionGeneration,
+          activeProjectInspectionWorkspaceIdentifier == workspaceIdentifier,
+          let workspaceURL,
+          Self.workspaceIdentifier(for: workspaceURL) == workspaceIdentifier else {
+      return
+    }
+
+    activeProjectInspectionWorkspaceIdentifier = nil
     isInspectingProject = false
 
     switch result {
@@ -934,9 +1100,16 @@ final class AppState: ObservableObject {
 
   private func clearProjectInspection() {
     projectInspector.cancel()
+    projectInspectionGeneration &+= 1
+    activeProjectInspectionWorkspaceIdentifier = nil
     isInspectingProject = false
     projectInspection = nil
     projectInspectionError = nil
+    projectInterviewModeOverride = nil
+  }
+
+  private static func workspaceIdentifier(for workspaceURL: URL) -> String {
+    workspaceURL.standardizedFileURL.resolvingSymlinksInPath().path
   }
 
   private func finishOpeningTerminal(_ result: TerminalWorkspaceOpenResult) {
@@ -988,7 +1161,12 @@ final class AppState: ObservableObject {
       interviewSchemaError = nil
       interviewErrorDetails = nil
       let shouldRemainPresented = isInterviewPresented
-      beginInterview(with: interviewMode.map { schema.focused(for: $0) } ?? schema)
+      let preparedSchema = interviewMode.map { schema.focused(for: $0) } ?? schema
+      if let mode = interviewMode, let workspaceURL {
+        offerInterviewDraftRecovery(for: workspaceURL, mode: mode, schema: preparedSchema)
+      } else {
+        beginInterview(with: preparedSchema)
+      }
       if !shouldRemainPresented {
         isInterviewPresented = false
       }
@@ -1036,13 +1214,20 @@ final class AppState: ObservableObject {
       interviewWriteError = nil
       interviewErrorDetails = nil
       if isFocusedProjectInterview {
-        interviewWriteMessage = "首轮答案已保存\n下一步：继续完善项目规划"
-        saveInterviewDraftImmediately()
+        focusedPlanningResult = makeFocusedPlanningResult()
+        focusedPlanningCopyFeedback = nil
+        focusedPlanningOpenError = nil
+        let writeMessage = interviewMode == .existingProject
+          ? "本次改动资料和任务包已生成"
+          : "规划资料和开发任务包已生成"
+        deleteCurrentInterviewDraft()
+        clearInterviewProgress(keepingPlanningResult: true)
+        interviewWriteMessage = writeMessage
         return
       }
       interviewWriteMessage = "项目问题已写入\n下一步：开始检查"
       if let workspaceURL {
-        interviewDraftStore.delete(for: workspaceURL)
+        deleteCurrentInterviewDraft(for: workspaceURL)
       }
       interviewDraftSaveTask?.cancel()
       interviewDraftSaveTask = nil
@@ -1053,6 +1238,12 @@ final class AppState: ObservableObject {
       interviewTaskPackMessage = nil
       interviewTaskPackError = nil
     case .failed(let exitCode, let message):
+      if isFocusedProjectInterview {
+        isInterviewComplete = false
+        isCurrentInterviewStageComplete = false
+        interviewCurrentQuestionIndex = max(interviewQuestions.count - 1, 0)
+        scheduleInterviewDraftSave()
+      }
       let code = exitCode.map(String.init) ?? "无法启动"
       interviewWriteError = "写入项目问题失败（退出码 \(code)）：\(message)"
       interviewErrorDetails = interviewErrorDetailsText(
@@ -1108,7 +1299,7 @@ final class AppState: ObservableObject {
   private func scheduleInterviewDraftSave() {
     interviewDraftSaveTask?.cancel()
     interviewDraftSaveTask = Task { [weak self] in
-      try? await Task.sleep(nanoseconds: 400_000_000)
+      try? await Task.sleep(nanoseconds: 500_000_000)
       guard !Task.isCancelled else { return }
       self?.saveInterviewDraftImmediately()
     }
@@ -1117,10 +1308,14 @@ final class AppState: ObservableObject {
   private func saveInterviewDraftImmediately() {
     interviewDraftSaveTask?.cancel()
     guard let workspaceURL, let interviewSchema else { return }
+    guard interviewMode == nil || hasUnfinishedInterviewDraft else { return }
 
     let draft = InterviewDraft(
       schemaVersion: interviewSchema.schemaVersion,
-      workspaceIdentifier: InterviewDraftStore.workspaceIdentifier(for: workspaceURL),
+      workspaceIdentifier: interviewMode.map {
+        InterviewDraftStore.workspaceIdentifier(for: workspaceURL, mode: $0, schemaVersion: interviewSchema.schemaVersion)
+      } ?? InterviewDraftStore.workspaceIdentifier(for: workspaceURL),
+      mode: interviewMode,
       currentQuestionIndex: interviewCurrentQuestionIndex,
       answers: interviewAnswers,
       skippedAnswerPaths: Array(skippedInterviewAnswerPaths),
@@ -1146,32 +1341,177 @@ final class AppState: ObservableObject {
     }
   }
 
-  private func restoreInterviewDraft(for workspaceURL: URL) {
-    switch interviewDraftStore.load(for: workspaceURL) {
+  private func offerInterviewDraftRecovery(
+    for workspaceURL: URL,
+    mode: ProjectInterviewMode,
+    schema: JumaoInterviewSchema
+  ) {
+    interviewSchema = schema
+    hasPendingInterviewDraftRecovery = false
+    pendingInterviewDraft = nil
+    pendingInterviewDraftIsLegacy = false
+
+    switch interviewDraftStore.load(for: workspaceURL, mode: mode, schemaVersion: schema.schemaVersion) {
     case .missing:
-      restoredInterviewDraftNeedsStageInference = false
-      interviewDraftError = nil
+      offerLegacyInterviewDraftRecovery(for: workspaceURL, mode: mode, schema: schema)
     case .loaded(let draft):
-      interviewAnswers = draft.answers
-      skippedInterviewAnswerPaths = Set(draft.skippedAnswerPaths)
-      interviewCurrentQuestionIndex = max(draft.currentQuestionIndex, 0)
-      isInterviewComplete = draft.isInterviewComplete
-      interviewCurrentStageID = draft.stageID
-      isCurrentInterviewStageComplete = draft.isCurrentStageComplete
-      restoredInterviewDraftNeedsStageInference = draft.stageID == nil
+      guard !draft.isInterviewComplete, draftHasProgress(draft) else {
+        interviewDraftStore.delete(for: workspaceURL, mode: mode, schemaVersion: schema.schemaVersion)
+        beginInterview(with: schema)
+        return
+      }
+      pendingInterviewDraft = draft
+      hasPendingInterviewDraftRecovery = true
       interviewDraftError = nil
-    case .corrupted:
-      restoredInterviewDraftNeedsStageInference = false
-      interviewDraftError = "本地问答草稿无法读取，已忽略。"
+    case .corrupted(let reason):
+      interviewDraftStore.delete(for: workspaceURL, mode: mode, schemaVersion: schema.schemaVersion)
+      interviewDraftError = "本地问答草稿无法读取，已清除。"
       interviewErrorDetails = interviewErrorDetailsText(
         operation: "读取问答草稿",
         exitCode: nil,
-        reason: "草稿文件格式无效或内容损坏。"
+        reason: reason
+      )
+      beginInterview(with: schema)
+    }
+  }
+
+  private func restoreLegacyInterviewDraftForGenericInterview(
+    for workspaceURL: URL,
+    schema: JumaoInterviewSchema
+  ) {
+    switch interviewDraftStore.loadLegacy(for: workspaceURL) {
+    case .missing:
+      interviewDraftError = nil
+      return
+    case .loaded(let draft):
+      applyInterviewDraft(draft, forceIncomplete: false)
+      interviewDraftError = nil
+    case .corrupted(let reason):
+      interviewDraftStore.deleteLegacy(for: workspaceURL)
+      interviewDraftError = "本地问答草稿无法读取，已清除。"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "读取问答草稿",
+        exitCode: nil,
+        reason: reason
       )
     }
   }
 
+  private func offerLegacyInterviewDraftRecovery(
+    for workspaceURL: URL,
+    mode: ProjectInterviewMode,
+    schema: JumaoInterviewSchema
+  ) {
+    switch interviewDraftStore.loadLegacy(for: workspaceURL) {
+    case .missing:
+      interviewDraftError = nil
+      beginInterview(with: schema)
+    case .loaded(let draft):
+      guard inferredInterviewMode(for: draft) == mode,
+            isCompatibleLegacyDraft(draft, with: schema),
+            draftHasProgress(draft) else {
+        beginInterview(with: schema)
+        return
+      }
+      pendingInterviewDraft = draft
+      pendingInterviewDraftIsLegacy = true
+      hasPendingInterviewDraftRecovery = true
+      interviewDraftError = nil
+    case .corrupted(let reason):
+      interviewDraftStore.deleteLegacy(for: workspaceURL)
+      interviewDraftError = "本地问答草稿无法读取，已清除。"
+      interviewErrorDetails = interviewErrorDetailsText(
+        operation: "读取问答草稿",
+        exitCode: nil,
+        reason: reason
+      )
+      beginInterview(with: schema)
+    }
+  }
+
+  private func applyInterviewDraft(_ draft: InterviewDraft, forceIncomplete: Bool) {
+    interviewAnswers = draft.answers
+    skippedInterviewAnswerPaths = Set(draft.skippedAnswerPaths)
+    interviewCurrentQuestionIndex = max(draft.currentQuestionIndex, 0)
+    isInterviewComplete = forceIncomplete ? false : draft.isInterviewComplete
+    interviewCurrentStageID = draft.stageID
+    isCurrentInterviewStageComplete = forceIncomplete ? false : draft.isCurrentStageComplete
+    restoredInterviewDraftNeedsStageInference = draft.stageID == nil
+  }
+
+  private func draftHasProgress(_ draft: InterviewDraft) -> Bool {
+    !draft.answers.isEmpty || !draft.skippedAnswerPaths.isEmpty
+  }
+
+  private func inferredInterviewMode(for draft: InterviewDraft) -> ProjectInterviewMode? {
+    if draft.answers.keys.contains(where: { $0.hasPrefix("existingProject.") }) {
+      return .existingProject
+    }
+    if draft.answers.keys.contains(where: {
+      $0.hasPrefix("newProject.")
+        || ["projectSummary", "coreFeatures", "primaryGoal", "targetPlatform"].contains($0)
+    }) {
+      return .newProject
+    }
+    return nil
+  }
+
+  private func isCompatibleLegacyDraft(_ draft: InterviewDraft, with schema: JumaoInterviewSchema) -> Bool {
+    draft.schemaVersion == schema.schemaVersion
+  }
+
+  private func deleteCurrentInterviewDraft(for workspaceURL: URL? = nil) {
+    guard let workspaceURL = workspaceURL ?? self.workspaceURL else { return }
+    if let mode = interviewMode, let schema = interviewSchema {
+      interviewDraftStore.delete(for: workspaceURL, mode: mode, schemaVersion: schema.schemaVersion)
+    }
+    interviewDraftStore.deleteLegacy(for: workspaceURL)
+  }
+
+  private func clearInterviewProgress(
+    keepingMode: Bool = false,
+    keepingPlanningResult: Bool = false
+  ) {
+    interviewDraftSaveTask?.cancel()
+    interviewDraftSaveTask = nil
+    isLoadingInterviewSchema = false
+    interviewSchema = nil
+    interviewSchemaError = nil
+    interviewDraftError = nil
+    interviewErrorDetails = nil
+    interviewErrorDetailsCopiedMessage = nil
+    interviewAnswers = [:]
+    skippedInterviewAnswerPaths = []
+    interviewCurrentStageID = nil
+    interviewCurrentQuestionIndex = 0
+    isCurrentInterviewStageComplete = false
+    interviewValidationMessage = nil
+    interviewPlatformMigrationMessage = nil
+    isInterviewComplete = false
+    isWritingInterviewAnswers = false
+    interviewWriteMessage = nil
+    interviewWriteError = nil
+    isInterviewWriteConfirmationPresented = false
+    isInterviewOverwriteConfirmationPresented = false
+    interviewDocumentsToOverwrite = []
+    restoredInterviewDraftNeedsStageInference = false
+    hasPendingInterviewDraftRecovery = false
+    pendingInterviewDraft = nil
+    pendingInterviewDraftIsLegacy = false
+    if !keepingMode {
+      interviewMode = nil
+      interviewInspectionContext = nil
+    }
+    if !keepingPlanningResult {
+      focusedPlanningResult = nil
+      focusedPlanningCopyFeedback = nil
+      focusedPlanningOpenError = nil
+    }
+  }
+
   private func clearProjectInitializationFeedback() {
+    interviewDraftSaveTask?.cancel()
+    interviewDraftSaveTask = nil
     isInitializingProject = false
     projectInitializationMessage = nil
     projectInitializationError = nil
@@ -1180,6 +1520,7 @@ final class AppState: ObservableObject {
     projectInitializationConflicts = []
     isLoadingInterviewSchema = false
     interviewSchema = nil
+    hasPendingInterviewDraftRecovery = false
     interviewSchemaError = nil
     interviewDraftError = nil
     interviewMode = nil
@@ -1192,7 +1533,11 @@ final class AppState: ObservableObject {
     interviewCurrentQuestionIndex = 0
     isCurrentInterviewStageComplete = false
     interviewValidationMessage = nil
+    interviewPlatformMigrationMessage = nil
     isInterviewComplete = false
+    restoredInterviewDraftNeedsStageInference = false
+    pendingInterviewDraft = nil
+    pendingInterviewDraftIsLegacy = false
     isWritingInterviewAnswers = false
     interviewWriteMessage = nil
     interviewWriteError = nil
@@ -1203,6 +1548,9 @@ final class AppState: ObservableObject {
     interviewTaskPackMessage = nil
     interviewTaskPackError = nil
     hasPassedProjectCheck = false
+    focusedPlanningResult = nil
+    focusedPlanningCopyFeedback = nil
+    focusedPlanningOpenError = nil
     isInterviewWriteConfirmationPresented = false
     isInterviewOverwriteConfirmationPresented = false
     interviewDocumentsToOverwrite = []
@@ -1213,6 +1561,93 @@ final class AppState: ObservableObject {
     let code = exitCode.map(String.init) ?? "无法启动"
     return "操作：\(operation)\n退出码：\(code)\n原因：\(reason)"
   }
+
+  private func makeFocusedPlanningResult() -> FocusedPlanningResult? {
+    guard let workspaceURL else { return nil }
+    let mode = interviewMode ?? (interviewAnswers.keys.contains(where: { $0.hasPrefix("existingProject.") })
+      ? .existingProject
+      : .newProject)
+
+    let isNewProject = mode == .newProject
+    let projectName = (interviewAnswers[isNewProject ? "newProject.idea" : "existingProject.requestedChange"] ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    let idea = projectName.isEmpty ? "待确认" : projectName
+    let firstVersion: String?
+    if isNewProject {
+      firstVersion = (interviewAnswers["newProject.features"] ?? interviewAnswers["newProject.firstVersion"] ?? "")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    } else {
+      firstVersion = nil
+    }
+    let platform = isNewProject
+      ? interviewAnswers["newProject.platform"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+      : nil
+    let taskPackPath = isNewProject ? "tasks/codex-task-pack.md" : "tasks/codex-change-task-pack.md"
+    let expectedFiles = isNewProject
+      ? [
+          ".jumao/intake-answers.json",
+          "AGENTS.md",
+          "product/product-brief.md",
+          "product/scope-gate.md",
+          "product/screen-states.md",
+          "product/data-safety.md",
+          taskPackPath
+        ]
+      : [
+          ".jumao/intake-answers.json",
+          "changes/current-change.md",
+          taskPackPath
+        ]
+    let files = expectedFiles.filter {
+      FileManager.default.fileExists(atPath: workspaceURL.appendingPathComponent($0).path)
+    }
+
+    return FocusedPlanningResult(
+      mode: mode,
+      projectName: workspaceURL.lastPathComponent,
+      idea: idea,
+      firstVersion: firstVersion?.isEmpty == false ? firstVersion : nil,
+      platform: platform?.isEmpty == false ? platform : nil,
+      files: files,
+      taskPackPath: taskPackPath
+    )
+  }
+
+  private func migrateLegacyNewProjectDraftIfNeeded(for schema: JumaoInterviewSchema) {
+    guard schema.questions.contains(where: { $0.answerPath == "newProject.idea" }) else { return }
+    interviewPlatformMigrationMessage = nil
+
+    let oldIdea = interviewAnswers["newProject.projectSummary"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let oldFeatures = interviewAnswers["newProject.coreFeatures"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let oldGoal = interviewAnswers["newProject.primaryGoal"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let oldPlatform = interviewAnswers["newProject.targetPlatform"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+    if !isMeaningfulInterviewAnswer(interviewAnswers["newProject.idea"] ?? ""), !oldIdea.isEmpty {
+      interviewAnswers["newProject.idea"] = oldIdea
+    }
+    if !isMeaningfulInterviewAnswer(interviewAnswers["newProject.features"] ?? "") {
+      if !oldFeatures.isEmpty {
+        interviewAnswers["newProject.features"] = oldFeatures
+      } else if let legacyFirstVersion = interviewAnswers["newProject.firstVersion"],
+                isMeaningfulInterviewAnswer(legacyFirstVersion) {
+        interviewAnswers["newProject.features"] = legacyFirstVersion
+      } else if !oldGoal.isEmpty {
+        interviewAnswers["newProject.features"] = oldGoal
+      }
+    }
+    let currentPlatform = interviewAnswers["newProject.platform"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let restoredPlatform = currentPlatform.isEmpty ? oldPlatform : currentPlatform
+    if restoredPlatform.isEmpty {
+      interviewAnswers.removeValue(forKey: "newProject.platform")
+    } else if Self.supportedNewProjectPlatforms.contains(restoredPlatform) {
+      interviewAnswers["newProject.platform"] = restoredPlatform
+    } else {
+      interviewAnswers.removeValue(forKey: "newProject.platform")
+      interviewPlatformMigrationMessage = "之前草稿中的平台选项已不再支持，请重新选择。"
+    }
+  }
+
+  private nonisolated static let supportedNewProjectPlatforms = Set(["iPhone", "Mac", "网页", "还没想好"])
 
   private func validateCurrentInterviewQuestion() -> Bool {
     guard let question = interviewCurrentQuestion else { return false }
@@ -1225,9 +1660,16 @@ final class AppState: ObservableObject {
   }
 
   private func finishCurrentInterviewStage() {
+    if isFocusedNewProjectInterview,
+       !isMeaningfulInterviewAnswer(interviewAnswers["newProject.firstVersion"] ?? ""),
+       let features = interviewAnswers["newProject.features"],
+       isMeaningfulInterviewAnswer(features) {
+      interviewAnswers["newProject.firstVersion"] = features
+    }
     isCurrentInterviewStageComplete = true
     isInterviewComplete = !hasNextInterviewStage
     interviewValidationMessage = nil
+    scheduleInterviewDraftSave()
   }
 
   private func questionStageID(for question: JumaoInterviewQuestion) -> String {

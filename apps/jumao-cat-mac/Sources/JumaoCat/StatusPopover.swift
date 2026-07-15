@@ -117,7 +117,7 @@ struct StatusPopover: View {
         .foregroundStyle(.secondary)
 
       if appState.isInspectingProject {
-        ProgressView("橘猫正在查看项目结构")
+        ProgressView("正在检查这个文件夹…")
           .controlSize(.small)
       } else if let inspection = appState.projectInspection {
         inspectionDetails(inspection)
@@ -129,8 +129,36 @@ struct StatusPopover: View {
             .fixedSize(horizontal: false, vertical: true)
         }
 
-        if let title = appState.projectInspectionPrimaryActionTitle,
-           let description = appState.projectInspectionPrimaryActionDescription {
+        if appState.needsProjectInterviewModeSelection {
+          Text("这个文件夹准备用来做什么？")
+            .font(.subheadline.weight(.semibold))
+          HStack {
+            Button("这是一个新项目") {
+              appState.chooseProjectInterviewMode(.newProject)
+            }
+            Button("梳理当前项目") {
+              appState.chooseProjectInterviewMode(.existingProject)
+            }
+          }
+          .buttonStyle(.bordered)
+        } else if let title = appState.projectInspectionPrimaryActionTitle,
+                  let description = appState.projectInspectionPrimaryActionDescription {
+          if let modeTitle = appState.projectInspectionModeTitle {
+            HStack(spacing: 6) {
+              Text("已识别为\(modeTitle)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+              Menu("不是这个类型？切换") {
+                Button("识别为新项目") {
+                  appState.chooseProjectInterviewMode(.newProject)
+                }
+                Button("识别为已有项目") {
+                  appState.chooseProjectInterviewMode(.existingProject)
+                }
+              }
+              .font(.caption)
+            }
+          }
           Button(title) {
             appState.startProjectInterview()
           }
@@ -150,7 +178,7 @@ struct StatusPopover: View {
         }
         .buttonStyle(.bordered)
       } else {
-        ProgressView("橘猫正在查看项目结构")
+        ProgressView("正在检查这个文件夹…")
           .controlSize(.small)
       }
     }

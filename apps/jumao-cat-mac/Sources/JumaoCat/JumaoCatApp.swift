@@ -8,5 +8,8 @@ struct JumaoCatApp: App {
     Settings {
       EmptyView()
     }
+    .commands {
+      TextEditingCommands()
+    }
   }
 }
