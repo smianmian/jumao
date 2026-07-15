@@ -1,56 +1,74 @@
-# Jumao
+# Jumao Cat
 
-Jumao is an agent-ready project governance CLI for AI coding tools.
+[简体中文](README.zh-CN.md)
 
-It helps builders avoid handing a vague idea directly to Codex, Claude, or Cursor
-and then watching the AI write code in the wrong direction. Jumao turns product
-intent, first-version boundaries, screen states, data safety, handoff rules, and
-completion proof into files that an AI coding tool can read before it edits code.
+Jumao helps turn a vague app idea—or a planned change to an existing project—into project material, boundaries, and a next step that an AI coding tool can read first. It does not automatically build a complete app; it first makes the requirements, scope, screen states, and data boundaries clear.
 
-Jumao does not call model APIs, does not require API keys, does not write your
-app code by itself, does not publish to npm, and does not push to remote
-repositories.
+<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="Jumao Cat main panel after scanning an empty folder" width="280">
 
-中文版本: [README.zh-CN.md](README.zh-CN.md)
+## Download Jumao Cat
 
-## How to Use Jumao
+[**Download Jumao Cat for macOS**](https://github.com/smianmian/jumao/releases/latest)
 
-Jumao is not an app and it does not generate your app by itself.
-It is a small command-line helper that makes your idea clear before you ask
-Codex, Claude, or Cursor to write code.
+> **Early preview:** Jumao Cat v0.3.0 focuses on project inspection, requirement intake, and setting boundaries before AI-assisted development. One-click planning, Agent execution, and complete task-package workflows are still being developed.
 
-If your terminal says `npm: command not found` or `command not found: npm`,
-install Node.js LTS first. Then close and reopen the terminal.
+Current support:
 
-https://nodejs.org/
+- macOS 14 or later
+- Apple silicon Macs (arm64)
+- Developer ID signed and Apple notarized
+- App users do not need Node.js, Homebrew, npm, or a global Jumao install
 
-## What Are Jumao's Built-in Agents?
+Download the ZIP, unzip it, move `Jumao Cat.app` to Applications, and open it from Applications.
 
-Jumao includes 44 built-in responsibility agents.
-You do not need to hire 44 people.
-These agents help check product, design, data, privacy, App Store, revenue, and
-release gaps before you ask Codex to write code.
+## For a new project
 
-For the full explanation:
+1. Choose an empty folder, or a folder you want to use for planning.
+2. Click **Start planning a new project**.
+3. Answer four questions: the project, core features, current goal, and target platform.
 
-[Read the 44 built-in Agent guide](docs/agents.zh-CN.md)
+<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="Jumao Cat new-project four-question completion screen" width="640">
 
-## Jumao Mascot Assets
+In v0.3.0, those answers are saved to `.jumao/intake-answers.json`. This is a first structured intake. It does not create an Xcode, web, or app source project, and it does not automatically finish a full project plan.
 
-Jumao mascot assets are included in the npm package at `assets/jumao/`.
-They include terminal ASCII art, color SVG/PNG icons, and black template SVG
-variants for future UI surfaces.
+## For an existing project
 
-## 1. Install Jumao
+1. Choose an existing code project.
+2. Jumao Cat performs a read-only inspection of visible platform, language, build, source, and test signals.
+3. Click **Start planning this change**, then answer what you want to change, what is blocking you, and what must not break.
+
+The existing-project questionnaire carries the read-only inspection result so it does not ask again about facts it can already see. Inspection and the first intake do not modify source code; any later write or development action requires your explicit decision.
+
+## v0.3.0 capability boundaries
+
+- Provides first-round intake for new and existing projects and saves structured answers.
+- Runs read-only `inspect` for existing projects.
+- Restores unfinished interview drafts.
+- Bundles Jumao CLI and Node.js runtime, so the app does not depend on a system development environment.
+- Does not automatically generate a complete app, publish anything, or replace product, compliance, or release decisions.
+
+For complete planning files and a task package, use the advanced CLI flow below. `jumao new` creates a **project planning workspace** with planning documents and templates; it does not create an Xcode, website, or app source project.
+
+## Agent groups: what is real today
+
+Jumao currently has **8 registered Agent groups and 44 registered Agent definitions**: direction and ownership, product and design, technology and development, data and privacy, compliance and health claims, platform qualification, revenue and operations, and release and incidents.
+
+They are rules and review perspectives—not 44 autonomous agents already performing development work.
+
+- **Registered:** the repository defines groups, trigger conditions, guidance, and guardrails.
+- **Matched:** `doctor --write` matches possible agents from answers provided by the project owner and writes a report, rules, and a status summary.
+- **Produced:** only the written governance report, rules, and status files are actual outputs.
+- **Not happening automatically:** agents do not write code, call external services, complete reviews, or declare a project ready for release.
+
+See the [full Agent guide](docs/agents.zh-CN.md) for the complete list.
+
+## Advanced CLI use
+
+Run the following commands yourself in a **system terminal**. Do not ask Codex, Claude, or Cursor to answer the interactive `jumao interview` questions for you; the person who understands the project should answer them.
 
 ```bash
 npm install -g jumao
-jumao --help
-```
 
-## 2. Create a Project
-
-```bash
 mkdir -p ~/jumao-work
 cd ~/jumao-work
 jumao new "My App" --dir ./my-app
@@ -60,358 +78,45 @@ jumao audit ./my-app --write
 jumao pack ./my-app --target codex
 ```
 
-## 3. Copy the Codex Task Pack
+`./my-app` is your own planning-workspace directory. After the complete CLI interview, Jumao can create or update these real planning artifacts:
 
-Mac users:
+- `product/product-brief.zh-CN.md`
+- `product/scope-gate.zh-CN.md`
+- `product/screen-states.zh-CN.md`
+- `product/data-safety.zh-CN.md`
+- `proof/release-proof.zh-CN.md`
+- `tasks/codex-task-pack.md` (after `pack --target codex`)
+
+### Handing the plan to Codex
+
+The recommended approach is to open the real project folder in the Codex app and tell Codex:
+
+```text
+Please read these project files first:
+- AGENTS.md
+- product/
+- proof/
+- tasks/codex-task-pack.md
+
+First summarize the goal, scope, risks, and the smallest next task.
+Do not modify code until I confirm.
+```
+
+If you genuinely need to copy between tools, you can instead run:
 
 ```bash
 cat ./my-app/tasks/codex-task-pack.md | pbcopy
 ```
 
-Not on macOS:
+This only copies file contents to the clipboard and shows no output. It is not the primary handoff flow.
 
-```text
-Open ./my-app/tasks/codex-task-pack.md and copy everything inside it.
-```
+The example `doctor-answers.json` is only for repository tests. Never use it as answers for a real project.
 
-## Optional: Run a Project Doctor Check First
+## Developer documentation and contributing
 
-If you plan to launch, charge money, support login, or submit to the App Store,
-run this first:
-
-```bash
-jumao doctor ./my-app --answers ./node_modules/jumao/examples/ai-note-helper/doctor-answers.json --write
-jumao pack ./my-app --target codex
-```
-
-Jumao writes the diagnosis to `governance/` and includes the hard gates in the
-task pack.
-
-## Check Jumao Cat Status
-
-Jumao writes a local status file inside your project:
-
-```text
-./my-app/.jumao/status.json
-```
-
-You can check it from the terminal:
-
-```bash
-jumao status ./my-app
-```
-
-It only shows the cat status, Agent group summary, key blockers, and next step.
-It does not show the full 44-agent table, does not use the network, does not
-call AI APIs, and does not copy anything to your clipboard.
-
-`ready` only means you can continue with one small task. It does not mean the
-project is ready to launch. `packed` only means the task pack was generated. It
-does not mean it was copied or published.
-
-## 4. Use It in the Codex App
-
-- Open the Codex app.
-- Open your project folder: `~/jumao-work/my-app`.
-- Start a new chat.
-- Paste the task pack you just copied.
-- Send this message:
-
-```text
-Please read the Jumao task pack above first.
-Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
-Wait for my confirmation before editing code.
-Do not do anything outside the task pack.
-```
-
-## 5. Use It in Codex CLI
-
-```bash
-cd ~/jumao-work/my-app
-codex
-```
-
-After it opens, paste the task pack you copied, then paste this message:
-
-```text
-Please read the Jumao task pack above first.
-Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
-Wait for my confirmation before editing code.
-Do not do anything outside the task pack.
-```
-
-## 6. Use It in Claude Code
-
-Create a Claude task pack:
-
-```bash
-cd ~/jumao-work
-jumao pack ./my-app --target claude
-cat ./my-app/tasks/claude-task-pack.md | pbcopy
-```
-
-Not on macOS:
-
-```text
-Open ./my-app/tasks/claude-task-pack.md and copy everything inside it.
-```
-
-- Open Claude Code.
-- Open your project folder: `~/jumao-work/my-app`.
-- Paste the Claude task pack.
-- Send this message:
-
-```text
-Please read the Claude task pack above first.
-Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
-Wait for my confirmation before editing code.
-Do not do anything outside the task pack.
-```
-
-If you use Claude Code from the terminal, you can open it like this:
-
-```bash
-cd ~/jumao-work/my-app
-claude
-```
-
-After it opens, paste the Claude task pack, then paste this message:
-
-```text
-Please read the Claude task pack above first.
-Summarize the product goal, first-version scope, risk boundaries, and next smallest safe task.
-Wait for my confirmation before editing code.
-Do not do anything outside the task pack.
-```
-
-## 7. Uninstall Jumao
-
-```bash
-npm uninstall -g jumao
-```
-
-## Try Without Global Install
-
-Use this if you only want to try Jumao:
-
-```bash
-npx jumao --help
-```
-
-## 5-minute Quickstart
-
-Run this from the repo root:
-
-```bash
-node bin/jumao.js new "AI Note" --dir ./tmp/ai-note
-node bin/jumao.js interview ./tmp/ai-note --answers ./examples/ai-note-helper/answers.json
-node bin/jumao.js check ./tmp/ai-note --strict
-node bin/jumao.js audit ./tmp/ai-note --write
-node bin/jumao.js pack ./tmp/ai-note --target codex
-```
-
-The result is a workspace in `./tmp/ai-note` and a Codex-ready task pack at:
-
-```text
-./tmp/ai-note/tasks/codex-task-pack.md
-```
-
-Give that task pack to your AI coding tool and ask it to summarize the product
-goal, first-version scope, risks, and next smallest safe task before editing code.
-
-## Core Flow
-
-```text
-new -> interview -> check --strict -> audit -> pack --target codex|claude|cursor
-```
-
-| Step | What it proves |
-| --- | --- |
-| `new` | The product workspace exists. |
-| `interview` | The user can fill core product context without staring at blank Markdown. |
-| `check --strict` | The context is no longer empty, vague, or placeholder-heavy. |
-| `audit` | The user can see gaps, why they matter, and the next safe AI task. |
-| `pack --target` | Codex, Claude, or Cursor gets a scoped task pack with tool-specific rules. |
-
-## Who It Is For
-
-- People with an app, website, SaaS, AI tool, or small product idea.
-- Builders who do not code much but use Codex, Claude Code, Cursor, or similar
-  tools.
-- Teams that want AI coding work to start from a product boundary instead of a
-  loose chat prompt.
-- Maintainers who want every round of AI work to leave tests, screenshots, logs,
-  or human review notes.
-
-## What It Helps Prevent
-
-AI coding work often drifts because the tool is missing product context.
-
-- The user is unclear.
-- The first version is too broad.
-- Excluded features are not written down.
-- Empty, error, loading, success, and permission states are missing.
-- Data collection and deletion rules are vague.
-- The AI says work is done without proof.
-- A coding tool touches publishing, production data, payments, or remote
-  repositories too early.
-
-Jumao turns those risks into files, checks, reports, and task packs.
-
-## Commands
-
-```bash
-jumao init [dir]
-jumao new <product-name> --dir [dir]
-jumao check [dir]
-jumao check [dir] --strict
-jumao audit [dir]
-jumao audit [dir] --write
-jumao doctor [dir] --answers answers.json
-jumao doctor [dir] --answers answers.json --write
-jumao interview [dir]
-jumao interview [dir] --answers answers.json
-jumao interview [dir] --answers answers.json --force
-jumao pack [dir]
-jumao pack [dir] --target codex
-jumao pack [dir] --target claude
-jumao pack [dir] --target cursor
-```
-
-Without global install, use `node bin/jumao.js ...` from this repo.
-
-| Command | Purpose |
-| --- | --- |
-| `init` | Put Jumao docs, templates, and a fillable product skeleton into a directory. |
-| `new` | Create a product workspace. |
-| `check` | Verify required files exist. |
-| `check --strict` | Gate: fail on placeholders, filler text, empty structures, and missing core product context. |
-| `audit` | Diagnose gaps, explain why they matter, and suggest the next safe AI task. |
-| `audit --write` | Write the diagnosis to `tasks/audit-report.md`. |
-| `doctor --answers` | Run a plain-language project diagnosis through the built-in Agent Review Board. |
-| `doctor --write` | Write the doctor report, agent findings, and Codex hard gates under `governance/`. |
-| `interview` | Ask questions and fill the four core product files. |
-| `interview --answers` | Generate core files from JSON; add `--force` to overwrite filled files. |
-| `pack` | Build the legacy `jumao-task-pack.md`. |
-| `pack --target` | Build a Codex, Claude, or Cursor task pack after the strict gate passes. |
-
-## Generated Workspace
-
-`jumao new "AI Note"` creates:
-
-```text
-AGENTS.md
-CLAUDE.md
-README.zh-CN.md
-README.md
-product/
-  product-brief.zh-CN.md
-  product-brief.md
-  scope-gate.zh-CN.md
-  scope-gate.md
-  screen-states.zh-CN.md
-  screen-states.md
-  data-safety.zh-CN.md
-  data-safety.md
-proof/
-  release-proof.zh-CN.md
-  release-proof.md
-```
-
-`pack --target codex|claude|cursor` also creates a tool-specific file under `tasks/`.
-
-## Working With AI Coding Tools
-
-### Codex
-
-```bash
-node bin/jumao.js pack ./tmp/ai-note --target codex
-```
-
-The Codex pack reminds the tool to read `AGENTS.md`, keep edits scoped, run tests
-before reporting completion, and report changed / not changed / test result /
-remaining gaps.
-
-### Claude
-
-```bash
-node bin/jumao.js pack ./tmp/ai-note --target claude
-```
-
-The Claude pack reminds the tool to read `CLAUDE.md`, keep implementation
-scoped, and explain assumptions before large changes.
-
-### Cursor
-
-```bash
-node bin/jumao.js pack ./tmp/ai-note --target cursor
-```
-
-The Cursor pack reminds the tool to keep edits small, prefer the existing
-project structure, and avoid new architecture unless asked.
-
-## Complete Example
-
-See [examples/ai-note-helper](examples/ai-note-helper). It is a filled workspace
-for a small AI note helper.
-
-```bash
-node bin/jumao.js check examples/ai-note-helper --strict
-node bin/jumao.js audit examples/ai-note-helper
-node bin/jumao.js pack examples/ai-note-helper --target codex
-```
-
-The example answers file used in the quickstart lives at
-[examples/ai-note-helper/answers.json](examples/ai-note-helper/answers.json).
-
-## Release Checks
-
-Before a release, run the local checks and make sure a human confirms any
-external action:
-
-```bash
-node bin/jumao.js --help
-npm test
-npm run check
-npm pack --dry-run
-npm publish --dry-run
-git status --short
-```
-
-Publishing to GitHub, pushing a branch, publishing to npm, or creating a git tag
-are external release actions. Do them only after a human confirms.
-
-## Project Files
-
-- [CHANGELOG.md](CHANGELOG.md): release notes.
-- [ROADMAP.md](ROADMAP.md): small, scoped next steps.
-- [CONTRIBUTING.md](CONTRIBUTING.md): contribution rules.
-- [SECURITY.md](SECURITY.md): security reporting.
-- [docs/guide.md](docs/guide.md): longer guide.
-- [docs/prompts.md](docs/prompts.md): copyable AI handoff prompts.
-- [docs/publish-checklist.md](docs/publish-checklist.md): publishing checklist.
-
-## FAQ
-
-### Does Jumao call OpenAI, Claude, or other models?
-
-No. Jumao only reads and writes local files. It does not call model APIs, read
-API keys, or create model costs.
-
-### Can I use it if I cannot code?
-
-Yes. Jumao is designed to help you explain the product clearly before asking an
-AI coding tool to continue.
-
-### Does it generate a full app?
-
-No. Jumao prepares product context, boundaries, task handoff, and proof
-structure. A separate AI coding tool or developer still implements the product.
-
-### Can I use it commercially?
-
-Yes. Jumao is MIT licensed.
-
-## License
-
-MIT
+- [Guide](docs/guide.md)
+- [Agent guide](docs/agents.zh-CN.md)
+- [Publishing checklist](docs/publish-checklist.md)
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [简体中文 README](README.zh-CN.md)
