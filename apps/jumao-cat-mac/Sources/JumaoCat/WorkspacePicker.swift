@@ -9,6 +9,7 @@ protocol WorkspaceChoosing {
 struct MacWorkspaceChooser: WorkspaceChoosing {
   func chooseWorkspace(startingAt directoryURL: URL) -> URL? {
     let panel = makePanel(startingAt: directoryURL)
+    NSApp.activate(ignoringOtherApps: true)
     guard panel.runModal() == .OK else { return nil }
     return panel.url
   }
