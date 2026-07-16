@@ -119,17 +119,38 @@ test('plan does not choose a framework for a new web project', () => {
   assert.equal(agentOutput(root, 'website_frontend').status, 'completed');
 });
 
-test('plan marks an undecided platform as the one true source-project blocker', () => {
+test('plan keeps planning ready and records a pending decision when platform is undecided', () => {
   const root = workspace();
   newIntake(root, { platform: '还没想好' });
 
   const result = planWorkspace(root);
   const status = readJSON(root, '.jumao/status.json');
+  const run = latest(root);
+  const runManifest = manifest(root);
+  const taskPlanJSON = readJSON(root, path.posix.join(run.runPath, 'task-plan.json'));
+  const taskPlan = readText(root, 'tasks/jumao-agent-plan.md');
+  const expectedDecision = '准备开始写平台相关代码前，需要确认先做 iPhone、Mac 还是网页';
 
   assert.equal(result.ok, true, result.error);
-  assert.equal(result.state, 'blocked');
-  assert.deepEqual(result.blockingQuestions, ['你想先在哪儿用它？']);
-  assert.equal(status.cat.state, 'blocked');
+  assert.equal(result.state, 'ready');
+  assert.equal(result.platformPending, true);
+  assert.equal(result.pendingDecision, expectedDecision);
+  assert.deepEqual(result.blockingQuestions, []);
+  assert.equal(status.cat.state, 'ready');
+  assert.equal(status.platformPending, true);
+  assert.equal(status.pendingDecision, expectedDecision);
+  assert.equal(run.platformPending, true);
+  assert.equal(runManifest.platformPending, true);
+  assert.equal(taskPlanJSON.platformPending, true);
+  assert.equal(taskPlanJSON.pendingDecision, expectedDecision);
+  assert.match(taskPlan, /与使用方式无关/);
+  assert.match(taskPlan, /暂不创建任何特定平台的源码工程/);
+  assert.match(taskPlan, /真正阻止开发的问题\n\n- 没有/);
+  assert.doesNotMatch(taskPlan, /Swift|SwiftUI|React|Vue|Next\.js|Svelte/);
+  assert.equal(agentOutput(root, 'ios_engineer').status, 'skipped');
+  assert.equal(agentOutput(root, 'website_frontend').status, 'skipped');
+  assert.equal(agentOutput(root, 'project_tech_lead').status, 'completed');
+  assert.ok(agentOutput(root, 'project_tech_lead').decisions.includes(expectedDecision));
   assert.equal(fs.existsSync(path.join(root, 'package.json')), false);
 });
 
@@ -234,6 +255,75 @@ test('manifest contains all 44 registered Agents with the exact auditable output
     const output = readJSON(root, path.posix.join(run.runPath, item.output));
     assert.deepEqual(Object.keys(output), agentOutputKeys);
     assert.ok(['completed', 'skipped', 'blocked', 'failed'].includes(output.status));
+  }
+});
+
+test('four representative plans produce complete, evidence-backed, non-repetitive artifacts', () => {
+  const cases = [
+    {
+      name: 'new iPhone',
+      setup(root) { newIntake(root); },
+      exactRequest: '一个记录心情的小工具'
+    },
+    {
+      name: 'new undecided',
+      setup(root) { newIntake(root, { platform: '还没想好' }); },
+      exactRequest: '一个记录心情的小工具',
+      undecided: true
+    },
+    {
+      name: 'existing Swift',
+      setup(root) {
+        mkdir(root, 'Focus.xcodeproj');
+        write(root, 'Sources/FocusView.swift', 'import SwiftUI\nstruct FocusView {}\n');
+        write(root, 'Tests/FocusTests.swift', 'import XCTest\n');
+        existingIntake(root, '修复 FocusView 保存后界面不更新');
+      },
+      exactRequest: '修复 FocusView 保存后界面不更新'
+    },
+    {
+      name: 'existing Python',
+      setup(root) {
+        write(root, 'pyproject.toml', '[project]\nname = "reports"\n');
+        write(root, 'src/report.py', 'def render():\n    return "report"\n');
+        write(root, 'tests/test_report.py', 'def test_render():\n    assert True\n');
+        existingIntake(root, '修复 report 生成空内容');
+      },
+      exactRequest: '修复 report 生成空内容'
+    }
+  ];
+
+  for (const item of cases) {
+    const root = workspace();
+    item.setup(root);
+    const result = planWorkspace(root);
+    const run = latest(root);
+    const runManifest = manifest(root);
+    const taskPlanJSON = readJSON(root, path.posix.join(run.runPath, 'task-plan.json'));
+    const taskPlan = readText(root, 'tasks/jumao-agent-plan.md');
+
+    assert.equal(result.state, 'ready', item.name);
+    assert.equal(runManifest.agents.length, 44, item.name);
+    assert.equal(runManifest.groups.length, 8, item.name);
+    assert.equal(runManifest.counts.failed, 0, item.name);
+    assert.equal(runManifest.counts.blocked, 0, item.name);
+    assert.ok(taskPlanJSON.firstStage.length >= 3, item.name);
+    assert.equal(taskPlan.split(item.exactRequest).length - 1, 1, item.name);
+    assert.doesNotMatch(taskPlan, /赋能|抓手|协同矩阵|优先级矩阵/, item.name);
+
+    for (const entry of runManifest.groups) {
+      assert.equal(fs.existsSync(path.join(root, run.runPath, entry.output)), true, `${item.name}:${entry.groupId}`);
+    }
+    for (const entry of runManifest.agents) {
+      const output = readJSON(root, path.posix.join(run.runPath, entry.output));
+      if (output.status === 'completed') assert.ok(output.evidence.length > 0, `${item.name}:${entry.agentId}`);
+      if (output.status === 'skipped') assert.ok(output.skippedReason, `${item.name}:${entry.agentId}`);
+    }
+
+    if (item.undecided) {
+      assert.equal(taskPlanJSON.platformPending, true, item.name);
+      assert.doesNotMatch(taskPlan, /Swift|SwiftUI|React|Vue|Next\.js|Svelte/, item.name);
+    }
   }
 });
 

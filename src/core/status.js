@@ -272,7 +272,9 @@ function makeStatus(targetDir, state, overrides = {}) {
       completedAgents: run.completedAgents,
       skippedAgents: run.skippedAgents,
       blockedAgents: run.blockedAgents,
-      failedAgents: run.failedAgents
+      failedAgents: run.failedAgents,
+      platformPending: run.platformPending || false,
+      pendingDecision: run.pendingDecision || null
     });
   }
 

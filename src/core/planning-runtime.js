@@ -10,6 +10,7 @@ const runtimeSchemaVersion = 1;
 const intakePath = '.jumao/intake-answers.json';
 const latestRunPath = '.jumao/latest-run.json';
 const publishedTaskPlanPath = 'tasks/jumao-agent-plan.md';
+const platformPendingDecision = '准备开始写平台相关代码前，需要确认先做 iPhone、Mac 还是网页';
 const validAgentStatuses = new Set(['completed', 'skipped', 'blocked', 'failed']);
 const alwaysRelevantAgentIds = new Set([
   'founder_decision',
@@ -121,7 +122,9 @@ export function planWorkspace(workspace, options = {}) {
       failedAgents: 0,
       groups: [],
       runPath: runRelativePath,
-      blockingQuestions: []
+      blockingQuestions: [],
+      platformPending: context.platformPending,
+      pendingDecision: context.pendingDecision
     });
     checkingWritten = true;
 
@@ -129,7 +132,7 @@ export function planWorkspace(workspace, options = {}) {
     const completedAt = nowISO(options);
     execution.completedAt = completedAt;
     execution.counts = countAgentStatuses(execution.agents);
-    execution.state = finalState(execution.counts);
+    execution.state = finalState(context, execution.counts);
 
     const taskPlan = synthesizeTaskPlan(context, execution);
     writeRunArtifacts(runPath, context, execution, taskPlan);
@@ -346,6 +349,9 @@ function buildContext(workspacePath, intake, inspection, inventory) {
   const impactFiles = findImpactFiles(inventory, answerText);
   const documentedProtections = findDocumentedProtections(inventory);
   const blockingQuestions = blockingQuestionsFor(intake);
+  const platformPending = intake.state === 'valid'
+    && intake.mode === 'new_project'
+    && (!intake.answers.platform || intake.answers.platform === '还没想好');
   return {
     workspacePath,
     intake,
@@ -354,7 +360,9 @@ function buildContext(workspacePath, intake, inspection, inventory) {
     signals,
     impactFiles,
     documentedProtections,
-    blockingQuestions
+    blockingQuestions,
+    platformPending,
+    pendingDecision: platformPending ? platformPendingDecision : null
   };
 }
 
@@ -422,8 +430,6 @@ function blockingQuestionsFor(intake) {
   if (intake.mode === 'new_project') {
     const questions = [];
     if (!intake.answers.idea) questions.push('你想做个什么？');
-    if (!intake.answers.features) questions.push('你希望它能做哪些事？');
-    if (!intake.answers.platform || intake.answers.platform === '还没想好') questions.push('你想先在哪儿用它？');
     return questions;
   }
   return intake.answers.requestedChange ? [] : ['这次你想让它变成什么样？'];
@@ -451,7 +457,8 @@ function executePipeline(context, run) {
       findings,
       protections,
       tasks,
-      blockingQuestions: unique(groupAgents.flatMap((agent) => agent.blockingQuestions))
+      blockingQuestions: unique(groupAgents.flatMap((agent) => agent.blockingQuestions)),
+      pendingDecision: context.pendingDecision
     };
     groups.push({
       groupId: group.id,
@@ -469,7 +476,9 @@ function executePipeline(context, run) {
       boundaries: unique(groupAgents.flatMap((agent) => agent.decisions)).slice(0, 12),
       protections,
       receivedContext: previousHandoff,
-      handoff
+      handoff,
+      platformPending: context.platformPending,
+      pendingDecision: context.pendingDecision
     });
     previousHandoff = handoff;
   }
@@ -483,7 +492,9 @@ function executePipeline(context, run) {
     agents,
     groups,
     counts: countAgentStatuses(agents),
-    state: 'checking'
+    state: 'checking',
+    platformPending: context.platformPending,
+    pendingDecision: context.pendingDecision
   };
 }
 
@@ -582,13 +593,7 @@ function relevanceReasons(agent, context) {
 
 function blocksAgent(agent, context) {
   if (context.intake.mode === 'existing_project') return !context.intake.answers.requestedChange;
-  if (!context.intake.answers.idea || !context.intake.answers.features) {
-    return alwaysRelevantAgentIds.has(agent.id);
-  }
-  if (!context.intake.answers.platform || context.intake.answers.platform === '还没想好') {
-    return ['project_tech_lead', 'qa_testing', 'release_manager', 'documentation_delivery'].includes(agent.id);
-  }
-  return false;
+  return !context.intake.answers.idea && alwaysRelevantAgentIds.has(agent.id);
 }
 
 function evidenceFor(agent, context, reasons) {
@@ -631,17 +636,23 @@ function analyzeAgent(agent, context, reasons) {
   if (agent.id === 'founder_decision') {
     findings.push(`当前规划基线是：${scope}`);
     decisions.push('只围绕用户已经表达的想法和能力形成第一阶段，不自动扩大产品。');
+    tasks.push('核对第一阶段任务是否都能追溯到用户描述，删除没有证据的新能力。');
   } else if (agent.id === 'product_manager') {
     findings.push(context.intake.mode === 'new_project'
-      ? `第一版闭环应先覆盖用户明确提出的能力：${context.intake.answers.features}`
-      : `本次计划只围绕这次变化：${context.intake.answers.requestedChange}`);
+      ? (context.intake.answers.features
+          ? `第一版先把“${context.intake.answers.features}”整理成一次能完成的使用过程。`
+          : '用户尚未补充具体使用动作；先从项目描述整理最小过程，不编造新能力。')
+      : '本次计划只处理用户描述的变化，不自动扩大到相邻功能。');
     decisions.push('第一阶段只做一个可运行、可验证的小闭环。');
+    tasks.push('把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。');
   } else if (agent.id === 'ui_ux') {
     findings.push('页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。');
     decisions.push('先基于用户描述确认最小入口与一次完整操作，再扩展页面。');
+    tasks.push('列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。');
   } else if (agent.id === 'security_privacy') {
     findings.push('当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。');
     protections.push('不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。');
+    tasks.push('只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。');
   } else if (agent.id === 'qa_testing') {
     findings.push(context.inventory.testFiles.length > 0
       ? `检测到 ${context.inventory.testFiles.length} 个测试相关文件，改动后必须运行现有测试。`
@@ -650,15 +661,21 @@ function analyzeAgent(agent, context, reasons) {
   } else if (agent.id === 'project_tech_lead') {
     findings.push(technicalFinding(context));
     decisions.push('按顺序执行最小任务，每一步完成后报告真实验证证据。');
+    tasks.push('按第一阶段任务顺序逐项执行，每完成一步就记录实际文件和验证命令。');
   } else if (agent.id === 'release_manager') {
     findings.push('本次 plan 只形成开发计划，不代表构建、签名、审核或发布已经完成。');
     protections.push('没有真实构建和测试证据时，不得声称可以发布。');
+    tasks.push('保留发布前检查清单；只有真实构建和测试完成后才更新结论。');
   } else if (agent.id === 'documentation_delivery') {
     findings.push('交付给 Codex 的计划必须引用本次 run 的真实证据，并要求先总结再改代码。');
     tasks.push(`读取 ${publishedTaskPlanPath} 并先向项目主人复述目标、边界和第一阶段任务。`);
   } else {
-    findings.push(`${agent.plainName}；该职责由 ${reasons.filter((item) => item.startsWith('signal:')).map((item) => item.slice(7)).join('、') || '当前工程证据'} 触发。`);
+    findings.push(`${agent.plainName}；${plainTriggerReason(reasons)}。`);
     tasks.push(...agent.inferredNeeds.slice(0, 2).map((need) => `在进入相关实现前整理并验证：${need}。`));
+  }
+
+  if (context.platformPending && ['project_tech_lead', 'qa_testing', 'release_manager', 'documentation_delivery'].includes(agent.id)) {
+    decisions.push(context.pendingDecision);
   }
 
   if (agent.id !== 'release_manager') {
@@ -673,7 +690,7 @@ function analyzeAgent(agent, context, reasons) {
     summary: `${agent.name}已基于本次问答、只读扫描和项目文件完成规划分析。`,
     findings: unique(findings),
     decisions: unique(decisions),
-    protections: unique(protections),
+    protections: conciseProtections(protections),
     tasks: unique(tasks)
   };
 }
@@ -689,6 +706,46 @@ function technicalFinding(context) {
   return context.intake.mode === 'new_project'
     ? '当前没有源码工程，第一阶段只能建议建立最小可运行入口，不能声称源码已创建。'
     : '当前没有足够工程证据，不能凭空指定架构或受影响模块。';
+}
+
+function plainTriggerReason(reasons) {
+  const labels = {
+    iphone: '用户明确选择 iPhone',
+    web: '用户明确选择网页',
+    watch: '用户明确提到手表或相关设备',
+    login: '用户明确提到账号或登录',
+    payment: '用户明确提到收费、购买或订阅',
+    cloud: '用户明确提到同步、云端或服务端',
+    health: '用户明确提到健康或医疗内容',
+    sensitive: '用户明确提到敏感数据或权限',
+    china: '用户明确提到中国大陆相关服务',
+    release: '用户明确提到发布或上架',
+    analytics: '用户明确提到统计或分析',
+    messaging: '用户明确提到短信或微信',
+    algorithm: '用户明确提到算法、预测或评分',
+    company: '用户明确提到公司或商业用途',
+    brand: '用户明确提到品牌或商标',
+    publicUsers: '用户明确提到面向其他用户开放',
+    thirdParty: '用户明确提到第三方服务',
+    abuse: '用户明确提到滥用防护',
+    support: '用户明确提到客服或用户反馈'
+  };
+  const triggers = reasons
+    .filter((item) => item.startsWith('signal:'))
+    .map((item) => labels[item.slice(7)] || '用户描述提供了直接证据');
+  return unique(triggers).join('、') || '现有工程文件提供了直接证据';
+}
+
+function conciseProtections(items) {
+  const seen = new Set();
+  return unique(items).filter((item) => {
+    let key = item;
+    if (/(密钥|私钥|凭证|验证码|敏感样例).*(仓库|写进|写入)/.test(item)) key = 'protect-secrets';
+    else if (/(不得声称|不代表).*(发布|提审|上线)|可以发布/.test(item)) key = 'require-release-proof';
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function synthesizeTaskPlan(context, execution) {
@@ -714,6 +771,8 @@ function synthesizeTaskPlan(context, execution) {
     testChecks,
     releaseChecks,
     blockingQuestions: context.blockingQuestions,
+    platformPending: context.platformPending,
+    pendingDecision: context.pendingDecision,
     codexInstructions: [
       '先总结项目目标、第一阶段边界、保护项、阻塞问题和下一步最小任务。',
       '在项目主人确认前，不要修改代码。',
@@ -756,7 +815,7 @@ function taskProtections(context, execution) {
     protections.push(`已有资料 ${item.source}：${item.statement}`);
   }
   for (const item of execution.agents.flatMap((agent) => agent.protections)) protections.push(item);
-  return unique(protections).slice(0, 20);
+  return conciseProtections(protections).slice(0, 20);
 }
 
 function firstStageTasks(context) {
@@ -764,10 +823,22 @@ function firstStageTasks(context) {
     return ['先解决“真正阻止开发的问题”中的缺口，再建立源码任务。'];
   }
   if (context.intake.mode === 'existing_project') {
+    const directFiles = context.impactFiles.slice(0, 3).map((file) => file.path);
+    const files = directFiles.length > 0
+      ? directFiles
+      : unique([...context.inventory.sourceFiles.slice(0, 3), ...context.inventory.configFiles.slice(0, 1)]);
+    const matchedTests = context.impactFiles.filter((file) => file.kind === 'test').map((file) => file.path);
+    const tests = matchedTests.length > 0 ? matchedTests.slice(0, 3) : context.inventory.testFiles.slice(0, 3);
     return [
-      '先读取用户描述、现有资料、相关源码和测试，确认直接影响区域。',
+      files.length > 0
+        ? (directFiles.length > 0
+            ? `先读取与本次变化直接匹配的文件：${files.join('、')}。`
+            : `先读取现有工程入口候选并确认影响范围：${files.join('、')}。`)
+        : '先读取用户描述、现有资料、相关源码和测试，确认直接影响区域。',
       '只修改与本次变化直接相关的最小文件集合。',
-      '运行现有测试，并为本次变化补充一个最小回归验证。'
+      tests.length > 0
+        ? `运行现有测试并补充最小回归验证，优先检查：${tests.join('、')}。`
+        : '为本次变化补充一个最小可重复验证。'
     ];
   }
   if (context.intake.answers.platform === 'iPhone') {
@@ -791,7 +862,14 @@ function firstStageTasks(context) {
       '本地启动并验证一次最小操作，确认后再继续。'
     ];
   }
-  return ['先确认使用方式，再建立对应的最小可运行工程。'];
+  return [
+    context.intake.answers.features
+      ? '把上面确认的第一版能力整理成一次完整的用户操作过程和必要页面状态。'
+      : '从项目描述整理一次完整的用户操作过程和必要页面状态，不补写用户没有提出的能力。',
+    '只整理需要保存的数据、隐私边界和可验证结果，不引入账号、收费、订阅、云服务或第三方工具。',
+    '准备与使用方式无关的目录、说明和测试清单，暂不创建任何特定平台的源码工程。',
+    platformPendingDecision
+  ];
 }
 
 function laterStageTasks(context) {
@@ -807,7 +885,9 @@ function laterStageTasks(context) {
 function testChecksFor(context) {
   const checks = [];
   if (context.inventory.testFiles.length > 0) {
-    checks.push(`运行现有测试：${context.inventory.testFiles.slice(0, 4).join('、')}。`);
+    const matchedTests = context.impactFiles.filter((file) => file.kind === 'test').map((file) => file.path);
+    const tests = matchedTests.length > 0 ? matchedTests.slice(0, 4) : context.inventory.testFiles.slice(0, 4);
+    checks.push(`运行现有测试：${tests.join('、')}。`);
   } else {
     checks.push('为第一阶段最小操作、失败状态和输入边界补充可重复验证。');
   }
@@ -832,11 +912,13 @@ function releaseChecksFor(context) {
 
 function renderTaskPlan(plan) {
   const section = (title, items) => [title, '', ...items.map((item) => `- ${item}`), ''];
+  const understanding = [plan.understanding];
+  if (plan.pendingDecision) understanding.push(`待确认决定：${plan.pendingDecision}`);
   return [
     '# Jumao Agent Plan',
     '',
     ...section('## 1. 用户想做什么或这次想改什么', [plan.request]),
-    ...section('## 2. Jumao 对需求的理解', [plan.understanding]),
+    ...section('## 2. Jumao 对需求的理解', understanding),
     ...section('## 3. Agent 自动识别的影响区域', plan.impactAreas),
     ...section('## 4. 需要保护的已有功能', plan.protections),
     ...section('## 5. 第一阶段最小开发任务', plan.firstStage),
@@ -893,6 +975,8 @@ function writeLatestRun(workspacePath, context, execution, runRelativePath) {
     completedAt: execution.completedAt,
     counts: execution.counts,
     blockingQuestions: unique(execution.agents.flatMap((agent) => agent.blockingQuestions)),
+    platformPending: context.platformPending,
+    pendingDecision: context.pendingDecision,
     taskPlan: publishedTaskPlanPath
   });
 }
@@ -916,6 +1000,8 @@ function buildManifest(context, execution) {
     },
     counts: execution.counts,
     blockingQuestions: unique(execution.agents.flatMap((agent) => agent.blockingQuestions)),
+    platformPending: context.platformPending,
+    pendingDecision: context.pendingDecision,
     agents: execution.agents.map((agent) => ({
       agentId: agent.agentId,
       groupId: agent.groupId,
@@ -948,6 +1034,8 @@ function renderPlanningSummary(context, execution) {
     `- skipped: ${execution.counts.skipped}`,
     `- blocked: ${execution.counts.blocked}`,
     `- failed: ${execution.counts.failed}`,
+    `- platformPending: ${context.platformPending}`,
+    ...(context.pendingDecision ? [`- pendingDecision: ${context.pendingDecision}`] : []),
     '',
     '## 需求基线',
     requestSummary(context),
@@ -1037,6 +1125,8 @@ function executionAfterFailure(context, execution, failure) {
     groups,
     counts: countAgentStatuses(agents),
     state: 'blocked',
+    platformPending: context.platformPending,
+    pendingDecision: context.pendingDecision,
     error: failure.message
   };
 }
@@ -1062,7 +1152,9 @@ function reusableResult(workspacePath, fingerprint) {
         planningSummary: path.posix.join(latest.runPath, 'planning-summary.md'),
         taskPlan: publishedTaskPlanPath
       },
-      blockingQuestions: latest.blockingQuestions || manifest.blockingQuestions || []
+      blockingQuestions: latest.blockingQuestions || manifest.blockingQuestions || [],
+      platformPending: latest.platformPending ?? manifest.platformPending ?? false,
+      pendingDecision: latest.pendingDecision ?? manifest.pendingDecision ?? null
     };
   } catch {
     return null;
@@ -1110,6 +1202,8 @@ function statusRun(execution, runRelativePath) {
     groups: execution.groups,
     runPath: runRelativePath,
     blockingQuestions: unique(execution.agents.flatMap((agent) => agent.blockingQuestions)),
+    platformPending: execution.platformPending || false,
+    pendingDecision: execution.pendingDecision || null,
     error: execution.error || null
   };
 }
@@ -1128,12 +1222,14 @@ function resultFromExecution(execution, runRelativePath, reused, error = null) {
       taskPlan: publishedTaskPlanPath
     },
     blockingQuestions: unique(execution.agents.flatMap((agent) => agent.blockingQuestions)),
+    platformPending: execution.platformPending || false,
+    pendingDecision: execution.pendingDecision || null,
     ...(error ? { error } : {})
   };
 }
 
-function finalState(counts) {
-  return counts.blocked > 0 || counts.failed > 0 ? 'blocked' : 'ready';
+function finalState(context, counts) {
+  return context.blockingQuestions.length > 0 || counts.failed > 0 ? 'blocked' : 'ready';
 }
 
 function countAgentStatuses(agents) {
@@ -1148,12 +1244,12 @@ function countAgentStatuses(agents) {
 function requestSummary(context) {
   if (context.intake.state !== 'valid') return '首轮需求尚不可用。';
   if (context.intake.mode === 'existing_project') return context.intake.answers.requestedChange || '本次变化尚未说明。';
-  return [context.intake.answers.idea, context.intake.answers.features].filter(Boolean).join('；') || '项目想法尚未说明。';
+  return context.intake.answers.idea || '项目想法尚未说明。';
 }
 
 function understandingSummary(context) {
   if (context.intake.mode === 'existing_project') {
-    return `先在现有项目中定位与“${context.intake.answers.requestedChange || '待确认'}”直接相关的代码和测试，只做最小变更。`;
+    return '先根据用户描述定位直接相关的代码和测试，只做能验证这次变化的最小改动。';
   }
   const platform = context.intake.answers.platform === 'iPhone'
     ? '先在 iPhone 上使用'
@@ -1162,7 +1258,10 @@ function understandingSummary(context) {
       : context.intake.answers.platform === '网页'
         ? '先通过网页使用'
         : '使用方式暂未确定';
-  return `用户想做“${context.intake.answers.idea || '待确认'}”，第一阶段先支持“${context.intake.answers.features || '待确认'}”，${platform}。`;
+  const firstUse = context.intake.answers.features
+    ? `第一阶段先把“${context.intake.answers.features}”整理成一次完整的使用过程`
+    : '第一阶段先从项目描述整理一次完整的使用过程，不补写未说明的能力';
+  return `${firstUse}，${platform}。`;
 }
 
 function searchTokens(text) {
