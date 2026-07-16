@@ -12,6 +12,7 @@ struct InterviewForm: View {
   @State private var catCelebrationPhase = 0
   @State private var lastCatNodAt = Date.distantPast
   @State private var isEditingUnderstanding = false
+  @State private var expandedAgentGroups = Set<String>()
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
@@ -45,7 +46,9 @@ struct InterviewForm: View {
         compactError(draftError)
       }
 
-      if appState.isLoadingInterviewSchema {
+      if let session = appState.agentPlanningSession {
+        agentPlanningCard(session)
+      } else if appState.isLoadingInterviewSchema {
         loadingCard
       } else if let schemaError = appState.interviewSchemaError {
         errorCard(title: "无法打开项目问答", message: schemaError)
@@ -104,8 +107,229 @@ struct InterviewForm: View {
   }
 
   private var stageHeaderTitle: String {
+    if let session = appState.agentPlanningSession {
+      switch session.phase {
+      case .running: return "橘猫正在帮你整理"
+      case .completed: return "橘猫已经整理好了"
+      case .interrupted: return "上次整理没有完成"
+      case .failed: return "整理时遇到问题"
+      case .cancelled: return "整理已取消"
+      }
+    }
     guard let stage = appState.currentInterviewStage else { return appState.interviewWindowTitle }
     return "第 \(stage.order) 阶段：\(stage.title)"
+  }
+
+  @ViewBuilder
+  private func agentPlanningCard(_ session: JumaoAgentPlanningSession) -> some View {
+    switch session.phase {
+    case .running:
+      agentPlanningProgressCard(session)
+    case .completed:
+      agentPlanningResultCard(session)
+    case .interrupted, .failed, .cancelled:
+      agentPlanningErrorCard(session)
+    }
+  }
+
+  private func agentPlanningProgressCard(_ session: JumaoAgentPlanningSession) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(spacing: 10) {
+        ProgressView()
+          .controlSize(.small)
+        VStack(alignment: .leading, spacing: 3) {
+          Text("橘猫正在帮你整理")
+            .font(.headline)
+          Text("它会检查项目、整理边界，并准备一份可以交给 Codex 的开发计划。")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      Text("\(session.totalAgents) 个角色正在检查 · \(session.groups.count) 个小组")
+        .font(.caption.weight(.semibold))
+      agentPlanningGroups(session.groups)
+      Button("取消整理", role: .destructive) {
+        appState.cancelAgentPlanning()
+      }
+      .buttonStyle(.bordered)
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private func agentPlanningResultCard(_ session: JumaoAgentPlanningSession) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("橘猫已经整理好了")
+        .font(.headline)
+      if let understanding = session.understanding {
+        Text(understanding)
+          .font(.subheadline)
+          .fixedSize(horizontal: false, vertical: true)
+      } else if let request = session.request {
+        Text(request)
+          .font(.subheadline)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      if session.reused {
+        Text("已使用现有规划结果")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+      }
+      HStack(spacing: 14) {
+        planningMetric("参与检查", session.totalAgents)
+        planningMetric("实际参与", session.counts.completed)
+        planningMetric("无关", session.counts.skipped)
+        planningMetric("需处理", session.counts.blocked)
+        if session.counts.failed > 0 {
+          planningMetric("失败", session.counts.failed)
+        }
+      }
+      if let runId = session.runId {
+        Text("运行编号：\(runId)")
+          .font(.caption2.monospaced())
+          .foregroundStyle(.secondary)
+          .textSelection(.enabled)
+      }
+
+      Button("交给 Codex") {
+        appState.copyAgentPlanningCodexInstruction()
+      }
+      .buttonStyle(.borderedProminent)
+      .tint(.orange)
+
+      HStack {
+        Button("查看开发计划") { appState.openAgentDevelopmentPlan() }
+        Button(appState.showsAgentPlanningGroups ? "收起 8 个小组" : "查看 8 个小组") {
+          appState.toggleAgentPlanningGroups()
+        }
+      }
+      .buttonStyle(.bordered)
+
+      HStack {
+        Button("在 Finder 中查看资料") { appState.openWorkspaceInFinder() }
+        Button("重新整理") { appState.rerunAgentPlanning() }
+      }
+      .buttonStyle(.bordered)
+
+      if appState.showsAgentPlanningGroups {
+        agentPlanningGroups(session.groups)
+      }
+      if let feedback = appState.agentPlanningCopyFeedback {
+        Text(feedback)
+          .font(.caption)
+          .foregroundStyle(.green)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private func agentPlanningErrorCard(_ session: JumaoAgentPlanningSession) -> some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Text(session.errorMessage ?? "上次整理没有完成")
+        .font(.headline)
+      Text("可以重新整理，或先查看项目中已经留下的资料。")
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+      HStack {
+        Button("重新整理") { appState.retryAgentPlanning() }
+          .buttonStyle(.borderedProminent)
+          .tint(.orange)
+        Button("复制详细错误") { appState.copyAgentPlanningErrorDetails() }
+          .buttonStyle(.bordered)
+          .disabled(session.errorDetails == nil)
+      }
+      HStack {
+        Button("在 Finder 中查看资料") { appState.openWorkspaceInFinder() }
+        Button("关闭") { appState.hideInterview() }
+      }
+      .buttonStyle(.bordered)
+      if let message = appState.agentPlanningErrorCopiedMessage {
+        Text(message).font(.caption).foregroundStyle(.secondary)
+      }
+      if !session.groups.isEmpty {
+        agentPlanningGroups(session.groups)
+      }
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.red.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private func planningMetric(_ title: String, _ value: Int) -> some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Text(String(value)).font(.headline.monospacedDigit())
+      Text(title).font(.caption2).foregroundStyle(.secondary)
+    }
+  }
+
+  private func agentPlanningGroups(_ groups: [JumaoAgentGroupProgress]) -> some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 8) {
+        ForEach(groups) { group in
+          DisclosureGroup(
+            isExpanded: Binding(
+              get: { expandedAgentGroups.contains(group.id) },
+              set: { expanded in
+                if expanded { expandedAgentGroups.insert(group.id) }
+                else { expandedAgentGroups.remove(group.id) }
+              }
+            )
+          ) {
+            VStack(alignment: .leading, spacing: 6) {
+              ForEach(group.agents) { agent in
+                VStack(alignment: .leading, spacing: 2) {
+                  HStack {
+                    Text(agent.name).font(.caption.weight(.medium))
+                    Spacer()
+                    Text(agentStatusLabel(agent.status)).font(.caption2).foregroundStyle(.secondary)
+                  }
+                  if let detail = agent.skippedReason ?? agent.summary, !detail.isEmpty {
+                    Text(detail)
+                      .font(.caption2)
+                      .foregroundStyle(.secondary)
+                      .fixedSize(horizontal: false, vertical: true)
+                  }
+                }
+              }
+            }
+            .padding(.top, 6)
+          } label: {
+            VStack(alignment: .leading, spacing: 3) {
+              HStack {
+                Text(group.name).font(.caption.weight(.semibold))
+                Spacer()
+                Text(agentStatusLabel(group.status)).font(.caption2).foregroundStyle(.secondary)
+              }
+              Text("共 \(group.totalAgents) · 完成 \(group.counts.completed) · 跳过 \(group.counts.skipped) · 阻塞 \(group.counts.blocked) · 失败 \(group.counts.failed)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+              if let summary = group.summary, !summary.isEmpty {
+                Text(summary).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+              }
+            }
+          }
+          .padding(10)
+          .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+        }
+      }
+    }
+    .frame(maxHeight: 300)
+  }
+
+  private func agentStatusLabel(_ status: JumaoAgentProgressStatus) -> String {
+    switch status {
+    case .waiting: "等待"
+    case .working: "正在检查"
+    case .completed: "已完成"
+    case .skipped: "已跳过"
+    case .blocked: "被阻塞"
+    case .failed: "失败"
+    }
   }
 
   private var loadingCard: some View {

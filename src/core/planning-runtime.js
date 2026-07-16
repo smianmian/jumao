@@ -107,7 +107,24 @@ export function planWorkspace(workspace, options = {}) {
 
     if (!options.force) {
       const reused = reusableResult(workspacePath, context.inputFingerprint);
-      if (reused) return reused;
+      if (reused) {
+        emitPlanningEvent(options, planningEvent('run.started', {
+          runId: reused.runId,
+          timestamp: nowISO(options),
+          counts: emptyAgentCounts(),
+          reused: true,
+          groups: registeredGroupSummaries()
+        }));
+        emitPlanningEvent(options, planningEvent('run.completed', {
+          runId: reused.runId,
+          timestamp: nowISO(options),
+          counts: reused.counts,
+          state: reused.state,
+          reused: true,
+          runPath: reused.runPath
+        }));
+        return reused;
+      }
     }
 
     ensureRunDirectories(runPath);
@@ -128,7 +145,20 @@ export function planWorkspace(workspace, options = {}) {
     });
     checkingWritten = true;
 
-    execution = executePipeline(context, { runId, startedAt, now: options.now });
+    emitPlanningEvent(options, planningEvent('run.started', {
+      runId,
+      timestamp: startedAt,
+      counts: emptyAgentCounts(),
+      reused: false,
+      groups: registeredGroupSummaries()
+    }));
+
+    execution = executePipeline(context, {
+      runId,
+      startedAt,
+      now: options.now,
+      onEvent: options.onEvent
+    });
     const completedAt = nowISO(options);
     execution.completedAt = completedAt;
     execution.counts = countAgentStatuses(execution.agents);
@@ -139,6 +169,15 @@ export function planWorkspace(workspace, options = {}) {
     publishTaskPlan(workspacePath, runPath, taskPlan.markdown);
     writeLatestRun(workspacePath, context, execution, runRelativePath);
     writePlanningStatus(workspacePath, execution.state, statusRun(execution, runRelativePath));
+
+    emitPlanningEvent(options, planningEvent('run.completed', {
+      runId,
+      timestamp: completedAt,
+      counts: execution.counts,
+      state: execution.state,
+      reused: false,
+      runPath: runRelativePath
+    }));
 
     return resultFromExecution(execution, runRelativePath, false);
   } catch (error) {
@@ -154,6 +193,32 @@ export function planWorkspace(workspace, options = {}) {
         writeFailureArtifacts(runPath, context, failedExecution);
         writeLatestRun(workspacePath, context, failedExecution, runRelativePath);
         writePlanningStatus(workspacePath, 'blocked', statusRun(failedExecution, runRelativePath));
+        const failedAgent = failedExecution.agents.find((agent) => agent.status === 'failed');
+        if (failedAgent) {
+          const failedGroup = failedExecution.groups.find((group) => group.groupId === failedAgent.groupId);
+          emitPlanningEvent(options, planningEvent('agent.failed', {
+            runId,
+            timestamp: failedExecution.completedAt,
+            groupId: failedAgent.groupId,
+            groupName: failedGroup?.groupName,
+            agentId: failedAgent.agentId,
+            agentName: agentName(failedAgent.agentId),
+            agentStatus: failedAgent.status,
+            counts: failedExecution.counts,
+            groupCounts: failedGroup?.counts,
+            summary: failedAgent.summary,
+            error: failedAgent.error || message
+          }));
+        }
+        emitPlanningEvent(options, planningEvent('run.failed', {
+          runId,
+          timestamp: failedExecution.completedAt,
+          counts: failedExecution.counts,
+          state: failedExecution.state,
+          reused: false,
+          runPath: runRelativePath,
+          error: message
+        }));
         return resultFromExecution(failedExecution, runRelativePath, false, message);
       } catch {
         try {
@@ -176,6 +241,15 @@ export function planWorkspace(workspace, options = {}) {
         }
       }
     }
+    emitPlanningEvent(options, planningEvent('run.failed', {
+      runId,
+      timestamp: nowISO(options),
+      counts: execution?.counts || emptyAgentCounts(),
+      state: 'blocked',
+      reused: false,
+      runPath: runRelativePath,
+      error: message
+    }));
     return failedResult(message, { runId, runPath: runRelativePath });
   }
 }
@@ -444,10 +518,36 @@ function executePipeline(context, run) {
     const group = agentGroups[index];
     const groupStartedAt = nowISO({ now: run.now });
     const timer = performance.now();
-    const groupAgents = responsibilityAgents
-      .filter((agent) => agent.groupId === group.id)
-      .map((agent) => executeAgent(agent, context));
-    agents.push(...groupAgents);
+    emitPlanningEvent(run, planningEvent('group.started', {
+      runId: run.runId,
+      timestamp: groupStartedAt,
+      groupId: group.id,
+      groupName: group.name,
+      counts: countAgentStatuses(agents),
+      groupCounts: emptyAgentCounts()
+    }));
+
+    const groupAgents = [];
+    for (const agent of responsibilityAgents.filter((candidate) => candidate.groupId === group.id)) {
+      const output = executeAgent(agent, context);
+      groupAgents.push(output);
+      agents.push(output);
+      const eventName = `agent.${output.status}`;
+      emitPlanningEvent(run, planningEvent(eventName, {
+        runId: run.runId,
+        timestamp: nowISO({ now: run.now }),
+        groupId: group.id,
+        groupName: group.name,
+        agentId: agent.id,
+        agentName: agent.name,
+        agentStatus: output.status,
+        counts: countAgentStatuses(agents),
+        groupCounts: countAgentStatuses(groupAgents),
+        summary: output.summary,
+        skippedReason: output.skippedReason,
+        error: output.error
+      }));
+    }
     const counts = countAgentStatuses(groupAgents);
     const findings = unique(groupAgents.flatMap((agent) => agent.findings)).slice(0, 12);
     const protections = unique(groupAgents.flatMap((agent) => agent.protections)).slice(0, 12);
@@ -460,7 +560,7 @@ function executePipeline(context, run) {
       blockingQuestions: unique(groupAgents.flatMap((agent) => agent.blockingQuestions)),
       pendingDecision: context.pendingDecision
     };
-    groups.push({
+    const groupResult = {
       groupId: group.id,
       groupName: group.name,
       sequence: index + 1,
@@ -479,7 +579,17 @@ function executePipeline(context, run) {
       handoff,
       platformPending: context.platformPending,
       pendingDecision: context.pendingDecision
-    });
+    };
+    groups.push(groupResult);
+    emitPlanningEvent(run, planningEvent('group.completed', {
+      runId: run.runId,
+      timestamp: groupResult.completedAt,
+      groupId: group.id,
+      groupName: group.name,
+      counts: countAgentStatuses(agents),
+      groupCounts: counts,
+      summary: findings[0] || '本组已完成当前项目适用性检查。'
+    }));
     previousHandoff = handoff;
   }
 
@@ -496,6 +606,54 @@ function executePipeline(context, run) {
     platformPending: context.platformPending,
     pendingDecision: context.pendingDecision
   };
+}
+
+function emptyAgentCounts() {
+  return { completed: 0, skipped: 0, blocked: 0, failed: 0 };
+}
+
+function registeredGroupSummaries() {
+  return agentGroups.map((group) => ({
+    groupId: group.id,
+    groupName: group.name,
+    totalAgents: responsibilityAgents.filter((agent) => agent.groupId === group.id).length
+  }));
+}
+
+function agentName(id) {
+  return responsibilityAgents.find((agent) => agent.id === id)?.name || id;
+}
+
+function planningEvent(event, details) {
+  const counts = details.counts || emptyAgentCounts();
+  return {
+    schemaVersion: runtimeSchemaVersion,
+    runId: details.runId || null,
+    timestamp: details.timestamp,
+    event,
+    groupId: details.groupId || null,
+    groupName: details.groupName || null,
+    agentId: details.agentId || null,
+    agentName: details.agentName || null,
+    agentStatus: details.agentStatus || null,
+    completedAgents: counts.completed,
+    skippedAgents: counts.skipped,
+    blockedAgents: counts.blocked,
+    failedAgents: counts.failed,
+    totalAgents: responsibilityAgents.length,
+    groupCounts: details.groupCounts || null,
+    summary: details.summary || null,
+    skippedReason: details.skippedReason || null,
+    state: details.state || null,
+    reused: details.reused ?? false,
+    runPath: details.runPath || null,
+    error: details.error || null,
+    groups: details.groups || null
+  };
+}
+
+function emitPlanningEvent(options, event) {
+  if (typeof options.onEvent === 'function') options.onEvent(event);
 }
 
 function executeAgent(agent, context) {
@@ -1004,6 +1162,7 @@ function buildManifest(context, execution) {
     pendingDecision: context.pendingDecision,
     agents: execution.agents.map((agent) => ({
       agentId: agent.agentId,
+      agentName: agentName(agent.agentId),
       groupId: agent.groupId,
       status: agent.status,
       output: `agents/${agent.agentId}.json`

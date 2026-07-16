@@ -61,6 +61,10 @@ final class AppState: ObservableObject {
   @Published private(set) var focusedPlanningResult: FocusedPlanningResult?
   @Published private(set) var focusedPlanningCopyFeedback: String?
   @Published private(set) var focusedPlanningOpenError: String?
+  @Published private(set) var agentPlanningSession: JumaoAgentPlanningSession?
+  @Published private(set) var agentPlanningCopyFeedback: String?
+  @Published private(set) var agentPlanningErrorCopiedMessage: String?
+  @Published var showsAgentPlanningGroups = true
   @Published var isProjectInitializationConfirmationPresented = false
   @Published var isProjectInitializationConflictPresented = false
   @Published var isInterviewPresented = false
@@ -81,6 +85,8 @@ final class AppState: ObservableObject {
   private let interviewAnswerWriter: any JumaoInterviewAnswerWriting
   private let strictCheckRunner: any JumaoStrictChecking
   private let interviewDraftStore: any InterviewDraftStoring
+  private let agentPlanRunner: any JumaoAgentPlanRunning
+  private let agentPlanLoader: any JumaoAgentPlanLoading
   private let appTerminator: any AppTerminating
   private let menuBarActivityCoordinator: MenuBarActivityCoordinator
   private var externalStatusActivityOperationID: UUID?
@@ -96,6 +102,10 @@ final class AppState: ObservableObject {
   private var pendingInterviewDraft: InterviewDraft?
   private var pendingInterviewDraftIsLegacy = false
   private var lastInterviewWriteUsedForce = false
+  private var agentPlanningGeneration = 0
+  private var agentPlanningActivityOperationID: UUID?
+  private var agentPlanningWorkspaceIdentifier: String?
+  private var agentPlanningCopyFeedbackToken = UUID()
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
       self?.refreshStatusAfterFileChange()
@@ -117,6 +127,8 @@ final class AppState: ObservableObject {
     interviewAnswerWriter: (any JumaoInterviewAnswerWriting)? = nil,
     strictCheckRunner: (any JumaoStrictChecking)? = nil,
     interviewDraftStore: any InterviewDraftStoring = InterviewDraftStore(),
+    agentPlanRunner: (any JumaoAgentPlanRunning)? = nil,
+    agentPlanLoader: any JumaoAgentPlanLoading = JumaoAgentPlanLoader(),
     menuBarActivityCoordinator: MenuBarActivityCoordinator = MenuBarActivityCoordinator(),
     appTerminator: any AppTerminating = MacAppTerminator()
   ) {
@@ -133,6 +145,8 @@ final class AppState: ObservableObject {
     self.interviewAnswerWriter = interviewAnswerWriter ?? JumaoInterviewAnswerWriter(resolver: cliResolver)
     self.strictCheckRunner = strictCheckRunner ?? JumaoStrictCheckRunner(resolver: cliResolver)
     self.interviewDraftStore = interviewDraftStore
+    self.agentPlanRunner = agentPlanRunner ?? JumaoAgentPlanRunner(resolver: cliResolver)
+    self.agentPlanLoader = agentPlanLoader
     self.menuBarActivityCoordinator = menuBarActivityCoordinator
     self.appTerminator = appTerminator
     menuBarActivityCoordinator.onStateChange = { [weak self] state in
@@ -142,6 +156,15 @@ final class AppState: ObservableObject {
 
   var workspacePath: String {
     workspaceURL?.path ?? "还没有选择项目"
+  }
+
+  var isAgentPlanning: Bool {
+    agentPlanningSession?.phase == .running
+  }
+
+  var hasAgentPlanningResult: Bool {
+    guard let phase = agentPlanningSession?.phase else { return false }
+    return phase == .completed || phase == .interrupted || phase == .failed || phase == .cancelled
   }
 
   var projectName: String {
@@ -741,6 +764,96 @@ final class AppState: ObservableObject {
     }
   }
 
+  func showAgentPlanning() {
+    guard agentPlanningSession != nil else { return }
+    isInterviewPresented = true
+  }
+
+  func rerunAgentPlanning() {
+    startAgentPlanning(force: true)
+  }
+
+  func retryAgentPlanning() {
+    startAgentPlanning(force: true)
+  }
+
+  func cancelAgentPlanning() {
+    guard isAgentPlanning else { return }
+    agentPlanRunner.cancel()
+  }
+
+  func toggleAgentPlanningGroups() {
+    showsAgentPlanningGroups.toggle()
+  }
+
+  func openAgentDevelopmentPlan() {
+    guard let workspaceURL else { return }
+    let planURL = workspaceURL.appendingPathComponent("tasks/jumao-agent-plan.md")
+    guard FileManager.default.fileExists(atPath: planURL.path) else {
+      updateAgentPlanningError(message: "找不到开发计划。", details: "缺少 tasks/jumao-agent-plan.md。")
+      return
+    }
+    if !NSWorkspace.shared.open(planURL) {
+      updateAgentPlanningError(message: "无法打开开发计划。", details: planURL.path)
+    }
+  }
+
+  func copyAgentPlanningCodexInstruction() {
+    guard let session = agentPlanningSession,
+          let runPath = session.runPath,
+          !runPath.isEmpty else {
+      updateAgentPlanningError(message: "找不到当前运行资料。", details: "当前规划结果没有 runPath。")
+      return
+    }
+    let instruction = Self.agentPlanningCodexInstruction(runPath: runPath)
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    guard pasteboard.setString(instruction, forType: .string) else {
+      updateAgentPlanningError(message: "无法复制启动指令。", details: "系统剪贴板写入失败。")
+      return
+    }
+    menuBarActivityCoordinator.showCopied()
+    let token = UUID()
+    agentPlanningCopyFeedbackToken = token
+    agentPlanningCopyFeedback = "已复制。请在 Codex 中打开这个项目文件夹，然后粘贴发送。"
+    Task { @MainActor [weak self] in
+      try? await Task.sleep(nanoseconds: 2_500_000_000)
+      guard !Task.isCancelled, self?.agentPlanningCopyFeedbackToken == token else { return }
+      self?.agentPlanningCopyFeedback = nil
+    }
+  }
+
+  func copyAgentPlanningErrorDetails() {
+    guard let details = agentPlanningSession?.errorDetails else { return }
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    agentPlanningErrorCopiedMessage = pasteboard.setString(details, forType: .string)
+      ? "错误详情已复制"
+      : "无法复制错误详情"
+  }
+
+  static func agentPlanningCodexInstruction(runPath: String) -> String {
+    """
+    请先读取当前项目中的：
+
+    - AGENTS.md
+    - .jumao/latest-run.json
+    - tasks/jumao-agent-plan.md
+    - \(runPath)/planning-summary.md
+    - \(runPath)/task-plan.json
+
+    先总结：
+
+    1. 项目或本次改动的目标
+    2. Agent 识别出的影响区域
+    3. 需要保护的现有功能
+    4. 第一阶段开发任务
+    5. 真正需要我确认的问题
+
+    在我确认前，不要修改代码。
+    """
+  }
+
   static func focusedPlanningCodexInstruction(for mode: ProjectInterviewMode) -> String {
     switch mode {
     case .newProject:
@@ -792,6 +905,7 @@ final class AppState: ObservableObject {
     taskPackRunner.cancel()
     strictCheckRunner.cancel()
     projectInspector.cancel()
+    agentPlanRunner.cancel()
     menuBarActivityCoordinator.reset()
     externalStatusActivityOperationID = nil
   }
@@ -1045,6 +1159,181 @@ final class AppState: ObservableObject {
     menuBarActivityCoordinator.finishOperation(activityOperationID, result: result)
   }
 
+  private func startAgentPlanning(force: Bool) {
+    guard let workspaceURL else { return }
+    let workspaceIdentifier = Self.workspaceIdentifier(for: workspaceURL)
+    guard !isAgentPlanning else { return }
+    guard !agentPlanRunner.isRunning else {
+      updateAgentPlanningError(
+        message: "另一个项目正在整理中。",
+        details: "Jumao Cat 同一时间只运行一个 jumao plan 子进程。"
+      )
+      isInterviewPresented = true
+      return
+    }
+
+    agentPlanningGeneration &+= 1
+    let generation = agentPlanningGeneration
+    agentPlanningWorkspaceIdentifier = workspaceIdentifier
+    agentPlanningSession = .running(workspaceIdentifier: workspaceIdentifier)
+    agentPlanningCopyFeedback = nil
+    agentPlanningErrorCopiedMessage = nil
+    showsAgentPlanningGroups = true
+    isInterviewPresented = true
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
+    agentPlanningActivityOperationID = activityOperationID
+
+    agentPlanRunner.run(
+      workspaceURL: workspaceURL,
+      force: force,
+      event: { [weak self] event in
+        self?.receiveAgentPlanningEvent(
+          event,
+          workspaceIdentifier: workspaceIdentifier,
+          generation: generation
+        )
+      },
+      completion: { [weak self] result in
+        self?.finishAgentPlanning(
+          result,
+          workspaceURL: workspaceURL,
+          workspaceIdentifier: workspaceIdentifier,
+          generation: generation,
+          activityOperationID: activityOperationID
+        )
+      }
+    )
+  }
+
+  private func receiveAgentPlanningEvent(
+    _ event: JumaoAgentPlanEvent,
+    workspaceIdentifier: String,
+    generation: Int
+  ) {
+    guard agentPlanningGeneration == generation,
+          agentPlanningWorkspaceIdentifier == workspaceIdentifier,
+          workspaceURL.map({ Self.workspaceIdentifier(for: $0) }) == workspaceIdentifier,
+          var session = agentPlanningSession else { return }
+    session.apply(event)
+    if event.event == "run.failed" {
+      session.errorMessage = "橘猫没有完成这次整理。"
+      session.errorDetails = event.error
+    }
+    agentPlanningSession = session
+  }
+
+  private func finishAgentPlanning(
+    _ result: JumaoAgentPlanRunResult,
+    workspaceURL: URL,
+    workspaceIdentifier: String,
+    generation: Int,
+    activityOperationID: UUID
+  ) {
+    if agentPlanningActivityOperationID == activityOperationID {
+      agentPlanningActivityOperationID = nil
+    }
+    let belongsToCurrentWorkspace = agentPlanningGeneration == generation
+      && agentPlanningWorkspaceIdentifier == workspaceIdentifier
+      && self.workspaceURL.map({ Self.workspaceIdentifier(for: $0) }) == workspaceIdentifier
+
+    switch result {
+    case .finished:
+      let loaded = agentPlanLoader.load(workspaceURL: workspaceURL)
+      let state = loaded.loadedSession?.state
+      menuBarActivityCoordinator.finishOperation(
+        activityOperationID,
+        result: state == "ready" ? .success : .failure
+      )
+      guard belongsToCurrentWorkspace else { return }
+      let reused = agentPlanningSession?.reused ?? false
+      switch loaded {
+      case .loaded(var session):
+        session.reused = reused
+        agentPlanningSession = session
+      case .interrupted(let session):
+        agentPlanningSession = session
+      case .invalid(let message, let details):
+        updateAgentPlanningError(message: message, details: details)
+      case .missing:
+        updateAgentPlanningError(
+          message: "规划结束了，但没有找到结果。",
+          details: "缺少 .jumao/latest-run.json。"
+        )
+      }
+      refreshStatus()
+    case .cancelled:
+      menuBarActivityCoordinator.cancelOperation(activityOperationID)
+      guard belongsToCurrentWorkspace, var session = agentPlanningSession else { return }
+      session.phase = .cancelled
+      session.errorMessage = "已取消整理"
+      session.errorDetails = "用户主动取消了当前 jumao plan 子进程。"
+      agentPlanningSession = session
+      refreshStatus()
+    case .failed(let exitCode, let message, let details):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
+      guard belongsToCurrentWorkspace else { return }
+      let code = exitCode.map(String.init) ?? "无法启动"
+      updateAgentPlanningError(message: message, details: "退出码：\(code)\n\(details)")
+      refreshStatus()
+    }
+  }
+
+  private func restoreAgentPlanning(for workspaceURL: URL) {
+    agentPlanningCopyFeedbackToken = UUID()
+    agentPlanningCopyFeedback = nil
+    agentPlanningErrorCopiedMessage = nil
+    switch agentPlanLoader.load(workspaceURL: workspaceURL) {
+    case .missing:
+      agentPlanningSession = nil
+    case .loaded(let session), .interrupted(let session):
+      agentPlanningSession = session
+    case .invalid(let message, let details):
+      agentPlanningSession = failedAgentPlanningSession(
+        workspaceURL: workspaceURL,
+        message: message,
+        details: details
+      )
+    }
+  }
+
+  private func updateAgentPlanningError(message: String, details: String) {
+    guard let workspaceURL else { return }
+    if var session = agentPlanningSession {
+      session.phase = .failed
+      session.errorMessage = message
+      session.errorDetails = details
+      agentPlanningSession = session
+    } else {
+      agentPlanningSession = failedAgentPlanningSession(
+        workspaceURL: workspaceURL,
+        message: message,
+        details: details
+      )
+    }
+  }
+
+  private func failedAgentPlanningSession(
+    workspaceURL: URL,
+    message: String,
+    details: String
+  ) -> JumaoAgentPlanningSession {
+    JumaoAgentPlanningSession(
+      phase: .failed,
+      workspaceIdentifier: Self.workspaceIdentifier(for: workspaceURL),
+      runId: nil,
+      runPath: nil,
+      state: "blocked",
+      reused: false,
+      counts: .zero,
+      totalAgents: 44,
+      groups: [],
+      request: nil,
+      understanding: nil,
+      errorMessage: message,
+      errorDetails: details
+    )
+  }
+
   private func activateWorkspace(_ workspaceURL: URL) {
     statusWatcher.stop()
     menuBarActivityCoordinator.reset()
@@ -1057,6 +1346,9 @@ final class AppState: ObservableObject {
     terminalOpenError = nil
     clearProjectInitializationFeedback()
     clearProjectInspection()
+    agentPlanningGeneration &+= 1
+    agentPlanningWorkspaceIdentifier = Self.workspaceIdentifier(for: workspaceURL)
+    restoreAgentPlanning(for: workspaceURL)
     refreshStatus()
     statusWatcher.start(watching: workspaceURL)
   }
@@ -1308,8 +1600,9 @@ final class AppState: ObservableObject {
           ? "本次改动资料和任务包已生成"
           : "规划资料和开发任务包已生成"
         deleteCurrentInterviewDraft()
-        clearInterviewProgress(keepingPlanningResult: true)
+        clearInterviewProgress(keepingMode: true, keepingPlanningResult: true)
         interviewWriteMessage = writeMessage
+        startAgentPlanning(force: false)
         return
       }
       interviewWriteMessage = "项目问题已写入\n下一步：开始检查"

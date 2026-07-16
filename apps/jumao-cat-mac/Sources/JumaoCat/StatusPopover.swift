@@ -66,6 +66,13 @@ struct StatusPopover: View {
 
   private var selectedWorkspace: some View {
     VStack(alignment: .leading, spacing: 14) {
+      if appState.agentPlanningSession != nil {
+        Button(appState.isAgentPlanning ? "查看整理进度" : "查看上次规划结果") {
+          appState.showAgentPlanning()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+      }
       if appState.shouldShowProjectInspection {
         projectInspection
       } else {

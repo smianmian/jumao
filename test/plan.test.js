@@ -473,6 +473,116 @@ test('plan --json emits stable machine-readable output with required status fiel
   assert.equal(status.failedAgents, first.counts.failed);
 });
 
+test('plan --events-jsonl emits strict JSONL in real execution order', () => {
+  const root = workspace();
+  newIntake(root);
+
+  const command = runCLI(root, '--events-jsonl');
+  assert.equal(command.status, 0, command.stderr);
+  assert.equal(command.stderr, '');
+  const events = command.stdout.trim().split('\n').map((line) => JSON.parse(line));
+
+  assert.equal(events.length, 1 + agentGroups.length * 2 + responsibilityAgents.length + 1);
+  assert.equal(events[0].event, 'run.started');
+  assert.equal(events.at(-1).event, 'run.completed');
+  assert.equal(events[0].groups.length, 8);
+  assert.equal(events[0].totalAgents, 44);
+  for (const event of events) {
+    for (const key of [
+      'runId', 'timestamp', 'event', 'groupId', 'agentId', 'agentStatus',
+      'completedAgents', 'skippedAgents', 'blockedAgents', 'failedAgents', 'totalAgents'
+    ]) assert.ok(Object.hasOwn(event, key), `${event.event}.${key}`);
+  }
+
+  let cursor = 1;
+  for (const group of agentGroups) {
+    assert.equal(events[cursor].event, 'group.started');
+    assert.equal(events[cursor].groupId, group.id);
+    cursor += 1;
+    const expectedAgents = responsibilityAgents.filter((agent) => agent.groupId === group.id);
+    for (const agent of expectedAgents) {
+      assert.match(events[cursor].event, /^agent\.(completed|skipped|blocked|failed)$/);
+      assert.equal(events[cursor].agentId, agent.id);
+      cursor += 1;
+    }
+    assert.equal(events[cursor].event, 'group.completed');
+    assert.equal(events[cursor].groupId, group.id);
+    cursor += 1;
+  }
+});
+
+test('events final Agent and group states match written manifest artifacts', () => {
+  const root = workspace();
+  newIntake(root);
+
+  const command = runCLI(root, '--events-jsonl');
+  const events = command.stdout.trim().split('\n').map((line) => JSON.parse(line));
+  const runManifest = manifest(root);
+  const agentEvents = new Map(
+    events.filter((event) => event.agentId).map((event) => [event.agentId, event.agentStatus])
+  );
+  const groupEvents = events.filter((event) => event.event === 'group.completed');
+
+  assert.equal(agentEvents.size, 44);
+  assert.equal(groupEvents.length, 8);
+  for (const agent of runManifest.agents) assert.equal(agentEvents.get(agent.agentId), agent.status);
+  assert.deepEqual(events.at(-1).completedAgents, runManifest.counts.completed);
+  assert.deepEqual(events.at(-1).skippedAgents, runManifest.counts.skipped);
+  assert.deepEqual(events.at(-1).blockedAgents, runManifest.counts.blocked);
+  assert.deepEqual(events.at(-1).failedAgents, runManifest.counts.failed);
+});
+
+test('events report failed runs and status never remains checking', () => {
+  const root = workspace();
+  newIntake(root);
+  write(root, 'tasks', 'block task plan directory');
+
+  const command = runCLI(root, '--events-jsonl');
+  const events = command.stdout.trim().split('\n').map((line) => JSON.parse(line));
+  const status = readJSON(root, '.jumao/status.json');
+
+  assert.equal(command.status, 1);
+  assert.equal(events.at(-1).event, 'run.failed');
+  assert.notEqual(status.cat.state, 'checking');
+  assert.equal(events.at(-1).failedAgents, manifest(root).counts.failed);
+  const failedAgentEvent = events.find((event) => event.event === 'agent.failed');
+  const failedGroup = manifest(root).groups.find((group) => group.groupId === failedAgentEvent.groupId);
+  assert.equal(failedAgentEvent.groupName, '产品与设计 Agent 组');
+  assert.deepEqual(failedAgentEvent.groupCounts, failedGroup.counts);
+});
+
+test('events support workspaces with Chinese characters and spaces', () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'jumao-plan-path-'));
+  const root = path.join(parent, '喝水 App 项目');
+  fs.mkdirSync(root);
+  newIntake(root);
+
+  const command = runCLI(root, '--events-jsonl');
+  const finalEvent = JSON.parse(command.stdout.trim().split('\n').at(-1));
+  assert.equal(command.status, 0, command.stderr);
+  assert.equal(finalEvent.event, 'run.completed');
+  assert.equal(finalEvent.state, 'ready');
+});
+
+test('events distinguish reused results from forced executions', () => {
+  const root = workspace();
+  newIntake(root);
+  const first = runCLI(root, '--events-jsonl');
+  const firstEvents = first.stdout.trim().split('\n').map((line) => JSON.parse(line));
+  const reused = runCLI(root, '--events-jsonl');
+  const reusedEvents = reused.stdout.trim().split('\n').map((line) => JSON.parse(line));
+  const forced = runCLI(root, '--events-jsonl', '--force');
+  const forcedEvents = forced.stdout.trim().split('\n').map((line) => JSON.parse(line));
+
+  assert.equal(reusedEvents.length, 2);
+  assert.deepEqual(reusedEvents.map((event) => event.event), ['run.started', 'run.completed']);
+  assert.ok(reusedEvents.every((event) => event.reused));
+  assert.equal(reusedEvents[0].runId, firstEvents[0].runId);
+  assert.equal(forcedEvents[0].reused, false);
+  assert.notEqual(forcedEvents[0].runId, firstEvents[0].runId);
+  assert.equal(forcedEvents.filter((event) => event.agentId).length, 44);
+});
+
 test('all eight groups execute sequentially and hand off structured context', () => {
   const root = workspace();
   newIntake(root);
