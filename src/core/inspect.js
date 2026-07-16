@@ -348,7 +348,11 @@ function isJumaoDirectory(name, relativePath) {
 }
 
 function isJumaoFile(name, relativePath) {
-  return name === 'AGENTS.md' || name === 'CLAUDE.md' || relativePath.startsWith('product/') || relativePath.startsWith('proof/');
+  return name === 'AGENTS.md'
+    || name === 'CLAUDE.md'
+    || relativePath === 'tasks/jumao-agent-plan.md'
+    || relativePath.startsWith('product/')
+    || relativePath.startsWith('proof/');
 }
 
 function isTestFile(name, relativePath) {

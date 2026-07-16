@@ -106,6 +106,18 @@ test('inspect identifies Jumao planning files as a new project', () => {
   assert.ok(evidenceFiles(result).includes('product/product-brief.zh-CN.md'));
 });
 
+test('inspect keeps a generated Agent plan in new-project mode', () => {
+  const root = workspace();
+  write(root, 'tasks/jumao-agent-plan.md', '# Jumao Agent Plan\n');
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.workspaceKind, 'new');
+  assert.equal(result.json.recommendedIntake.mode, 'new_project');
+  assert.equal(result.json.project.hasJumaoFiles, true);
+});
+
 test('inspect identifies an Xcode and Swift project as existing with high iOS fit', () => {
   const root = workspace();
   mkdir(root, 'Focus.xcodeproj');
