@@ -39,6 +39,7 @@ final class CodexTaskPackCopierTests: XCTestCase {
 
     XCTAssertEqual(appState.taskPackCopyFeedback, "已复制")
     XCTAssertTrue(appState.taskPackCopySucceeded)
+    XCTAssertEqual(appState.menuBarActivity, .copied)
   }
 
   func testCopiesInternalRelativeUTF8TaskPack() throws {

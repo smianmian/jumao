@@ -90,12 +90,14 @@ final class JumaoProjectInitializerTests: XCTestCase {
 
     appState.requestProjectInitialization()
     appState.confirmProjectInitialization()
+    XCTAssertEqual(appState.menuBarActivity, .working)
     initializer.complete(.succeeded)
     await Task.yield()
 
     XCTAssertFalse(appState.isInitializingProject)
     XCTAssertEqual(appState.projectInitializationMessage, "项目框架已建立\n下一步：回答项目问题")
     XCTAssertNil(appState.projectInitializationError)
+    XCTAssertEqual(appState.menuBarActivity, .success)
   }
 
   @MainActor
@@ -118,6 +120,7 @@ final class JumaoProjectInitializerTests: XCTestCase {
 
     XCTAssertFalse(appState.isInitializingProject)
     XCTAssertEqual(appState.projectInitializationError, "项目建立失败（退出码 1）：无法创建文件")
+    XCTAssertEqual(appState.menuBarActivity, .failure)
   }
 
   @MainActor
@@ -144,6 +147,10 @@ final class JumaoProjectInitializerTests: XCTestCase {
       .appendingPathComponent("jumao-cat-project-initializer-tests")
       .appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: workspaceURL, withIntermediateDirectories: true)
+    let statusURL = workspaceURL.appendingPathComponent(".jumao/status.json")
+    try FileManager.default.createDirectory(at: statusURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try #"{"cat":{"state":"ready","label":"已准备","message":"测试状态。"}}"#
+      .write(to: statusURL, atomically: true, encoding: .utf8)
     addTeardownBlock {
       try? FileManager.default.removeItem(at: workspaceURL)
     }

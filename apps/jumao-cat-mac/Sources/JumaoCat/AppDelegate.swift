@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var statusItem: NSStatusItem?
   private var menuBarInteraction: MenuBarInteractionController?
   private var interviewWindow: InterviewWindowController?
+  private var catAnimator: MenuBarCatAnimator?
+  private var hoverTracker: MenuBarHoverTracker?
   private var cancellables = Set<AnyCancellable>()
 
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -22,6 +24,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     item.button?.action = #selector(handleStatusItemClick(_:))
     item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
     item.button?.toolTip = "Jumao Cat"
+
+    if let button = item.button {
+      let animator = MenuBarCatAnimator(button: button)
+      let tracker = MenuBarHoverTracker(button: button)
+      tracker.onHoverChange = { [weak animator] isHovered in
+        animator?.setHovered(isHovered)
+      }
+      catAnimator = animator
+      hoverTracker = tracker
+    }
 
     popover.behavior = .transient
     let hostingController = NSHostingController(rootView: StatusPopover(appState: appState))
@@ -50,10 +62,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         contextMenu: contextMenu
       )
     }
-    appState.$status
+    Publishers.CombineLatest(appState.$status, appState.$menuBarActivity)
       .receive(on: RunLoop.main)
-      .sink { [weak self] status in
-        self?.statusItem?.button?.image = JumaoMenuBarIcon.makeImage(for: status.catState)
+      .sink { [weak self] status, activity in
+        self?.catAnimator?.render(
+          activity: activity,
+          persistentState: status.catState,
+          reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        )
+      }
+      .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification)
+      .receive(on: RunLoop.main)
+      .sink { [weak self] _ in
+        guard let self else { return }
+        self.catAnimator?.render(
+          activity: self.appState.menuBarActivity,
+          persistentState: self.appState.status.catState,
+          reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        )
       }
       .store(in: &cancellables)
 
@@ -73,6 +101,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    hoverTracker?.stop()
+    hoverTracker = nil
+    catAnimator?.stop()
     appState.shutdown()
   }
 }

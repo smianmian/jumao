@@ -31,6 +31,8 @@ final class InterviewTaskPackFlowTests: XCTestCase {
     await passProjectCheck(in: appState, strictRunner: strictRunner)
     appState.generateInterviewTaskPack()
 
+    XCTAssertEqual(appState.menuBarActivity, .working)
+
     XCTAssertEqual(
       packRunner.workspaceURLs.map { $0.resolvingSymlinksInPath() },
       [workspaceURL.resolvingSymlinksInPath()]
@@ -73,6 +75,7 @@ final class InterviewTaskPackFlowTests: XCTestCase {
     XCTAssertFalse(appState.isInterviewPresented)
     XCTAssertEqual(appState.interviewTaskPackMessage, "任务包已生成")
     XCTAssertTrue(appState.canCopyLatestTaskPack)
+    XCTAssertEqual(appState.menuBarActivity, .success)
   }
 
   func testFailedGenerationShowsRetryAndCanRunAgain() async throws {
@@ -91,6 +94,7 @@ final class InterviewTaskPackFlowTests: XCTestCase {
 
     XCTAssertEqual(appState.interviewTaskPackError, "任务包生成失败，请确认项目内容后重试。")
     XCTAssertTrue(appState.canGenerateInterviewTaskPack)
+    XCTAssertEqual(appState.menuBarActivity, .failure)
 
     appState.generateInterviewTaskPack()
     XCTAssertEqual(packRunner.workspaceURLs.count, 2)
@@ -135,6 +139,7 @@ final class InterviewTaskPackFlowTests: XCTestCase {
       .appendingPathComponent("jumao-cat-interview-task-pack-tests")
       .appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: workspaceURL, withIntermediateDirectories: true)
+    try writeStatus(state: "ready", latestTaskPack: "", in: workspaceURL)
 
     let suiteName = "JumaoCatInterviewTaskPackTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {

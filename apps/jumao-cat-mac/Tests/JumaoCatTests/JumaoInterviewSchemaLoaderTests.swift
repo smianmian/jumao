@@ -129,6 +129,7 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
     XCTAssertTrue(appState.canAnswerProjectQuestions)
     appState.answerProjectQuestions()
     XCTAssertTrue(appState.isLoadingInterviewSchema)
+    XCTAssertEqual(appState.menuBarActivity, .working)
 
     loader.complete(.failed(exitCode: 1, message: "找不到 jumao"))
     await Task.yield()
@@ -138,6 +139,7 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
     XCTAssertEqual(appState.interviewSchemaError, "读取项目问题失败（退出码 1）：找不到 jumao")
     XCTAssertEqual(appState.interviewErrorDetails, "操作：interview --schema\n退出码：1\n原因：找不到 jumao")
     XCTAssertTrue(appState.canRetryInterviewOperation)
+    XCTAssertEqual(appState.menuBarActivity, .failure)
 
     appState.retryInterviewOperation()
     XCTAssertTrue(appState.isLoadingInterviewSchema)
@@ -214,8 +216,16 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
       try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
       try Data().write(to: fileURL)
     }
+    try writeReadyStatus(in: workspaceURL)
 
     return workspaceURL
+  }
+
+  private func writeReadyStatus(in workspaceURL: URL) throws {
+    let statusURL = workspaceURL.appendingPathComponent(".jumao/status.json")
+    try FileManager.default.createDirectory(at: statusURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try #"{"cat":{"state":"ready","label":"已准备","message":"测试状态。"}}"#
+      .write(to: statusURL, atomically: true, encoding: .utf8)
   }
 }
 

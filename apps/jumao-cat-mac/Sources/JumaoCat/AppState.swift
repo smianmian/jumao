@@ -15,6 +15,7 @@ struct FocusedPlanningResult: Equatable {
 final class AppState: ObservableObject {
   @Published private(set) var workspaceURL: URL?
   @Published private(set) var status: WorkspaceStatus = .unselected
+  @Published private(set) var menuBarActivity: MenuBarActivityState = .idle
   @Published private(set) var workspaceOpenError: String?
   @Published private(set) var agentReportOpenError: String?
   @Published private(set) var taskPackCopyFeedback: String?
@@ -81,6 +82,9 @@ final class AppState: ObservableObject {
   private let strictCheckRunner: any JumaoStrictChecking
   private let interviewDraftStore: any InterviewDraftStoring
   private let appTerminator: any AppTerminating
+  private let menuBarActivityCoordinator: MenuBarActivityCoordinator
+  private var externalStatusActivityOperationID: UUID?
+  private var projectInspectionActivityOperationID: UUID?
   private var projectInspectionGeneration = 0
   private var activeProjectInspectionWorkspaceIdentifier: String?
   private var projectInitializationConflicts: [String] = []
@@ -94,7 +98,7 @@ final class AppState: ObservableObject {
   private var lastInterviewWriteUsedForce = false
   private lazy var statusWatcher = StatusFileWatcher { [weak self] in
     Task { @MainActor [weak self] in
-      self?.refreshStatus()
+      self?.refreshStatusAfterFileChange()
     }
   }
 
@@ -113,6 +117,7 @@ final class AppState: ObservableObject {
     interviewAnswerWriter: (any JumaoInterviewAnswerWriting)? = nil,
     strictCheckRunner: (any JumaoStrictChecking)? = nil,
     interviewDraftStore: any InterviewDraftStoring = InterviewDraftStore(),
+    menuBarActivityCoordinator: MenuBarActivityCoordinator = MenuBarActivityCoordinator(),
     appTerminator: any AppTerminating = MacAppTerminator()
   ) {
     self.workspaceBookmarkStore = workspaceBookmarkStore
@@ -128,7 +133,11 @@ final class AppState: ObservableObject {
     self.interviewAnswerWriter = interviewAnswerWriter ?? JumaoInterviewAnswerWriter(resolver: cliResolver)
     self.strictCheckRunner = strictCheckRunner ?? JumaoStrictCheckRunner(resolver: cliResolver)
     self.interviewDraftStore = interviewDraftStore
+    self.menuBarActivityCoordinator = menuBarActivityCoordinator
     self.appTerminator = appTerminator
+    menuBarActivityCoordinator.onStateChange = { [weak self] state in
+      self?.menuBarActivity = state
+    }
   }
 
   var workspacePath: String {
@@ -422,6 +431,8 @@ final class AppState: ObservableObject {
       taskPackGenerationError = nil
       terminalOpenError = nil
       clearProjectInitializationFeedback()
+      menuBarActivityCoordinator.reset()
+      externalStatusActivityOperationID = nil
       return
     }
 
@@ -449,16 +460,27 @@ final class AppState: ObservableObject {
       taskPackGenerationError = nil
       terminalOpenError = nil
       clearProjectInitializationFeedback()
+      menuBarActivityCoordinator.reset()
+      externalStatusActivityOperationID = nil
     }
   }
 
   func refreshStatus() {
+    refreshStatus(observedStatusFileChange: false)
+  }
+
+  func refreshStatusAfterFileChange() {
+    refreshStatus(observedStatusFileChange: true)
+  }
+
+  private func refreshStatus(observedStatusFileChange: Bool) {
     guard let workspaceURL else {
       status = .unselected
       return
     }
 
     status = statusReader.read(workspaceURL: workspaceURL)
+    syncStatusFileActivity(observedStatusFileChange: observedStatusFileChange)
     if shouldShowProjectInspection {
       startProjectInspectionIfNeeded(in: workspaceURL)
     } else {
@@ -535,6 +557,7 @@ final class AppState: ObservableObject {
     switch taskPackCopier.copy(taskPackPath: taskPackPath, workspaceURL: workspaceURL) {
     case .copied:
       showCopiedTaskPackFeedback()
+      menuBarActivityCoordinator.showCopied()
     case .emptyPath:
       showTaskPackCopyError("Codex 任务包路径为空。")
     case .outsideWorkspace:
@@ -563,10 +586,11 @@ final class AppState: ObservableObject {
 
     isRegeneratingTaskPack = true
     taskPackGenerationError = nil
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
 
     taskPackRunner.run(workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
-        self?.finishTaskPackGeneration(result)
+        self?.finishTaskPackGeneration(result, activityOperationID: activityOperationID)
       }
     }
   }
@@ -751,9 +775,10 @@ final class AppState: ObservableObject {
     interviewSchemaError = nil
     interviewErrorDetails = nil
     interviewErrorDetailsCopiedMessage = nil
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
     interviewSchemaLoader.run { [weak self] result in
       Task { @MainActor [weak self] in
-        self?.finishLoadingInterviewSchema(result)
+        self?.finishLoadingInterviewSchema(result, activityOperationID: activityOperationID)
       }
     }
   }
@@ -767,6 +792,8 @@ final class AppState: ObservableObject {
     taskPackRunner.cancel()
     strictCheckRunner.cancel()
     projectInspector.cancel()
+    menuBarActivityCoordinator.reset()
+    externalStatusActivityOperationID = nil
   }
 
   func quit() {
@@ -975,10 +1002,11 @@ final class AppState: ObservableObject {
     projectCheckError = nil
     interviewErrorDetails = nil
     interviewErrorDetailsCopiedMessage = nil
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
 
     strictCheckRunner.run(workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
-        self?.finishProjectCheck(result)
+        self?.finishProjectCheck(result, activityOperationID: activityOperationID)
       }
     }
   }
@@ -990,16 +1018,37 @@ final class AppState: ObservableObject {
     interviewTaskPackError = nil
     interviewErrorDetails = nil
     interviewErrorDetailsCopiedMessage = nil
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
 
     taskPackRunner.run(workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
-        self?.finishInterviewTaskPackGeneration(result)
+        self?.finishInterviewTaskPackGeneration(result, activityOperationID: activityOperationID)
       }
     }
   }
 
+  private func syncStatusFileActivity(observedStatusFileChange: Bool) {
+    guard observedStatusFileChange else { return }
+
+    if status.catState == "checking" {
+      guard externalStatusActivityOperationID == nil,
+            !menuBarActivityCoordinator.hasActiveOperations else {
+        return
+      }
+      externalStatusActivityOperationID = menuBarActivityCoordinator.beginOperation()
+      return
+    }
+
+    guard let activityOperationID = externalStatusActivityOperationID else { return }
+    externalStatusActivityOperationID = nil
+    let result: MenuBarOperationResult = status.catState == "blocked" ? .failure : .success
+    menuBarActivityCoordinator.finishOperation(activityOperationID, result: result)
+  }
+
   private func activateWorkspace(_ workspaceURL: URL) {
     statusWatcher.stop()
+    menuBarActivityCoordinator.reset()
+    externalStatusActivityOperationID = nil
     self.workspaceURL = workspaceURL
     workspaceOpenError = nil
     agentReportOpenError = nil
@@ -1039,14 +1088,19 @@ final class AppState: ObservableObject {
     taskPackCopySucceeded = false
   }
 
-  private func finishTaskPackGeneration(_ result: CodexTaskPackRunResult) {
+  private func finishTaskPackGeneration(
+    _ result: CodexTaskPackRunResult,
+    activityOperationID: UUID
+  ) {
     isRegeneratingTaskPack = false
 
     switch result {
     case .succeeded:
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .success)
       taskPackGenerationError = nil
       refreshStatus()
     case .failed(let exitCode, let message):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
       let code = exitCode.map(String.init) ?? "无法启动"
       taskPackGenerationError = "任务包生成失败（退出码 \(code)）：\(message)"
     }
@@ -1064,11 +1118,14 @@ final class AppState: ObservableObject {
     let generation = projectInspectionGeneration
     let workspaceIdentifier = Self.workspaceIdentifier(for: workspaceURL)
     activeProjectInspectionWorkspaceIdentifier = workspaceIdentifier
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
+    projectInspectionActivityOperationID = activityOperationID
     projectInspector.run(workspaceURL: workspaceURL) { [weak self] result in
       self?.finishProjectInspection(
         result,
         workspaceIdentifier: workspaceIdentifier,
-        generation: generation
+        generation: generation,
+        activityOperationID: activityOperationID
       )
     }
   }
@@ -1076,7 +1133,8 @@ final class AppState: ObservableObject {
   private func finishProjectInspection(
     _ result: JumaoProjectInspectionResult,
     workspaceIdentifier: String,
-    generation: Int
+    generation: Int,
+    activityOperationID: UUID
   ) {
     guard generation == projectInspectionGeneration,
           activeProjectInspectionWorkspaceIdentifier == workspaceIdentifier,
@@ -1085,7 +1143,16 @@ final class AppState: ObservableObject {
       return
     }
 
+    projectInspectionActivityOperationID = nil
     activeProjectInspectionWorkspaceIdentifier = nil
+    let activityResult: MenuBarOperationResult
+    switch result {
+    case .succeeded:
+      activityResult = .success
+    case .failed:
+      activityResult = .failure
+    }
+    menuBarActivityCoordinator.finishOperation(activityOperationID, result: activityResult)
     isInspectingProject = false
 
     switch result {
@@ -1100,7 +1167,11 @@ final class AppState: ObservableObject {
 
   private func clearProjectInspection() {
     projectInspector.cancel()
+    if let activityOperationID = projectInspectionActivityOperationID {
+      menuBarActivityCoordinator.cancelOperation(activityOperationID)
+    }
     projectInspectionGeneration &+= 1
+    projectInspectionActivityOperationID = nil
     activeProjectInspectionWorkspaceIdentifier = nil
     isInspectingProject = false
     projectInspection = nil
@@ -1131,33 +1202,43 @@ final class AppState: ObservableObject {
     isInitializingProject = true
     projectInitializationMessage = nil
     projectInitializationError = nil
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
 
     projectInitializer.run(projectName: workspaceURL.lastPathComponent, workspaceURL: workspaceURL) { [weak self] result in
       Task { @MainActor [weak self] in
-        self?.finishProjectInitialization(result)
+        self?.finishProjectInitialization(result, activityOperationID: activityOperationID)
       }
     }
   }
 
-  private func finishProjectInitialization(_ result: JumaoProjectInitializationResult) {
+  private func finishProjectInitialization(
+    _ result: JumaoProjectInitializationResult,
+    activityOperationID: UUID
+  ) {
     isInitializingProject = false
 
     switch result {
     case .succeeded:
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .success)
       projectInitializationError = nil
       projectInitializationMessage = "项目框架已建立\n下一步：回答项目问题"
       refreshStatus()
     case .failed(let exitCode, let message):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
       let code = exitCode.map(String.init) ?? "无法启动"
       projectInitializationError = "项目建立失败（退出码 \(code)）：\(message)"
     }
   }
 
-  private func finishLoadingInterviewSchema(_ result: JumaoInterviewSchemaLoadResult) {
+  private func finishLoadingInterviewSchema(
+    _ result: JumaoInterviewSchemaLoadResult,
+    activityOperationID: UUID
+  ) {
     isLoadingInterviewSchema = false
 
     switch result {
     case .succeeded(let schema):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .success)
       interviewSchemaError = nil
       interviewErrorDetails = nil
       let shouldRemainPresented = isInterviewPresented
@@ -1171,6 +1252,7 @@ final class AppState: ObservableObject {
         isInterviewPresented = false
       }
     case .failed(let exitCode, let message):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
       interviewSchema = nil
       if message == JumaoCLIResolutionError.globalVersionOutdated.userFacingMessage {
         interviewSchemaError = message
@@ -1193,6 +1275,7 @@ final class AppState: ObservableObject {
     interviewWriteError = nil
     interviewErrorDetails = nil
     interviewErrorDetailsCopiedMessage = nil
+    let activityOperationID = menuBarActivityCoordinator.beginOperation()
 
     interviewAnswerWriter.run(
       workspaceURL: workspaceURL,
@@ -1201,16 +1284,20 @@ final class AppState: ObservableObject {
       force: force
     ) { [weak self] result in
       Task { @MainActor [weak self] in
-        self?.finishInterviewWrite(result)
+        self?.finishInterviewWrite(result, activityOperationID: activityOperationID)
       }
     }
   }
 
-  private func finishInterviewWrite(_ result: JumaoInterviewAnswerWriteResult) {
+  private func finishInterviewWrite(
+    _ result: JumaoInterviewAnswerWriteResult,
+    activityOperationID: UUID
+  ) {
     isWritingInterviewAnswers = false
 
     switch result {
     case .succeeded:
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .success)
       interviewWriteError = nil
       interviewErrorDetails = nil
       if isFocusedProjectInterview {
@@ -1238,6 +1325,7 @@ final class AppState: ObservableObject {
       interviewTaskPackMessage = nil
       interviewTaskPackError = nil
     case .failed(let exitCode, let message):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
       if isFocusedProjectInterview {
         isInterviewComplete = false
         isCurrentInterviewStageComplete = false
@@ -1254,17 +1342,22 @@ final class AppState: ObservableObject {
     }
   }
 
-  private func finishProjectCheck(_ result: JumaoStrictCheckResult) {
+  private func finishProjectCheck(
+    _ result: JumaoStrictCheckResult,
+    activityOperationID: UUID
+  ) {
     isCheckingProject = false
     refreshStatus()
 
     switch result {
     case .succeeded:
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .success)
       hasPassedProjectCheck = true
       projectCheckMessage = "检查通过\n下一步：生成 Codex 任务包"
       projectCheckError = nil
       interviewErrorDetails = nil
     case .failed(let exitCode, let message):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
       hasPassedProjectCheck = false
       projectCheckMessage = "发现需要补充的内容"
       projectCheckError = "请补充项目文档中的必要内容后重新检查。"
@@ -1276,17 +1369,22 @@ final class AppState: ObservableObject {
     }
   }
 
-  private func finishInterviewTaskPackGeneration(_ result: CodexTaskPackRunResult) {
+  private func finishInterviewTaskPackGeneration(
+    _ result: CodexTaskPackRunResult,
+    activityOperationID: UUID
+  ) {
     isGeneratingInterviewTaskPack = false
 
     switch result {
     case .succeeded:
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .success)
       refreshStatus()
       isInterviewPresented = false
       interviewTaskPackMessage = "任务包已生成"
       interviewTaskPackError = nil
       interviewErrorDetails = nil
     case .failed(let exitCode, let message):
+      menuBarActivityCoordinator.finishOperation(activityOperationID, result: .failure)
       interviewTaskPackError = "任务包生成失败，请确认项目内容后重试。"
       interviewErrorDetails = interviewErrorDetailsText(
         operation: "pack --target codex",

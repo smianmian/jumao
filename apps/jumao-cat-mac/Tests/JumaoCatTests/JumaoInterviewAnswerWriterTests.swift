@@ -89,12 +89,14 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     appState.confirmInterviewWrite()
 
     XCTAssertEqual(writer.calls.map(\.force), [false])
+    XCTAssertEqual(appState.menuBarActivity, .working)
     writer.complete(.succeeded)
     await Task.yield()
 
     XCTAssertEqual(appState.interviewWriteMessage, "项目问题已写入\n下一步：开始检查")
     XCTAssertTrue(appState.interviewAnswers.isEmpty)
     XCTAssertNil(appState.interviewWriteError)
+    XCTAssertEqual(appState.menuBarActivity, .success)
   }
 
   func testExistingDocumentsRequireExplicitOverwriteConfirmation() async throws {
@@ -139,6 +141,7 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     XCTAssertEqual(appState.interviewWriteError, "写入项目问题失败（退出码 1）：权限不足")
     XCTAssertEqual(appState.interviewErrorDetails, "操作：interview --answers\n退出码：1\n原因：权限不足")
     XCTAssertTrue(appState.canRetryInterviewOperation)
+    XCTAssertEqual(appState.menuBarActivity, .failure)
 
     appState.retryInterviewOperation()
     XCTAssertEqual(writer.calls.count, 2)
@@ -270,6 +273,10 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     writer: any JumaoInterviewAnswerWriting
   ) throws -> (AppState, UserDefaults, String, URL) {
     let workspaceURL = try makeTemporaryDirectory()
+    let statusURL = workspaceURL.appendingPathComponent(".jumao/status.json")
+    try FileManager.default.createDirectory(at: statusURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try #"{"cat":{"state":"ready","label":"已准备","message":"测试状态。"}}"#
+      .write(to: statusURL, atomically: true, encoding: .utf8)
     let suiteName = "JumaoCatInterviewAnswerWriterTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
       throw NSError(domain: "JumaoCatTests", code: 1)

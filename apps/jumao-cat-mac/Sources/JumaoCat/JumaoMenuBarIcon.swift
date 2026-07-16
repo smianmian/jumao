@@ -29,6 +29,20 @@ enum JumaoMenuBarIcon {
       return "JumaoCheckingTemplate"
     case "blocked":
       return "JumaoBlockedTemplate"
+    case "copied":
+      return "JumaoCopiedTemplate"
+    case "idleRest":
+      return "JumaoIdleRestTemplate"
+    case "idleWaking01":
+      return "JumaoIdleWaking01Template"
+    case "idleWaking02":
+      return "JumaoIdleWaking02Template"
+    case "idleAwake":
+      return "JumaoIdleAwakeTemplate"
+    case "idleResting01":
+      return "JumaoIdleResting01Template"
+    case "idleResting02":
+      return "JumaoIdleResting02Template"
     case "packed":
       return "JumaoPackedTemplate"
     default:

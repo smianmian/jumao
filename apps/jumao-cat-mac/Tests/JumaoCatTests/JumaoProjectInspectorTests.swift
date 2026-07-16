@@ -49,6 +49,17 @@ final class JumaoProjectInspectorTests: XCTestCase {
     XCTAssertEqual(appState.projectInspectionPrimaryActionTitle, "开始规划新项目")
   }
 
+  func testInspectionActivityOnlyRunsWhileInspectCommandIsRunning() throws {
+    let inspector = DeferredProjectInspector()
+    let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector)
+    defer { cleanUp(appState, defaults, suiteName, workspaceURL) }
+
+    XCTAssertEqual(appState.menuBarActivity, .working)
+
+    inspector.complete(.succeeded(try inspection(kind: "new", level: "limited")))
+    XCTAssertEqual(appState.menuBarActivity, .success)
+  }
+
   func testExistingProjectShowsChangeEntry() throws {
     let inspector = DeferredProjectInspector()
     let (appState, defaults, suiteName, workspaceURL) = try makeAppState(inspector: inspector)

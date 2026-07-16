@@ -18,12 +18,14 @@ final class JumaoStrictCheckRunnerTests: XCTestCase {
     await writeInterviewAnswers(in: appState)
     appState.startProjectCheck()
     XCTAssertTrue(appState.isCheckingProject)
+    XCTAssertEqual(appState.menuBarActivity, .working)
 
     runner.complete(.succeeded)
     await waitForCheckToFinish(in: appState)
 
     XCTAssertEqual(appState.projectCheckMessage, "检查通过\n下一步：生成 Codex 任务包")
     XCTAssertNil(appState.projectCheckError)
+    XCTAssertEqual(appState.menuBarActivity, .success)
   }
 
   func testFailedCheckShowsShortChineseRetryMessage() async throws {
@@ -39,6 +41,7 @@ final class JumaoStrictCheckRunnerTests: XCTestCase {
     XCTAssertEqual(appState.projectCheckMessage, "发现需要补充的内容")
     XCTAssertEqual(appState.projectCheckError, "请补充项目文档中的必要内容后重新检查。")
     XCTAssertTrue(appState.canStartProjectCheck)
+    XCTAssertEqual(appState.menuBarActivity, .failure)
   }
 
   func testDoesNotStartMultipleChecksAtOnce() async throws {
@@ -104,6 +107,7 @@ final class JumaoStrictCheckRunnerTests: XCTestCase {
       .appendingPathComponent("jumao-cat-strict-check-tests")
       .appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: workspaceURL, withIntermediateDirectories: true)
+    try writeStatus(state: "ready", in: workspaceURL)
 
     let suiteName = "JumaoCatStrictCheckTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {
