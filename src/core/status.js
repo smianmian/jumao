@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { agentGroups } from './agent-registry.js';
@@ -226,7 +227,15 @@ export function renderStatus(status) {
 function writeStatus(targetDir, status) {
   const dir = path.join(targetDir, '.jumao');
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(statusPath(targetDir), JSON.stringify(status, null, 2) + '\n', 'utf8');
+  const destination = statusPath(targetDir);
+  const temporary = `${destination}.tmp-${process.pid}-${crypto.randomUUID()}`;
+  try {
+    fs.writeFileSync(temporary, JSON.stringify(status, null, 2) + '\n', 'utf8');
+    fs.renameSync(temporary, destination);
+  } catch (error) {
+    try { fs.rmSync(temporary, { force: true }); } catch {}
+    throw error;
+  }
   return status;
 }
 

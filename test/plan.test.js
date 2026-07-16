@@ -339,6 +339,7 @@ test('write failure records a failed run and never leaves status checking', () =
   assert.notEqual(status.cat.state, 'checking');
   assert.equal(status.cat.state, 'blocked');
   assert.ok(status.failedAgents > 0);
+  assert.equal(fs.readdirSync(path.join(root, '.jumao')).some((name) => name.includes('.tmp-')), false);
   assert.equal(runManifest.agents.length, 44);
   assert.equal(agentOutput(root, 'documentation_delivery').status, 'failed');
 });
