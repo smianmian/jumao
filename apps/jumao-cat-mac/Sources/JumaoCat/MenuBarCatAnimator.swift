@@ -288,7 +288,7 @@ final class MenuBarCatAnimator {
 }
 
 @MainActor
-final class MenuBarHoverTracker: NSObject {
+final class MenuBarHoverTracker: NSResponder {
   private weak var button: NSStatusBarButton?
   private var trackingArea: NSTrackingArea?
   private(set) var isHovered = false
@@ -298,6 +298,10 @@ final class MenuBarHoverTracker: NSObject {
     self.button = button
     super.init()
     start()
+  }
+
+  required init?(coder: NSCoder) {
+    return nil
   }
 
   func start() {
@@ -319,11 +323,11 @@ final class MenuBarHoverTracker: NSObject {
     onHoverChange = nil
   }
 
-  @objc func mouseEntered(with event: NSEvent) {
+  override func mouseEntered(with event: NSEvent) {
     updateHover(true)
   }
 
-  @objc func mouseExited(with event: NSEvent) {
+  override func mouseExited(with event: NSEvent) {
     updateHover(false)
   }
 
@@ -338,4 +342,5 @@ final class MenuBarHoverTracker: NSObject {
     button.removeTrackingArea(trackingArea)
     self.trackingArea = nil
   }
+
 }

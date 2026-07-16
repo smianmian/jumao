@@ -211,7 +211,7 @@ final class MenuBarActivityStateTests: XCTestCase {
     animator.stop()
   }
 
-  func testHoverTrackerUsesButtonTrackingAreaAndDoesNotChangeClickAction() {
+  func testHoverTrackerUsesButtonTrackingAreaAndDoesNotChangeClickAction() throws {
     let button = NSStatusBarButton(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
     let action = #selector(MenuBarHoverActionTarget.performAction(_:))
     let target = MenuBarHoverActionTarget()
@@ -228,13 +228,29 @@ final class MenuBarActivityStateTests: XCTestCase {
         && $0.owner === tracker
     }
     XCTAssertEqual(trackingAreas.count, 1)
+
+    tracker.start()
+    XCTAssertEqual(button.trackingAreas.filter { $0.owner === tracker }.count, 1)
+    XCTAssertTrue(tracker.responds(to: #selector(NSResponder.mouseEntered(with:))))
+    XCTAssertTrue(tracker.responds(to: #selector(NSResponder.mouseExited(with:))))
     XCTAssertTrue(button.target === target)
     XCTAssertEqual(button.action, action)
 
     var hoverChanges: [Bool] = []
     tracker.onHoverChange = { hoverChanges.append($0) }
-    tracker.updateHover(true)
-    tracker.updateHover(false)
+    let event = try XCTUnwrap(NSEvent.mouseEvent(
+      with: .mouseMoved,
+      location: .zero,
+      modifierFlags: [],
+      timestamp: 0,
+      windowNumber: 0,
+      context: nil,
+      eventNumber: 0,
+      clickCount: 0,
+      pressure: 0
+    ))
+    tracker.mouseEntered(with: event)
+    tracker.mouseExited(with: event)
     XCTAssertEqual(hoverChanges, [true, false])
 
     tracker.stop()
