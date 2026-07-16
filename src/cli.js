@@ -6,6 +6,7 @@ import { runDoctor } from './core/doctor.js';
 import { inspectWorkspace } from './core/inspect.js';
 import { collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
+import { planWorkspace } from './core/planning-runtime.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
 import { isJumaoWorkspace, readJumaoStatus, renderStatus } from './core/status.js';
 
@@ -40,6 +41,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'inspect') return inspectCommand(args, io);
   if (command === 'interview') return interviewCommand(args, io);
   if (command === 'pack') return packCommand(args, io);
+  if (command === 'plan') return planCommand(args, io);
   if (command === 'status') return statusCommand(args, io);
 
   io.stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
@@ -60,6 +62,7 @@ function helpText() {
     '  jumao interview [dir] [--answers file] [--force]',
     '  jumao interview --schema',
     '  jumao pack [dir] [--target codex|claude|cursor]',
+    '  jumao plan <workspace> [--json] [--force]',
     '  jumao status [dir]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
@@ -254,6 +257,32 @@ function packCommand(args, io) {
   return 0;
 }
 
+function planCommand(args, io) {
+  const parsed = parsePlanArgs(args);
+  if (parsed.error) {
+    io.stderr.write(`${parsed.error}\n`);
+    return 1;
+  }
+
+  const result = planWorkspace(parsed.workspace, { force: parsed.force });
+  if (parsed.json) {
+    io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } else if (result.ok) {
+    const reuseMessage = result.reused ? '（输入未变化，复用已有 run）' : '';
+    io.stdout.write(`Jumao Agent plan ${result.state}: ${result.runId}${reuseMessage}\n`);
+    io.stdout.write(`- completed: ${result.counts.completed}\n`);
+    io.stdout.write(`- skipped: ${result.counts.skipped}\n`);
+    io.stdout.write(`- blocked: ${result.counts.blocked}\n`);
+    io.stdout.write(`- failed: ${result.counts.failed}\n`);
+    io.stdout.write(`- task plan: ${result.artifacts.taskPlan}\n`);
+  } else {
+    io.stderr.write(`Jumao Agent plan failed: ${result.error || 'Unknown planning error'}\n`);
+    if (result.runId) io.stderr.write(`Run: ${result.runId}\n`);
+  }
+
+  return result.ok ? 0 : 1;
+}
+
 function statusCommand(args, io) {
   const targetDir = path.resolve(args[0] || '.');
 
@@ -395,6 +424,23 @@ function parsePackArgs(args) {
     targetDir: path.resolve(targetDir || '.'),
     target
   };
+}
+
+function parsePlanArgs(args) {
+  let workspace;
+  let json = false;
+  let force = false;
+
+  for (const arg of args) {
+    if (arg === '--json') json = true;
+    else if (arg === '--force') force = true;
+    else if (arg.startsWith('--')) return { error: `Unknown plan option: ${arg}` };
+    else if (!workspace) workspace = arg;
+    else return { error: `Unexpected plan argument: ${arg}` };
+  }
+
+  if (!workspace) return { error: 'Missing workspace path.' };
+  return { workspace: path.resolve(workspace), json, force };
 }
 
 function writeStrictGateResult(targetDir, result, io) {

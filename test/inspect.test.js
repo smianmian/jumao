@@ -106,6 +106,18 @@ test('inspect identifies Jumao planning files as a new project', () => {
   assert.ok(evidenceFiles(result).includes('product/product-brief.zh-CN.md'));
 });
 
+test('inspect keeps a generated Agent plan in new-project mode', () => {
+  const root = workspace();
+  write(root, 'tasks/jumao-agent-plan.md', '# Jumao Agent Plan\n');
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.json.workspaceKind, 'new');
+  assert.equal(result.json.recommendedIntake.mode, 'new_project');
+  assert.equal(result.json.project.hasJumaoFiles, true);
+});
+
 test('inspect identifies an Xcode and Swift project as existing with high iOS fit', () => {
   const root = workspace();
   mkdir(root, 'Focus.xcodeproj');
@@ -126,6 +138,19 @@ test('inspect identifies an Xcode and Swift project as existing with high iOS fi
   assert.ok(result.json.evidence.some((item) => item.file === 'Focus.xcodeproj'));
 });
 
+test('inspect distinguishes a macOS Xcode project from an iOS project', () => {
+  const root = workspace();
+  write(root, 'DesktopCat.xcodeproj/project.pbxproj', 'SDKROOT = macosx;\nMACOSX_DEPLOYMENT_TARGET = 14.0;\n');
+  write(root, 'Sources/AppDelegate.swift', 'import AppKit\nfinal class AppDelegate: NSObject {}\n');
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(result.json.project.platforms, ['macOS']);
+  assert.deepEqual(result.json.project.languages, ['Swift']);
+  assert.equal(result.json.capabilityFit.primaryFocus, 'macos_native');
+});
+
 test('inspect identifies a Node project as existing with limited fit', () => {
   const root = workspace();
   write(root, 'package.json', JSON.stringify({ name: 'web-api', scripts: { prepare: 'touch should-not-exist' } }));
@@ -141,6 +166,18 @@ test('inspect identifies a Node project as existing with limited fit', () => {
   assert.equal(result.json.capabilityFit.level, 'limited');
   assert.match(result.json.capabilityFit.message, /更擅长 iOS 原生 App/);
   assert.equal(fs.existsSync(path.join(root, 'should-not-exist')), false);
+});
+
+test('inspect identifies a package bin entry as a Node CLI instead of a backend service', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'jumao-cli', bin: { jumao: './bin/jumao.js' } }));
+  write(root, 'bin/jumao.js', '#!/usr/bin/env node\n');
+
+  const result = inspect(root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.json.project.platforms.includes('Node CLI'));
+  assert.equal(result.json.project.platforms.includes('Backend'), false);
 });
 
 test('inspect does not write files or execute project scripts', () => {

@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { agentGroups } from './agent-registry.js';
@@ -162,6 +163,35 @@ export function writePackedStatus(targetDir, target, outputPath) {
   }));
 }
 
+export function writePlanningStatus(targetDir, state, run) {
+  if (!['checking', 'ready', 'blocked'].includes(state)) {
+    throw new Error(`Unsupported planning status: ${state}`);
+  }
+
+  const blockers = state === 'blocked'
+    ? planningBlockers(run)
+    : [];
+  const nextSafeTask = state === 'checking'
+    ? '等待 Agent 规划流水线完成，不要把检查中状态当成最终结论。'
+    : state === 'ready'
+      ? '先让 Codex 读取 tasks/jumao-agent-plan.md 并总结，确认后再修改代码。'
+      : blockers[0]?.message || '先处理真实阻塞，再重新运行 jumao plan。';
+
+  return writeStatus(targetDir, makeStatus(targetDir, state, {
+    agentBoard: planningAgentBoard(run.groups || []),
+    blockers,
+    nextSafeTask,
+    artifacts: {
+      agentReport: run.runPath ? `${run.runPath}/planning-summary.md` : null,
+      agentFindings: run.runPath ? `${run.runPath}/manifest.json` : '.jumao/status.json',
+      codexGates: null,
+      latestTaskPack: 'tasks/jumao-agent-plan.md'
+    },
+    lastRun: { command: 'plan', target: null, ok: state === 'checking' ? null : state === 'ready' },
+    planningRun: run
+  }));
+}
+
 export function renderStatus(status) {
   const state = status?.cat?.state || 'sleeping';
   const cat = catStates[state] || catStates.sleeping;
@@ -197,14 +227,22 @@ export function renderStatus(status) {
 function writeStatus(targetDir, status) {
   const dir = path.join(targetDir, '.jumao');
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(statusPath(targetDir), JSON.stringify(status, null, 2) + '\n', 'utf8');
+  const destination = statusPath(targetDir);
+  const temporary = `${destination}.tmp-${process.pid}-${crypto.randomUUID()}`;
+  try {
+    fs.writeFileSync(temporary, JSON.stringify(status, null, 2) + '\n', 'utf8');
+    fs.renameSync(temporary, destination);
+  } catch (error) {
+    try { fs.rmSync(temporary, { force: true }); } catch {}
+    throw error;
+  }
   return status;
 }
 
 function makeStatus(targetDir, state, overrides = {}) {
   const cat = catStates[state] || catStates.sleeping;
 
-  return {
+  const status = {
     schemaVersion,
     jumaoVersion,
     updatedAt: new Date().toISOString(),
@@ -223,6 +261,83 @@ function makeStatus(targetDir, state, overrides = {}) {
     },
     lastRun: overrides.lastRun || { command: null, target: null, ok: null }
   };
+
+  if (overrides.planningRun) {
+    const run = overrides.planningRun;
+    Object.assign(status, {
+      runId: run.runId,
+      startedAt: run.startedAt,
+      completedAt: run.completedAt ?? null,
+      totalAgents: run.totalAgents,
+      completedAgents: run.completedAgents,
+      skippedAgents: run.skippedAgents,
+      blockedAgents: run.blockedAgents,
+      failedAgents: run.failedAgents,
+      platformPending: run.platformPending || false,
+      pendingDecision: run.pendingDecision || null
+    });
+  }
+
+  return status;
+}
+
+function planningAgentBoard(groups) {
+  const byId = new Map(groups.map((group) => [group.groupId, group]));
+  const renderedGroups = agentGroups.map((group) => {
+    const result = byId.get(group.id);
+    const counts = result?.counts || { completed: 0, skipped: 0, blocked: 0, failed: 0 };
+    const participatingAgentCount = counts.completed + counts.blocked + counts.failed;
+    return {
+      id: group.id,
+      name: group.name,
+      state: counts.failed > 0 || counts.blocked > 0
+        ? 'blocked'
+        : participatingAgentCount > 0
+          ? 'triggered'
+          : 'idle',
+      triggeredAgentCount: participatingAgentCount,
+      message: counts.failed > 0
+        ? `${counts.failed} 个 Agent 执行失败`
+        : counts.blocked > 0
+          ? `${counts.blocked} 个 Agent 被真实缺口阻塞`
+          : participatingAgentCount > 0
+            ? `${counts.completed} 个 Agent 完成分析`
+            : ''
+    };
+  });
+
+  return {
+    triggeredAgentCount: renderedGroups.reduce((sum, group) => sum + group.triggeredAgentCount, 0),
+    activeGroupCount: renderedGroups.filter((group) => group.state !== 'idle').length,
+    blockedGroupCount: renderedGroups.filter((group) => group.state === 'blocked').length,
+    groups: renderedGroups
+  };
+}
+
+function planningBlockers(run) {
+  const blockers = [];
+  for (const question of run.blockingQuestions || []) {
+    blockers.push({
+      title: '规划所需信息',
+      message: question,
+      source: '.jumao/intake-answers.json'
+    });
+  }
+  if (run.error) {
+    blockers.push({
+      title: 'Agent 规划运行',
+      message: run.error,
+      source: run.runPath ? `${run.runPath}/manifest.json` : '.jumao/status.json'
+    });
+  }
+  if (blockers.length === 0 && ((run.blockedAgents || 0) > 0 || (run.failedAgents || 0) > 0)) {
+    blockers.push({
+      title: 'Agent 规划运行',
+      message: '查看本次 manifest 和 Agent 输出中的真实阻塞。',
+      source: run.runPath ? `${run.runPath}/manifest.json` : '.jumao/status.json'
+    });
+  }
+  return blockers.slice(0, 3);
 }
 
 function sleepingStatus(targetDir) {

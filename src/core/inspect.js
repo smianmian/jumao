@@ -32,9 +32,9 @@ const binaryExtensions = new Set([
 ]);
 
 const sourceExtensions = new Map([
-  ['.swift', { language: 'Swift', platform: 'iOS' }],
-  ['.m', { language: 'Objective-C', platform: 'iOS' }],
-  ['.mm', { language: 'Objective-C++', platform: 'iOS' }],
+  ['.swift', { language: 'Swift' }],
+  ['.m', { language: 'Objective-C' }],
+  ['.mm', { language: 'Objective-C++' }],
   ['.js', { language: 'JavaScript' }],
   ['.jsx', { language: 'JavaScript', platform: 'Web' }],
   ['.ts', { language: 'TypeScript' }],
@@ -155,7 +155,7 @@ function scanDirectory(directory, relativeDirectory, depth, state) {
             : path.basename(entry.name, '.xcworkspace');
           addEvidence(state, 'project_name', relativePath, '项目名称来自 Xcode 工程文件名');
         }
-        addFact(state, { platform: 'iOS', buildSystem: 'Xcode' });
+        addFact(state, { platform: xcodePlatform(fullPath, state), buildSystem: 'Xcode' });
         state.hasExistingEvidence = true;
         continue;
       }
@@ -221,12 +221,28 @@ function inspectPackageManifest(fullPath, relativePath, state) {
       ...(manifest.dependencies || {}),
       ...(manifest.devDependencies || {})
     };
+    const hasCLI = typeof manifest.bin === 'string'
+      || (manifest.bin && typeof manifest.bin === 'object' && Object.keys(manifest.bin).length > 0);
+    if (hasCLI) addFact(state, { platform: 'Node CLI' });
     if (dependencies['react-native']) addFact(state, { platform: 'React Native' });
     else if (dependencies.react || dependencies.next) addFact(state, { platform: 'Web' });
-    else addFact(state, { platform: 'Backend' });
+    else if (!hasCLI) addFact(state, { platform: 'Backend' });
   } catch {
     addWarning(state, `无法解析允许读取的配置：${relativePath}`);
   }
+}
+
+function xcodePlatform(projectPath, state) {
+  const projectFile = projectPath.endsWith('.xcodeproj')
+    ? path.join(projectPath, 'project.pbxproj')
+    : null;
+  if (!projectFile || !fs.existsSync(projectFile)) return 'iOS';
+  const relativePath = path.relative(state.workspacePath, projectFile).split(path.sep).join('/');
+  const text = readSmallTextFile(projectFile, relativePath, state);
+  if (text && /(SDKROOT\s*=\s*macosx|MACOSX_DEPLOYMENT_TARGET|SUPPORTED_PLATFORMS\s*=\s*[^;]*macosx)/.test(text)) {
+    return 'macOS';
+  }
+  return 'iOS';
 }
 
 function readSmallTextFile(fullPath, relativePath, state) {
@@ -253,12 +269,12 @@ function buildResult(state) {
   const workspaceKind = state.visibleEntries === 0
     ? 'empty'
     : (state.hasExistingEvidence ? 'existing' : (state.hasUnclassifiedVisibleFile ? 'unknown' : 'new'));
-  const isIOSNative = state.platforms.has('iOS') || state.languages.has('Swift') || state.buildSystems.has('Xcode');
-  const capabilityFit = isIOSNative
+  const isAppleNative = state.platforms.has('iOS') || state.platforms.has('macOS') || state.languages.has('Swift') || state.buildSystems.has('Xcode');
+  const capabilityFit = isAppleNative
     ? {
         level: 'high',
-        primaryFocus: 'ios_native',
-        message: '橘猫对这个项目类型比较熟悉。当前的问题库、模板和检查规则主要针对 Swift、SwiftUI 与 Xcode 项目。'
+        primaryFocus: state.platforms.has('macOS') ? 'macos_native' : 'ios_native',
+        message: '橘猫对这个项目类型比较熟悉。当前的问题库、模板和检查规则可结合 Swift、SwiftUI 与 Xcode 项目证据。'
       }
     : {
         level: 'limited',
@@ -276,7 +292,7 @@ function buildResult(state) {
           ? '仅发现空目录结构或 Jumao 初始化文件'
           : (workspaceKind === 'unknown' ? '未找到足够的工程或源代码证据，等待用户选择用途' : '检测到真实开发证据'))
   );
-  addEvidence(state, 'capability_fit', '.', isIOSNative ? '检测到 iOS、Swift 或 Xcode 证据' : '未检测到 iOS、Swift 或 Xcode 证据');
+  addEvidence(state, 'capability_fit', '.', isAppleNative ? '检测到 Apple 平台、Swift 或 Xcode 证据' : '未检测到 Apple 平台、Swift 或 Xcode 证据');
 
   return {
     schemaVersion: 1,
@@ -348,7 +364,11 @@ function isJumaoDirectory(name, relativePath) {
 }
 
 function isJumaoFile(name, relativePath) {
-  return name === 'AGENTS.md' || name === 'CLAUDE.md' || relativePath.startsWith('product/') || relativePath.startsWith('proof/');
+  return name === 'AGENTS.md'
+    || name === 'CLAUDE.md'
+    || relativePath === 'tasks/jumao-agent-plan.md'
+    || relativePath.startsWith('product/')
+    || relativePath.startsWith('proof/');
 }
 
 function isTestFile(name, relativePath) {
