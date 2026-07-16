@@ -1,29 +1,37 @@
 # Jumao Cat macOS
 
-Jumao Cat 是一个本地 macOS 菜单栏小应用。它只读取：
+Jumao Cat 是本地 macOS 菜单栏应用。它可以选择新项目或已有项目、完成聚焦问答，
+并通过 App 内置的 Node.js 和 Jumao CLI 自动运行 Agent Planning Runtime。
 
-```text
-<workspace>/.jumao/status.json
+Runtime 不调用外部 AI API。扫描和规划默认只读项目源码，规划结果写入项目的
+`.jumao/` 和 `tasks/`。
+
+## 准备内置 Runtime
+
+```bash
+./scripts/prepare-bundled-runtime.sh --arch current
+./scripts/prepare-bundled-runtime.sh --verify-only
 ```
+
+内置 Runtime 位于 `Resources/BundledRuntime/`，该目录由脚本生成且不提交 Git。
+它必须包含独立 Node 可执行文件、当前 Jumao CLI、runtime manifest 和第三方许可证。
 
 ## 在 Xcode 打开
 
-打开 [JumaoCat.xcodeproj](JumaoCat.xcodeproj)，选择 `JumaoCat` scheme 后运行。
+打开 [JumaoCat.xcodeproj](JumaoCat.xcodeproj)，选择 `JumaoCat` scheme 后运行，或执行：
 
-应用没有 Dock 图标。点击菜单栏的橘猫，选择一个 Jumao 项目目录，即可看到：
+```bash
+xcodebuild build -scheme JumaoCat
+xcodebuild test -scheme JumaoCat
+```
 
-- `cat.state`
-- `cat.label`
-- `cat.message`
-- Agent Board 摘要、最多 3 条关键阻塞和下一步
+应用没有 Dock 图标。点击菜单栏橘猫后可以选择项目、恢复问答草稿、查看最近一次
+规划、重新整理，并把 `tasks/jumao-agent-plan.md` 对应的启动指令交给 Codex。
 
-目录访问权限以 macOS security-scoped bookmark 保存。App 重启后会恢复上次目录，并监听 `.jumao/status.json` 的创建、修改、替换和删除。
+目录访问权限使用 macOS security-scoped bookmark 保存。App 会监听
+`.jumao/status.json`，并从 `.jumao/latest-run.json` 恢复真实规划结果。
 
-没有状态文件时显示 `sleeping`；JSON 无法解析时显示明确的读取错误。应用只读 status 文件，不会写入或修改它。
+## 发布边界
 
-## 本阶段不做
-
-- 不运行 `jumao doctor` 或 `jumao pack`
-- 不复制任务包
-- 不打开报告
-- 不联网、登录、云同步或调用 AI API
+正式 Developer ID 签名脚本是 `scripts/sign-release-app.sh`。只有明确进行正式发布时
+才能运行；普通本地构建和 Release Candidate 验证不运行该脚本，也不执行 Apple 公证。

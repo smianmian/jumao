@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.3.1 - Release Candidate
+
+### Added
+
+- Add Agent Planning Runtime v1, a deterministic local rules pipeline that
+  creates auditable planning results without calling an external AI API.
+- Add `jumao plan` with `--json`, `--events-jsonl`, and `--force` modes.
+- Run all 8 groups and record the real `completed`, `skipped`, `blocked`, or
+  `failed` result for each of the 44 registered professional review roles.
+- Write run manifests, Agent evidence, planning summaries, and structured task
+  plans under `.jumao/`, plus the Codex-ready `tasks/jumao-agent-plan.md`.
+- Run planning automatically from Jumao Cat after the user confirms the focused
+  new-project or existing-project intake.
+- Show real group progress and Agent results in Jumao Cat, restore the latest
+  run, and support rerunning the plan.
+- Add the one-click **Hand to Codex** instruction flow.
+- Add menu bar cat animations for idle, working, success, failure, and copied
+  states.
+
+### Fixed
+
+- Preserve Chinese text input, paste commands, and interview draft recovery.
+- Prevent new-project and existing-project inspection results from racing with
+  workspace or interview state.
+- Keep planning ready when the target platform has not been decided.
+- Write planning status files atomically.
+- Make menu bar hover event delivery reliable.
+- Bring the workspace picker to the foreground.
+
+### Notes
+
+- No breaking CLI changes.
+- Jumao does not call external AI APIs.
+- Planning results are derived from the user's answers, read-only inspection,
+  and real project evidence.
+- Affected-file location is intentionally conservative evidence matching, not
+  a complete source-code dependency graph.
+
 ## 0.3.0 - Unreleased
 
 ### Added

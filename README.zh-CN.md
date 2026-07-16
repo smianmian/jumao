@@ -2,121 +2,87 @@
 
 [English](README.md)
 
-Jumao 帮你把模糊的 App 想法或一次改动，整理成 AI 编程工具可以先读懂的项目资料、边界和下一步。它不会替你自动完成整个 App；它先让需求、范围、页面状态和数据安全变得清楚。
+Jumao Cat 会把一个新产品想法，或已有项目的一次改动，整理成有真实证据、
+可以交给 Codex 的开发计划。它在本地做规划，默认不会修改项目源码，也不会替你发布。
 
-<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="Jumao Cat 主面板：扫描空文件夹后显示新项目入口" width="280">
+<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="Jumao Cat 项目选择和规划面板" width="280">
 
 ## 下载 Jumao Cat
 
 [**下载 Jumao Cat for macOS**](https://github.com/smianmian/jumao/releases/latest)
 
-> **早期预览：** Jumao Cat v0.3.0 目前重点是项目扫描、需求梳理和 AI 开发前的边界整理。完整的一键规划、Agent 执行和开发任务生成仍在持续完善。
-
 当前支持：
 
-- macOS 14 或更高版本
-- Apple 芯片 Mac（arm64）
-- 已完成 Developer ID 签名和 Apple 公证
-- App 用户不需要安装 Node.js、Homebrew、npm 或全局 Jumao
+- macOS 14 或更高版本、Apple 芯片 Mac（arm64）
+- 已发布下载包使用 Developer ID 签名并通过 Apple 公证
+- App 不需要系统 Node.js、Homebrew、npm 或全局 Jumao
+- 也提供 Node CLI，供需要终端流程的人使用
 
-安装很简单：下载 ZIP，解压后把 `Jumao Cat.app` 拖到“应用程序”，再从“应用程序”打开它。
+下载 ZIP，解压后把 `Jumao Cat.app` 拖到“应用程序”，再从“应用程序”打开。
 
-## 新项目怎么用
+## Jumao Cat 的普通使用流程
 
-1. 在 Jumao Cat 中选择一个空文件夹，或准备开始规划的文件夹。
-2. 点击“开始规划新项目”。
-3. 依次回答：要做什么、核心功能、当前目标和运行平台。
+1. 选择一个新项目文件夹，或已有代码项目。
+2. 新项目只回答 3 道普通问题：想做什么、希望它能做哪些事、想先在哪里使用。
+3. 已有项目只描述“这次想改成什么样”。Jumao Cat 会读取能看到的项目证据，
+   不再让你重复回答它已经知道的事实。
+4. 确认 Jumao Cat 理解正确后，App 自动运行本地 Agent Planning Runtime。
+5. 查看 8 个小组、44 个专业角色的真实处理结果，包括哪些已完成、已跳过、
+   被阻塞或运行失败。
+6. 查看生成的、可以交给 Codex 的开发计划。
+7. 点击“交给 Codex”，在 Codex 中打开同一个项目文件夹，再粘贴已经复制的指令。
 
-<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="Jumao Cat 新项目四题问答完成页" width="640">
+<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="Jumao Cat 新项目三道普通问题" width="640">
 
-v0.3.0 会把这轮新项目回答保存为 `.jumao/intake-answers.json`。这是首轮结构化梳理，不会自动生成 Xcode、网站或 App 源码工程，也不会自动完成完整项目规划。
+Jumao Cat 会恢复没有填完的问答草稿，也会恢复最近一次规划结果。项目或需求变化后，
+可以直接重新整理。
 
-## 已有项目怎么用
+## Agent Planning Runtime 到底是什么
 
-1. 选择一个已有代码项目。
-2. Jumao Cat 会先做只读扫描，识别可见的平台、语言、构建线索、源代码和测试线索。
-3. 点击“开始梳理这次改动”，再回答：这次要改什么、当前阻塞什么、哪些已有功能不能破坏。
+Agent Planning Runtime v1 是一个**本地确定性规则流水线**，不会调用外部 AI API。
 
-已有项目问答会携带这次只读扫描结果，避免重复问已能确认的信息。扫描和首轮问答不会修改你的源代码；任何后续写入或开发动作都需要你明确决定。
+44 个 Agent 是分在 8 个小组中的、可以审计的专业检查角色，不是 44 个独立大模型
+在并行开发。每个角色都会得到真实运行状态：
 
-## v0.3.0 当前能力边界
+- `completed`：找到相关证据并完成分析
+- `skipped`：没有找到相关触发条件或项目证据
+- `blocked`：缺少必须由人确认的决定或输入
+- `failed`：角色处理或产物写入未能完成
 
-- 完成新项目与已有项目的首轮梳理，并保存结构化问答结果。
-- 对已有项目进行只读 `inspect` 扫描。
-- 恢复未完成的问答草稿。
-- 提供内置 Jumao CLI 与 Node.js 运行时，App 不依赖系统开发环境。
-- 不会直接自动生成完整 App，不会替你发布，也不会代替你做产品、合规或发布决定。
+结果来自用户回答、只读项目扫描和项目中的真实证据。当前“可能受影响的文件”使用
+保守的证据匹配，并不是完整的代码依赖图。
 
-当你需要完整的项目资料和任务包时，可以使用后面的 CLI 高级流程。CLI 中的 `jumao new` 创建的是**项目规划工作区**：其中包含规划文档和模板，不是 Xcode、网站或 App 源码工程。
+## 文件和安全边界
 
-## Agent 小组：当前到底做了什么
+- 扫描和规划阶段默认只读项目源码。
+- 运行记录、manifest、证据和 latest run 状态写入 `.jumao/`。
+- 当前主要交接文件是 `tasks/jumao-agent-plan.md`。
+- Jumao Cat 不调用外部 AI API，不自动添加业务代码，不发布、不收费，也不替人做发布决定。
 
-Jumao 当前**注册了 8 个 Agent 小组、44 个 Agent 定义**。它们覆盖：方向与主体、产品与设计、技术与开发、数据与隐私、合规与健康声明、上架与平台资质、收费与运营、发布与事故。
+## Node CLI
 
-这些是规则和检查视角，不是 44 个已经自动执行开发任务的机器人。
-
-- 已注册：代码中定义了 Agent、小组、触发条件、建议与限制规则。
-- 匹配到：CLI 的 `doctor --write` 会根据项目主人提供的答案匹配可能需要参与的 Agent，并写入报告、规则和状态摘要。
-- 已产生输出：只有写入的治理报告、规则和状态文件才是实际产物。
-- 尚未发生：Agent 不会自行写代码、调用外部服务、完成审核或宣布项目可发布。
-
-完整清单和每个规则的含义见 [Agent 说明](docs/agents.zh-CN.md)。
-
-## 开发者和终端用户：CLI 高级用法
-
-以下命令必须由项目主人在**系统终端**中运行。不要把交互式 `jumao interview` 命令交给 Codex、Claude 或 Cursor 代为执行；问题应由真正了解项目的人亲自回答。
+同一个 Planning Runtime 也可以在终端使用：
 
 ```bash
 npm install -g jumao
-
-mkdir -p ~/jumao-work
-cd ~/jumao-work
-jumao new "我的 App" --dir ./my-app
-jumao interview ./my-app
-jumao check ./my-app --strict
-jumao audit ./my-app --write
-jumao pack ./my-app --target codex
+jumao plan /你的/项目路径
 ```
 
-这里的 `./my-app` 是你自己的规划工作区目录。完成完整 CLI 问答后，Jumao 会生成或更新这些真实规划资料：
-
-- `product/product-brief.zh-CN.md`
-- `product/scope-gate.zh-CN.md`
-- `product/screen-states.zh-CN.md`
-- `product/data-safety.zh-CN.md`
-- `proof/release-proof.zh-CN.md`
-- `tasks/codex-task-pack.md`（运行 `pack --target codex` 后）
-
-### 把规划交给 Codex
-
-推荐方式是在 Codex 客户端直接打开你的实际项目文件夹，并告诉 Codex：
-
-```text
-请先读取项目中的：
-- AGENTS.md
-- product/
-- proof/
-- tasks/codex-task-pack.md
-
-先总结目标、范围、风险和下一步最小任务。
-我确认前不要修改代码。
-```
-
-只有确实需要跨工具复制时，才可以在终端运行：
+需要机器可读输出或强制重新运行时：
 
 ```bash
-cat ./my-app/tasks/codex-task-pack.md | pbcopy
+jumao plan /你的/项目路径 --json
+jumao plan /你的/项目路径 --events-jsonl
+jumao plan /你的/项目路径 --force
 ```
 
-它只把文件内容复制到剪贴板，执行后不会显示内容；这不是主要交接方式。
+原有的 `new`、`interview`、`inspect`、`check`、`audit`、`doctor`、`pack` 和
+`status` 命令继续保留。v0.3.1 没有破坏性 CLI 变更。
 
-`doctor-answers.json` 中的示例回答仅用于本仓库测试，绝不能作为真实项目的答案输入。
-
-## 技术文档与贡献
+## 文档
 
 - [使用指南](docs/guide.zh-CN.md)
 - [Agent 说明](docs/agents.zh-CN.md)
 - [发布检查清单](docs/publish-checklist.zh-CN.md)
 - [更新记录](CHANGELOG.md)
-- [贡献方式](CONTRIBUTING.md)
-- [English README](README.md)
+- [贡献方式](CONTRIBUTING.zh-CN.md)

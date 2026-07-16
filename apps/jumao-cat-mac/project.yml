@@ -43,8 +43,8 @@ targets:
         INFOPLIST_FILE: Sources/JumaoCat/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
-        MARKETING_VERSION: 0.3.0
-        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.3.1
+        CURRENT_PROJECT_VERSION: 2
       configs:
         Release:
           DEVELOPMENT_TEAM: L2TYJNDTJK
