@@ -101,6 +101,7 @@ test('plan keeps a new Mac project specific to macOS', () => {
   assert.equal(result.ok, true, result.error);
   assert.match(taskPlan, /只面向 macOS/);
   assert.doesNotMatch(taskPlan, /iPhone|iPad|Android|Windows/);
+  assert.doesNotMatch(taskPlan, /TestFlight|App Store/);
   assert.doesNotMatch(taskPlan, /源码已创建|工程已创建/);
 });
 
@@ -114,6 +115,7 @@ test('plan does not choose a framework for a new web project', () => {
   assert.equal(result.ok, true, result.error);
   assert.match(taskPlan, /不预先指定框架/);
   assert.doesNotMatch(taskPlan, /React|Vue|Next\.js|Svelte/);
+  assert.doesNotMatch(taskPlan, /TestFlight|App Store/);
   assert.equal(agentOutput(root, 'website_frontend').status, 'completed');
 });
 
@@ -163,6 +165,7 @@ test('plan analyzes an existing Python project without inventing a different sta
   assert.match(taskPlan, /src\/report_export\.py/);
   assert.match(taskPlan, /tests\/test_report_export\.py/);
   assert.doesNotMatch(taskPlan, /Xcode 工程/);
+  assert.doesNotMatch(taskPlan, /TestFlight|App Store/);
   assert.ok(agentOutput(root, 'project_tech_lead').evidence.some((item) => /Python/.test(item.detail)));
 });
 

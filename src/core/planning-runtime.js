@@ -661,7 +661,9 @@ function analyzeAgent(agent, context, reasons) {
     tasks.push(...agent.inferredNeeds.slice(0, 2).map((need) => `在进入相关实现前整理并验证：${need}。`));
   }
 
-  for (const rule of agent.codexRules || []) protections.push(rule);
+  if (agent.id !== 'release_manager') {
+    for (const rule of agent.codexRules || []) protections.push(rule);
+  }
   for (const documented of context.documentedProtections.slice(0, 4)) {
     protections.push(`保留已有约束（${documented.source}）：${documented.statement}`);
   }
