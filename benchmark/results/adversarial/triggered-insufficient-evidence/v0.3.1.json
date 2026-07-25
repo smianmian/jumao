@@ -24,6 +24,7 @@
       "roles": [
         "founder_decision"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -31,6 +32,7 @@
       "roles": [
         "product_manager"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -38,6 +40,7 @@
       "roles": [
         "ui_ux"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -45,6 +48,7 @@
       "roles": [
         "documentation_delivery"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -52,6 +56,7 @@
       "roles": [
         "backend_engineer"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -59,6 +64,7 @@
       "roles": [
         "backend_engineer"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -66,6 +72,7 @@
       "roles": [
         "admin_dashboard_product"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -73,6 +80,7 @@
       "roles": [
         "admin_dashboard_product"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -80,6 +88,7 @@
       "roles": [
         "cicd_build"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -87,6 +96,7 @@
       "roles": [
         "cicd_build"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -94,6 +104,7 @@
       "roles": [
         "database_engineer"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -101,6 +112,7 @@
       "roles": [
         "database_engineer"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -108,6 +120,7 @@
       "roles": [
         "security_privacy"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -115,6 +128,7 @@
       "roles": [
         "data_governance_dictionary"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -122,6 +136,7 @@
       "roles": [
         "data_governance_dictionary"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -129,6 +144,7 @@
       "roles": [
         "privacy_request_ops"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -136,6 +152,7 @@
       "roles": [
         "privacy_request_ops"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -143,6 +160,7 @@
       "roles": [
         "support_operations"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -150,6 +168,7 @@
       "roles": [
         "support_operations"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -157,6 +176,7 @@
       "roles": [
         "project_tech_lead"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -164,6 +184,7 @@
       "roles": [
         "qa_testing"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -171,6 +192,7 @@
       "roles": [
         "release_manager"
       ],
+      "scope": null,
       "impact": []
     }
   ]

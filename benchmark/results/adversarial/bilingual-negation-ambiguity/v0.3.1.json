@@ -22,6 +22,7 @@
       "roles": [
         "founder_decision"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -29,6 +30,7 @@
       "roles": [
         "product_manager"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -36,6 +38,7 @@
       "roles": [
         "ui_ux"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -43,6 +46,7 @@
       "roles": [
         "documentation_delivery"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -50,6 +54,7 @@
       "roles": [
         "cicd_build"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -57,6 +62,7 @@
       "roles": [
         "cicd_build"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -64,6 +70,7 @@
       "roles": [
         "security_privacy"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -71,6 +78,7 @@
       "roles": [
         "app_store_submission"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -78,6 +86,7 @@
       "roles": [
         "app_store_submission"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -85,6 +94,7 @@
       "roles": [
         "project_tech_lead"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -92,6 +102,7 @@
       "roles": [
         "qa_testing"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -99,6 +110,7 @@
       "roles": [
         "release_manager"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -106,6 +118,7 @@
       "roles": [
         "sre_stability"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -113,6 +126,7 @@
       "roles": [
         "sre_stability"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -120,6 +134,7 @@
       "roles": [
         "remote_config_gray_release"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -127,6 +142,7 @@
       "roles": [
         "remote_config_gray_release"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -134,6 +150,7 @@
       "roles": [
         "device_lab_test_data"
       ],
+      "scope": null,
       "impact": []
     },
     {
@@ -141,6 +158,7 @@
       "roles": [
         "device_lab_test_data"
       ],
+      "scope": null,
       "impact": []
     }
   ]

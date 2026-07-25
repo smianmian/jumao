@@ -169,10 +169,6 @@ function renderReport(results) {
   ]);
   const baselineTotals = totalMetrics(results, 'v0.3.1');
   const currentTotals = totalMetrics(results, 'v0.4');
-  const proven = currentTotals.taskCount < baselineTotals.taskCount
-    && currentTotals.unsupportedTaskCount <= baselineTotals.unsupportedTaskCount
-    && currentTotals.evidenceCoverage >= baselineTotals.evidenceCoverage
-    && currentTotals.decisionImpactCoverage === 1;
   return [
     ...header,
     ...rows,
@@ -182,9 +178,7 @@ function renderReport(results) {
     ...detail,
     '## 结论',
     '',
-    proven
-      ? '是。四个案例显示 v0.4 产生了更少的候选任务，未增加不受支持的任务，并为每个优先任务保存了可追溯的 evidence、finding 与 decision impact。它适合交给 Codex 执行，但报告中的人工复核项仍需在编码前确认。'
-      : '否。当前指标尚不足以证明“更少但更准确的任务，并且每个任务都有可追溯理由”；请先检查报告中的人工修改建议。',
+    '本报告只验证产物结构和候选任务差异；任务数量、evidence coverage 与 decision impact coverage 不能单独证明内容正确或 Codex 执行质量。产品结论必须以独立审计、冻结对抗案例和真实执行对照给出。',
     ''
   ].join('\n');
 }

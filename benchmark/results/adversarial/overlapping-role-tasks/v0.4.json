@@ -28,6 +28,11 @@
       "roles": [
         "backend_engineer"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "backend_engineer",
@@ -45,6 +50,11 @@
       "roles": [
         "website_frontend"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "website_frontend",
@@ -63,6 +73,11 @@
         "database_engineer",
         "data_governance_dictionary"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "database_engineer",
@@ -89,6 +104,11 @@
       "roles": [
         "security_privacy"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "security_privacy",
@@ -106,6 +126,11 @@
       "roles": [
         "product_manager"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "product_manager",
@@ -123,6 +148,11 @@
       "roles": [
         "ui_ux"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "ui_ux",
@@ -140,6 +170,11 @@
       "roles": [
         "qa_testing"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "qa_testing",
@@ -157,6 +192,11 @@
       "roles": [
         "legal_compliance"
       ],
+      "scope": {
+        "paths": [
+          "**"
+        ]
+      },
       "impact": [
         {
           "roleId": "legal_compliance",

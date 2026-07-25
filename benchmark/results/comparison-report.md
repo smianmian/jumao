@@ -69,4 +69,4 @@
 
 ## 结论
 
-是。四个案例显示 v0.4 产生了更少的候选任务，未增加不受支持的任务，并为每个优先任务保存了可追溯的 evidence、finding 与 decision impact。它适合交给 Codex 执行，但报告中的人工复核项仍需在编码前确认。
+本报告只验证产物结构和候选任务差异；任务数量、evidence coverage 与 decision impact coverage 不能单独证明内容正确或 Codex 执行质量。产品结论必须以独立审计、冻结对抗案例和真实执行对照给出。

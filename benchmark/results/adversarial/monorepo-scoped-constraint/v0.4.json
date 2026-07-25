@@ -18,6 +18,11 @@
       "roles": [
         "product_manager"
       ],
+      "scope": {
+        "paths": [
+          "packages/admin/**"
+        ]
+      },
       "impact": [
         {
           "roleId": "product_manager",
@@ -35,6 +40,11 @@
       "roles": [
         "qa_testing"
       ],
+      "scope": {
+        "paths": [
+          "packages/admin/**"
+        ]
+      },
       "impact": [
         {
           "roleId": "qa_testing",
