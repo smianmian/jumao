@@ -20,6 +20,7 @@ final class InterviewWindowControllerTests: XCTestCase {
     let menuBarController = MenuBarInteractionController(
       appState: appState,
       popover: WindowRecordingPopover(),
+      mainWindow: WindowRecordingMainWindow(),
       contextMenu: contextMenu
     )
 
@@ -45,6 +46,11 @@ private final class WindowRecordingPopover: MenuBarPopoverControlling {
 private final class WindowRecordingContextMenu: MenuBarContextMenuPresenting {
   private(set) var showCount = 0
   func showQuitMenu() { showCount += 1 }
+}
+
+@MainActor
+private final class WindowRecordingMainWindow: MainWindowControlling {
+  func show() {}
 }
 
 @MainActor

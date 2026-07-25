@@ -13,6 +13,7 @@
 		1544BA710D0EE682A5DA5AB3 /* WorkspaceFolderOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A0FDECC557CAB0B0C5A5D1 /* WorkspaceFolderOpener.swift */; };
 		1C4F0F85B5612DF018912014 /* StatusPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */; };
 		2155154BC37F09927C60D167 /* JumaoProjectInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B7E0E3D6E8D44C6F12C8C /* JumaoProjectInitializer.swift */; };
+		22531A52079B8793290861A6 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E92F89F26319002D056B20 /* MainWindowController.swift */; };
 		2326F4A63AE184877550C784 /* TerminalWorkspaceOpenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490B658AB2874D55FFBA5116 /* TerminalWorkspaceOpenerTests.swift */; };
 		2578B0BDCAC83FC3782DA227 /* JumaoStrictCheckRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E250E0E8097DF468995C652 /* JumaoStrictCheckRunnerTests.swift */; };
 		2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */; };
@@ -123,6 +124,7 @@
 		D2F669E627CE53A6F75DE15A /* InterviewTaskPackFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewTaskPackFlowTests.swift; sourceTree = "<group>"; };
 		D469CEAC2901F2C5120876C8 /* BundledRuntime */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BundledRuntime; path = Resources/BundledRuntime; sourceTree = SOURCE_ROOT; };
 		D4ED21FBA84A8798123FAEBC /* JumaoInterviewSchemaLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoInterviewSchemaLoader.swift; sourceTree = "<group>"; };
+		D9E92F89F26319002D056B20 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		DBC33B6273657D3D9F60C28D /* AgentReportOpenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentReportOpenerTests.swift; sourceTree = "<group>"; };
 		DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFileWatcher.swift; sourceTree = "<group>"; };
 		DE9477E4A8746D2C9C757849 /* JumaoAgentPlanRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoAgentPlanRunner.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 				64182AD9F13C9EBD39BD4C9A /* JumaoProjectInspector.swift */,
 				7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */,
 				0CFF716C3E6049BCBA044AB9 /* JumaoStrictCheckRunner.swift */,
+				D9E92F89F26319002D056B20 /* MainWindowController.swift */,
 				8A0087ED77E9887D913CE916 /* MenuBarActivityState.swift */,
 				901006CE4E5E0A3444099EDF /* MenuBarCatAnimator.swift */,
 				196C1572DDACC5FFB9EBFDBA /* MenuBarInteractionController.swift */,
@@ -382,6 +385,7 @@
 				79CAAF6FFFD92B8FDFEBF49D /* JumaoProjectInspector.swift in Sources */,
 				D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */,
 				B53DC836FAD51FA1BEFF5A90 /* JumaoStrictCheckRunner.swift in Sources */,
+				22531A52079B8793290861A6 /* MainWindowController.swift in Sources */,
 				341D60A9360BEEC42094FCDF /* MenuBarActivityState.swift in Sources */,
 				EA454FB98DC138E2464A99FE /* MenuBarCatAnimator.swift in Sources */,
 				9AFD3952CF35A81A215D8757 /* MenuBarInteractionController.swift in Sources */,

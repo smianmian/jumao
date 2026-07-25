@@ -16,25 +16,25 @@ protocol MenuBarContextMenuPresenting: AnyObject {
 final class MenuBarInteractionController {
   private let appState: AppState
   private let popover: any MenuBarPopoverControlling
+  private let mainWindow: any MainWindowControlling
   private let contextMenu: any MenuBarContextMenuPresenting
 
   init(
     appState: AppState,
     popover: any MenuBarPopoverControlling,
+    mainWindow: any MainWindowControlling,
     contextMenu: any MenuBarContextMenuPresenting
   ) {
     self.appState = appState
     self.popover = popover
+    self.mainWindow = mainWindow
     self.contextMenu = contextMenu
   }
 
   func handleLeftClick() {
     appState.refreshStatus()
-    if popover.isShown {
-      popover.close()
-    } else {
-      popover.show()
-    }
+    popover.close()
+    mainWindow.show()
   }
 
   func handleRightClick() {
