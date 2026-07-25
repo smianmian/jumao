@@ -12,6 +12,13 @@ const latestRunPath = '.jumao/latest-run.json';
 const publishedTaskPlanPath = 'tasks/jumao-agent-plan.md';
 const platformPendingDecision = '准备开始写平台相关代码前，需要确认先做 iPhone、Mac 还是网页';
 const validAgentStatuses = new Set(['completed', 'skipped', 'blocked', 'failed']);
+const validImpactTypes = new Set([
+  'created_task', 'removed_risk', 'protected_constraint', 'changed_priority', 'merged_task'
+]);
+const priorityImpactAgentIds = new Set([
+  'security_privacy', 'privacy_request_ops', 'medical_claims_review', 'algorithm_validation_evidence',
+  'qa_testing', 'release_manager'
+]);
 const alwaysRelevantAgentIds = new Set([
   'founder_decision',
   'product_manager',
@@ -81,6 +88,65 @@ const signalAgentMap = {
   thirdParty: ['sdk_vendor_governance', 'procurement_contract_vendor'],
   abuse: ['abuse_risk_control'],
   support: ['support_operations', 'privacy_request_ops', 'admin_dashboard_product']
+};
+
+const signalPatterns = {
+  iphone: /iphone|ios|苹果手机/,
+  mac: /macos|mac app|mac 应用|mac 工具/,
+  web: /网页|网站|web(?:site| app)?|browser/,
+  watch: /watch|手表|心率/,
+  login: /登录|登陆|login|sign[ -]?in|account|账号|账户|注册/,
+  payment: /支付|付费|收费|订阅|会员|购买|退款|payment|subscription|purchase|membership/,
+  cloud: /云|同步|换机|服务端|后端|服务器|cloud|sync|backend/,
+  health: /健康|医疗|诊断|治疗|睡眠|心率|血压|health|medical/,
+  sensitive: /身份证|手机号|定位|通讯录|隐私|敏感|儿童|照片|privacy|location|contact/,
+  china: /中国大陆|大陆用户|备案|微信|短信|china/,
+  release: /发布|上架|app store|testflight|提审|上线|release/,
+  analytics: /统计|分析|留存|转化|analytics/,
+  messaging: /微信|短信|验证码|wechat|sms/,
+  algorithm: /算法|评分|预测|推荐|报告|趋势|algorithm|score|predict/,
+  company: /公司|企业|商业化|融资|company|business/,
+  brand: /品牌|商标|图标|名称|brand|trademark/,
+  publicUsers: /公开|外部用户|真实用户|客户|朋友|public users?|customers?/,
+  thirdParty: /第三方|供应商|sdk|外包|vendor/,
+  abuse: /防刷|滥用|验证码|公开入口|abuse/,
+  support: /客服|退款|注销|反馈|support/,
+  anonymous: /匿名|anonymous/,
+  localOnly: /本地假数据|本地模拟|仅使用本地|local fake|mock data|local-only/
+};
+
+const platformAgentRequirements = {
+  ios_engineer: 'apple',
+  watchos_engineer: 'watch',
+  website_frontend: 'web',
+  app_store_submission: 'apple',
+  iap_revenue_ops: 'apple'
+};
+
+const platformRequirementLabels = {
+  apple: 'Apple 平台',
+  watch: 'watchOS',
+  web: 'Web 平台'
+};
+
+const roleEvidencePatterns = {
+  website_frontend: /html|css|jsx|tsx|vue|svelte|web|网页|catalog|页面/,
+  backend_engineer: /auth|login|account|session|user|member|subscription|登录|账号|账户|会员|匿名/,
+  admin_dashboard_product: /admin|support|account|refund|客服|后台|账号|退款/,
+  cicd_build: /\.github\/workflows|ci|build|deploy|package\.json|makefile|project\.yml/,
+  database_engineer: /database|schema|model|account|user|member|subscription|数据库|字段|账号|会员/,
+  security_privacy: /privacy|security|password|credential|account|payment|隐私|安全|密码|凭证|账号|支付/,
+  data_governance_dictionary: /data|schema|account|user|member|subscription|数据|字段|账号|会员/,
+  privacy_request_ops: /delete|account|user|privacy|注销|删除|账号|隐私/,
+  legal_compliance: /privacy|terms|payment|subscription|release|隐私|协议|支付|订阅|发布/,
+  finance_tax: /payment|subscription|purchase|refund|支付|订阅|购买|退款/,
+  support_operations: /support|refund|delete|account|客服|退款|注销|账号/,
+  iap_revenue_ops: /storekit|iap|subscription|purchase|订阅|内购|购买/,
+  qa_testing: /test|spec|xctest|pytest|测试/,
+  release_manager: /release|publish|sign|notary|deploy|发布|提审|签名|公证/,
+  sre_stability: /monitor|alert|incident|deploy|监控|告警|事故|部署/,
+  remote_config_gray_release: /feature flag|remote config|rollout|gray|灰度|功能开关/,
+  device_lab_test_data: /device|fixture|test data|真机|设备|测试数据/
 };
 
 export function planWorkspace(workspace, options = {}) {
@@ -419,7 +485,7 @@ function shouldSkipInventoryFile(name) {
 
 function buildContext(workspacePath, intake, inspection, inventory) {
   const answerText = Object.values(intake.answers || {}).filter((value) => typeof value === 'string').join('\n');
-  const signals = detectSignals(answerText, intake, inspection);
+  const detected = detectSignals(answerText, intake, inspection);
   const impactFiles = findImpactFiles(inventory, answerText);
   const documentedProtections = findDocumentedProtections(inventory);
   const blockingQuestions = blockingQuestionsFor(intake);
@@ -431,7 +497,10 @@ function buildContext(workspacePath, intake, inspection, inventory) {
     intake,
     inspection,
     inventory,
-    signals,
+    signals: detected.signals,
+    negativeSignals: detected.negativeSignals,
+    signalEvidence: detected.signalEvidence,
+    platforms: detected.platforms,
     impactFiles,
     documentedProtections,
     blockingQuestions,
@@ -442,31 +511,57 @@ function buildContext(workspacePath, intake, inspection, inventory) {
 
 function detectSignals(answerText, intake, inspection) {
   const value = answerText.toLowerCase();
-  const has = (pattern) => pattern.test(value);
   const platform = intake.mode === 'new_project' ? intake.answers.platform : '';
   const project = inspection.project || {};
+  const signals = {};
+  const negativeSignals = [];
+  const signalEvidence = {};
+  for (const [name, pattern] of Object.entries(signalPatterns)) {
+    const mentions = classifySignalMentions(value, pattern);
+    signals[name] = mentions.positive;
+    signalEvidence[name] = mentions;
+    if (mentions.negative) negativeSignals.push(name);
+  }
+
+  signals.iphone ||= platform === 'iPhone' || (project.platforms || []).includes('iOS');
+  signals.mac ||= platform === 'Mac' || (project.platforms || []).includes('macOS');
+  signals.web ||= platform === '网页' || (project.platforms || []).includes('Web');
+
+  let platforms = unique([
+    ...(project.platforms || []),
+    ...(signals.iphone ? ['iOS'] : []),
+    ...(signals.mac ? ['macOS'] : []),
+    ...(signals.web ? ['Web'] : []),
+    ...(signals.watch ? ['watchOS'] : [])
+  ]);
+  if (signals.web && !signals.cloud) platforms = platforms.filter((item) => item !== 'Backend');
+  return { signals, negativeSignals: unique(negativeSignals), signalEvidence, platforms };
+}
+
+function classifySignalMentions(value, pattern) {
+  const matcher = new RegExp(pattern.source, 'gi');
+  const matches = [...value.matchAll(matcher)];
+  let positive = false;
+  let negative = false;
+  for (const match of matches) {
+    if (mentionIsNegated(value, match.index || 0)) negative = true;
+    else positive = true;
+  }
   return {
-    iphone: platform === 'iPhone' || (project.platforms || []).includes('iOS'),
-    mac: platform === 'Mac' || (project.platforms || []).includes('macOS'),
-    web: platform === '网页' || (project.platforms || []).includes('Web'),
-    watch: has(/watch|手表|心率/),
-    login: has(/登录|账号|账户|注册|sign[ -]?in|account/),
-    payment: has(/支付|付费|收费|订阅|会员|购买|退款|payment|subscription|purchase/),
-    cloud: has(/云|同步|换机|服务端|后端|服务器|cloud|sync|backend/),
-    health: has(/健康|医疗|诊断|治疗|睡眠|心率|血压|health|medical/),
-    sensitive: has(/身份证|手机号|定位|通讯录|隐私|敏感|儿童|照片|privacy|location|contact/),
-    china: has(/中国大陆|大陆用户|备案|微信|短信|china/),
-    release: has(/发布|上架|app store|testflight|提审|上线|release/),
-    analytics: has(/统计|分析|留存|转化|analytics/),
-    messaging: has(/微信|短信|验证码|wechat|sms/),
-    algorithm: has(/算法|评分|预测|推荐|报告|趋势|algorithm|score|predict/),
-    company: has(/公司|企业|商业化|融资|company|business/),
-    brand: has(/品牌|商标|图标|名称|brand|trademark/),
-    publicUsers: has(/公开|用户|朋友|客户|上线|public/),
-    thirdParty: has(/第三方|供应商|sdk|外包|vendor/),
-    abuse: has(/防刷|滥用|验证码|公开入口|abuse/),
-    support: has(/客服|退款|注销|反馈|support/)
+    positive,
+    negative,
+    matches: matches.map((match) => match[0])
   };
+}
+
+function mentionIsNegated(value, index) {
+  const prefix = value.slice(Math.max(0, index - 32), index);
+  const boundaries = /[，。；,.;!?]|但是|不过|然而|但|\b(?:but|however)\b/gi;
+  let clauseStart = 0;
+  for (const match of prefix.matchAll(boundaries)) clauseStart = (match.index || 0) + match[0].length;
+  const clause = prefix.slice(clauseStart);
+  return /(?:不|不要|暂不|禁止|无需|无须|避免|未|不会|不能|不得)[^，。；;,.!?]{0,12}$/i.test(clause)
+    || /(?:do not|don't|not|no|without|never|won't|will not)\s+(?:\w+\s+){0,4}$/i.test(clause);
 }
 
 function findImpactFiles(inventory, answerText) {
@@ -659,15 +754,33 @@ function emitPlanningEvent(options, event) {
 function executeAgent(agent, context) {
   const base = {
     agentId: agent.id,
+    roleId: agent.id,
     groupId: agent.groupId,
     status: 'skipped',
     summary: '',
+    triggerReasons: [],
+    triggerReason: null,
+    negativeSignals: context.negativeSignals || [],
+    intentEvidence: [],
+    projectEvidence: [],
+    roleEvidence: [],
     evidence: [],
+    evidenceQuality: { valid: false, validEvidence: [], invalidReasons: [] },
     findings: [],
+    independentFinding: null,
     decisions: [],
     protections: [],
+    protectedConstraint: null,
     tasks: [],
+    generatedTask: null,
+    decisionImpact: null,
+    changedPlanDecision: null,
+    affectedTaskIds: [],
+    impactType: null,
+    unusedEvidence: false,
     blockingQuestions: [],
+    planContribution: null,
+    incompleteEvidence: false,
     skippedReason: null,
     error: null
   };
@@ -708,35 +821,86 @@ function executeAgent(agent, context) {
     return skippedAgent(base, '没有首轮答案，也没有项目证据触发该职责。');
   }
 
-  const relevantReasons = relevanceReasons(agent, context);
-  if (relevantReasons.length === 0) {
-    return skippedAgent(base, '用户答案、只读扫描和项目文件中没有发现与该职责相关的证据。');
+  const relevance = relevanceForAgent(agent, context);
+  if (relevance.reasons.length === 0) {
+    return skippedAgent(base, relevance.skippedReason);
   }
+
+  const intentEvidence = intentEvidenceFor(context, relevance.reasons);
+  const projectEvidence = projectEvidenceFor(context);
+  const roleEvidence = roleEvidenceFor(agent, context);
+  const evidence = dedupeEvidence([...intentEvidence, ...projectEvidence, ...roleEvidence]).slice(0, 12);
 
   if (context.blockingQuestions.length > 0 && blocksAgent(agent, context)) {
     return {
       ...base,
       status: 'blocked',
       summary: '缺少会直接影响当前实现方向的信息，暂不能完成该职责判断。',
-      evidence: evidenceFor(agent, context, relevantReasons),
+      triggerReasons: relevance.reasons,
+      intentEvidence,
+      projectEvidence,
+      roleEvidence,
+      evidence,
       blockingQuestions: context.blockingQuestions
     };
   }
 
-  const analysis = analyzeAgent(agent, context, relevantReasons);
-  return {
+  const analysis = analyzeAgent(agent, context, relevance.reasons);
+  const triggerReason = relevance.reasons.join('、');
+  const evidenceQuality = validateEvidenceQuality(evidence);
+  const independentFinding = analysis.findings[0] || null;
+  const protectedConstraint = analysis.protections[0] || null;
+  const generatedTask = analysis.tasks[0] || null;
+  const decisionImpact = decisionImpactFor(agent, analysis);
+  const planContribution = planContributionFor(agent, analysis, evidence, relevance.reasons, decisionImpact);
+  const contract = validateAgentEvidence({
+    roleId: agent.id,
+    triggerReason,
+    evidenceQuality,
+    independentFinding,
+    protectedConstraint,
+    generatedTask,
+    decisionImpact,
+    planContribution
+  });
+  const result = {
     ...base,
-    status: 'completed',
+    roleId: agent.id,
+    triggerReason,
     summary: analysis.summary,
-    evidence: evidenceFor(agent, context, relevantReasons),
+    triggerReasons: relevance.reasons,
+    intentEvidence,
+    projectEvidence,
+    roleEvidence,
+    evidenceQuality,
+    evidence,
     findings: analysis.findings,
+    independentFinding,
     decisions: analysis.decisions,
     protections: analysis.protections,
-    tasks: analysis.tasks
+    protectedConstraint,
+    tasks: analysis.tasks,
+    generatedTask,
+    decisionImpact,
+    changedPlanDecision: decisionImpact.changedPlanDecision,
+    affectedTaskIds: decisionImpact.affectedTaskIds,
+    impactType: decisionImpact.impactType,
+    unusedEvidence: contract.unusedEvidence,
+    planContribution,
+    incompleteEvidence: !contract.valid
   };
+  if (!contract.valid) {
+    return {
+      ...result,
+      status: 'skipped',
+      planContribution: null,
+      skippedReason: `证据契约不完整：${contract.issues.join('、')}`
+    };
+  }
+  return { ...result, status: 'completed' };
 }
 
-function relevanceReasons(agent, context) {
+function relevanceForAgent(agent, context) {
   const reasons = [];
   if (alwaysRelevantAgentIds.has(agent.id)) reasons.push('runtime-baseline');
   for (const [signal, ids] of Object.entries(signalAgentMap)) {
@@ -746,7 +910,34 @@ function relevanceReasons(agent, context) {
     if (agent.id === 'cicd_build' && context.inventory.configFiles.length > 0) reasons.push('existing-config');
     if (agent.id === 'design_system_qa' && /界面|页面|ui|view/i.test(context.intake.answers.requestedChange)) reasons.push('existing-ui-change');
   }
-  return unique(reasons);
+  const uniqueReasons = unique(reasons);
+  const requirement = platformAgentRequirements[agent.id];
+  if (uniqueReasons.length > 0 && requirement && !platformRequirementSatisfied(requirement, context.platforms)) {
+    return {
+      reasons: [],
+      skippedReason: `当前项目缺少${platformRequirementLabels[requirement]}证据，该职责与已确认平台不兼容。`
+    };
+  }
+  if (uniqueReasons.length > 0) return { reasons: uniqueReasons, skippedReason: null };
+
+  const excludedSignals = context.negativeSignals.filter((signal) => signalAgentMap[signal]?.includes(agent.id));
+  if (excludedSignals.length > 0) {
+    return {
+      reasons: [],
+      skippedReason: `用户明确排除了相关能力或阶段：${excludedSignals.map(plainSignalLabel).join('、')}。`
+    };
+  }
+  return {
+    reasons: [],
+    skippedReason: '没有发现触发该职责的正向需求信号、平台条件或基线责任。'
+  };
+}
+
+function platformRequirementSatisfied(requirement, platforms) {
+  if (requirement === 'apple') return platforms.some((platform) => ['iOS', 'macOS', 'watchOS'].includes(platform));
+  if (requirement === 'watch') return platforms.includes('watchOS');
+  if (requirement === 'web') return platforms.includes('Web');
+  return true;
 }
 
 function blocksAgent(agent, context) {
@@ -754,7 +945,7 @@ function blocksAgent(agent, context) {
   return !context.intake.answers.idea && alwaysRelevantAgentIds.has(agent.id);
 }
 
-function evidenceFor(agent, context, reasons) {
+function intentEvidenceFor(context, reasons) {
   const evidence = [];
   if (context.intake.mode === 'new_project') {
     if (context.intake.answers.idea) evidence.push({ source: 'intake.answers.idea', detail: '用户提供了项目描述。' });
@@ -763,25 +954,190 @@ function evidenceFor(agent, context, reasons) {
   } else if (context.intake.answers.requestedChange) {
     evidence.push({ source: 'intake.answers.requestedChange', detail: '用户描述了本次希望发生的变化。' });
   }
+  for (const reason of reasons.filter((item) => item.startsWith('signal:'))) {
+    evidence.push({ source: `derived:${reason.slice(7)}`, detail: '由用户描述中的明确正向表达触发。' });
+  }
+  return dedupeEvidence(evidence).slice(0, 8);
+}
+
+function projectEvidenceFor(context) {
+  const evidence = [];
   if (context.inspection.project.languages.length > 0) {
     evidence.push({ source: 'inspect.project.languages', detail: context.inspection.project.languages.join('、') });
   }
-  if (context.inspection.project.platforms.length > 0) {
-    evidence.push({ source: 'inspect.project.platforms', detail: context.inspection.project.platforms.join('、') });
+  if (context.platforms.length > 0) {
+    evidence.push({ source: 'inspect.project.platforms', detail: context.platforms.join('、') });
   }
-  if (context.inventory.configFiles.length > 0) {
-    evidence.push({ source: `file:${context.inventory.configFiles[0]}`, detail: '检测到真实工程配置。' });
-  }
-  if (context.inventory.testFiles.length > 0 && ['qa_testing', 'project_tech_lead', 'release_manager'].includes(agent.id)) {
-    evidence.push({ source: `file:${context.inventory.testFiles[0]}`, detail: '检测到现有测试。' });
-  }
-  if (context.impactFiles.length > 0 && context.intake.mode === 'existing_project') {
-    evidence.push({ source: `file:${context.impactFiles[0].path}`, detail: '文件名或内容与用户改动描述有直接匹配。' });
-  }
-  for (const reason of reasons.filter((item) => item.startsWith('signal:'))) {
-    evidence.push({ source: `derived:${reason.slice(7)}`, detail: '仅由用户描述中的明确词语触发。' });
+  if (context.inspection.project.buildSystems.length > 0) {
+    evidence.push({ source: 'inspect.project.buildSystems', detail: context.inspection.project.buildSystems.join('、') });
   }
   return dedupeEvidence(evidence).slice(0, 8);
+}
+
+function roleEvidenceFor(agent, context) {
+  const evidence = [];
+  if (['qa_testing', 'project_tech_lead', 'release_manager'].includes(agent.id) && context.inventory.testFiles.length > 0) {
+    evidence.push({ source: `file:${context.inventory.testFiles[0]}`, detail: '检测到与验证职责直接相关的现有测试。' });
+  }
+  if (agent.id === 'cicd_build') {
+    const ciFile = context.inventory.files.find((file) => /(^|\/)\.github\/workflows\//.test(file.path));
+    if (ciFile) evidence.push({ source: `file:${ciFile.path}`, detail: '检测到与 CI/CD 职责直接相关的工作流配置。' });
+  }
+  const pattern = roleEvidencePatterns[agent.id];
+  if (pattern) {
+    for (const file of context.inventory.files) {
+      if (!['source', 'test', 'config', 'product', 'proof', 'document'].includes(file.kind)) continue;
+      if (!pattern.test(`${file.path.toLowerCase()}\n${file.searchText}`)) continue;
+      evidence.push({ source: `file:${file.path}`, detail: '文件名或内容与该角色职责直接相关。' });
+      if (evidence.length >= 4) break;
+    }
+  }
+  return dedupeEvidence(evidence).slice(0, 8);
+}
+
+const evidenceSourcePatterns = [
+  /^intake\.answers\./,
+  /^inspect\./,
+  /^manifest\./,
+  /^derived:/,
+  /^file:/
+];
+
+export function validateEvidenceQuality(evidence = []) {
+  const validEvidence = [];
+  const invalidReasons = [];
+  for (const item of Array.isArray(evidence) ? evidence : []) {
+    if (!item || typeof item.source !== 'string' || typeof item.detail !== 'string') {
+      invalidReasons.push('evidence 必须包含 source 和 detail');
+      continue;
+    }
+    if (!evidenceSourcePatterns.some((pattern) => pattern.test(item.source))) {
+      invalidReasons.push(`不支持的 evidence 来源：${item.source}`);
+      continue;
+    }
+    if (item.detail.trim().length < 2) {
+      invalidReasons.push(`evidence 描述过短：${item.source}`);
+      continue;
+    }
+    validEvidence.push({ source: item.source, detail: item.detail });
+  }
+  const uniqueEvidence = dedupeEvidence(validEvidence);
+  if (uniqueEvidence.length === 0) invalidReasons.push('没有有效 evidence');
+  return {
+    valid: invalidReasons.length === 0 && uniqueEvidence.length > 0,
+    validEvidence: uniqueEvidence,
+    invalidReasons: unique(invalidReasons)
+  };
+}
+
+export function validateAgentEvidence({
+  roleId,
+  triggerReason,
+  evidence,
+  evidenceQuality,
+  independentFinding,
+  protectedConstraint,
+  generatedTask,
+  decisionImpact,
+  planContribution
+} = {}) {
+  const quality = evidenceQuality || validateEvidenceQuality(evidence);
+  const issues = [];
+  const unusedEvidence = Boolean(
+    quality.valid
+      && meaningfulContractText(independentFinding)
+      && !meaningfulContractText(generatedTask)
+      && !meaningfulContractText(protectedConstraint)
+      && !hasPlanImpact(decisionImpact)
+  );
+  if (typeof roleId !== 'string' || roleId.trim().length === 0) issues.push('缺少 roleId');
+  if (typeof triggerReason !== 'string' || triggerReason.trim().length === 0) issues.push('缺少 triggerReason');
+  if (!quality.valid) issues.push(...quality.invalidReasons);
+  if (!meaningfulContractText(independentFinding)) issues.push('缺少 independentFinding');
+  if (!meaningfulContractText(protectedConstraint) && !meaningfulContractText(generatedTask)) {
+    issues.push('缺少 protectedConstraint 或 generatedTask');
+  }
+  if (!hasPlanImpact(decisionImpact)) issues.push('缺少 decisionImpact');
+  if (unusedEvidence) issues.push('unusedEvidence');
+  if (!planContribution || !Array.isArray(planContribution.agentIds) || !planContribution.agentIds.includes(roleId)) {
+    issues.push('缺少 planContribution');
+  }
+  return { valid: issues.length === 0, issues: unique(issues), evidenceQuality: quality, unusedEvidence };
+}
+
+function meaningfulContractText(value) {
+  return typeof value === 'string' && value.trim().length >= 8;
+}
+
+function planContributionFor(agent, analysis, evidence = [], triggerReasons = [], decisionImpact = null) {
+  return {
+    agentIds: [agent.id],
+    sections: contributionSectionsFor(agent),
+    tasks: analysis.tasks,
+    protections: analysis.protections,
+    blockingQuestions: [],
+    triggerReasons,
+    triggerReason: triggerReasons.join('、'),
+    evidence,
+    independentFinding: analysis.findings[0] || null,
+    protectedConstraint: analysis.protections[0] || null,
+    generatedTask: analysis.tasks[0] || null,
+    decisionImpact
+  };
+}
+
+function decisionImpactFor(agent, analysis) {
+  const generatedTask = analysis.tasks[0] || null;
+  const protectedConstraint = analysis.protections[0] || null;
+  if (generatedTask) {
+    const changedPriority = priorityImpactAgentIds.has(agent.id);
+    return {
+      changedPlanDecision: changedPriority
+        ? `将 ${agent.name} 发现的风险任务提升为 high 优先级。`
+        : `将 ${agent.name} 的可执行任务加入计划优先任务池。`,
+      affectedTaskIds: [taskIdFor(generatedTask)],
+      impactType: changedPriority ? 'changed_priority' : 'created_task',
+      lowContribution: false
+    };
+  }
+  if (protectedConstraint) {
+    return {
+      changedPlanDecision: `将 ${agent.name} 的保护约束加入计划边界。`,
+      affectedTaskIds: [],
+      impactType: 'protected_constraint',
+      lowContribution: false
+    };
+  }
+  return {
+    changedPlanDecision: '',
+    affectedTaskIds: [],
+    impactType: null,
+    lowContribution: true
+  };
+}
+
+function hasPlanImpact(decisionImpact) {
+  if (!decisionImpact || typeof decisionImpact !== 'object') return false;
+  if (!validImpactTypes.has(decisionImpact.impactType)) return false;
+  if (typeof decisionImpact.changedPlanDecision !== 'string' || decisionImpact.changedPlanDecision.trim().length < 8) return false;
+  if (!Array.isArray(decisionImpact.affectedTaskIds)) return false;
+  if (['created_task', 'changed_priority', 'merged_task'].includes(decisionImpact.impactType)) {
+    return decisionImpact.affectedTaskIds.length > 0;
+  }
+  return true;
+}
+
+function taskIdFor(task) {
+  return `task-${hashText(contractTextKey(task)).slice(0, 12)}`;
+}
+
+function contributionSectionsFor(agent) {
+  if (['finance_tax', 'support_operations', 'iap_revenue_ops', 'app_store_submission', 'sre_stability', 'remote_config_gray_release', 'device_lab_test_data'].includes(agent.id)) {
+    return ['laterStages', 'protections'];
+  }
+  if (agent.id === 'release_manager') return ['releaseChecks', 'protections'];
+  if (agent.id === 'qa_testing') return ['firstStage', 'testChecks', 'protections'];
+  return ['firstStage', 'protections'];
 }
 
 function analyzeAgent(agent, context, reasons) {
@@ -807,10 +1163,46 @@ function analyzeAgent(agent, context, reasons) {
     findings.push('页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。');
     decisions.push('先基于用户描述确认最小入口与一次完整操作，再扩展页面。');
     tasks.push('列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。');
+  } else if (agent.id === 'website_frontend') {
+    findings.push('当前需求和项目证据指向 Web 使用方式，网页任务不得混入 Apple 平台实现。');
+    tasks.push('确认现有网页入口、匿名浏览入口以及登录后状态的最小界面变化。');
+  } else if (agent.id === 'backend_engineer') {
+    findings.push('登录与会员状态需要明确区分匿名、已登录和会员三种状态，但第一阶段不自动扩大成生产后端。');
+    let task = '定义匿名、已登录和会员状态，保留匿名浏览作为可回归行为。';
+    if (context.signals.localOnly || context.negativeSignals.includes('payment')) {
+      decisions.push('第一阶段仅使用本地假账号和假会员状态，不连接真实支付。');
+      task = '定义匿名、已登录和会员状态，保留匿名浏览作为可回归行为；使用本地假账号和假会员状态验证流程，不保存真实密码或支付信息。';
+    }
+    tasks.push(task);
+  } else if (agent.id === 'cicd_build') {
+    const workflows = context.inventory.files.filter((file) => /(^|\/)\.github\/workflows\//.test(file.path));
+    findings.push(workflows.length > 0
+      ? `检测到 ${workflows.length} 个 CI 工作流，改动后应继续运行现有自动检查。`
+      : '检测到现有构建配置，但没有足够证据要求新增发布证书或签名流程。');
+    tasks.push('保留现有构建和测试命令，并记录本次真实运行结果。');
+  } else if (agent.id === 'database_engineer') {
+    findings.push('登录与会员规划可能引入账号和权益字段，但本地假数据阶段不需要生产数据库。');
+    tasks.push('列出账号与会员状态所需的最小字段，并标明哪些字段仅用于本地假数据。');
+    if (context.signals.localOnly) protections.push('第一阶段不得创建生产数据库或保存真实账号数据。');
   } else if (agent.id === 'security_privacy') {
     findings.push('当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。');
     protections.push('不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。');
     tasks.push('只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。');
+  } else if (agent.id === 'data_governance_dictionary') {
+    findings.push('账号和会员状态必须区分用途、保存位置和删除方式，不能因为规划登录就默认收集更多资料。');
+    tasks.push('建立账号与会员状态的最小数据清单，标明用途、保存位置和删除条件。');
+  } else if (agent.id === 'privacy_request_ops') {
+    findings.push('如果后续启用真实账号，必须先定义注销和删除流程；本地假账号阶段不声称已具备生产能力。');
+    tasks.push('把真实账号注销和数据删除列为进入生产登录前的后续阶段条件。');
+  } else if (agent.id === 'finance_tax') {
+    findings.push('订阅规划需要先明确会员权益；没有真实支付时，不应产生收款、税务或对账已就绪的结论。');
+    tasks.push('明确会员权益和未来收费边界，把真实支付与收入对账留到后续阶段。');
+  } else if (agent.id === 'support_operations') {
+    findings.push('真实登录和收费前需要退款、注销与反馈流程；当前可以先定义边界，不启用生产运营。');
+    tasks.push('把退款、注销和账号反馈流程列为真实登录与支付前的后续阶段条件。');
+  } else if (agent.id === 'iap_revenue_ops') {
+    findings.push('当前 Apple 平台证据与订阅意图同时成立，才需要评估 IAP 商品和会员权益。');
+    tasks.push('在 Apple 平台范围内定义 IAP 商品、会员权益和恢复购买规则。');
   } else if (agent.id === 'qa_testing') {
     findings.push(context.inventory.testFiles.length > 0
       ? `检测到 ${context.inventory.testFiles.length} 个测试相关文件，改动后必须运行现有测试。`
@@ -856,7 +1248,7 @@ function analyzeAgent(agent, context, reasons) {
 function technicalFinding(context) {
   const project = context.inspection.project;
   const facts = [
-    project.platforms.length ? `平台 ${project.platforms.join('、')}` : '',
+    context.platforms.length ? `平台 ${context.platforms.join('、')}` : '',
     project.languages.length ? `语言 ${project.languages.join('、')}` : '',
     project.buildSystems.length ? `构建方式 ${project.buildSystems.join('、')}` : ''
   ].filter(Boolean);
@@ -894,10 +1286,25 @@ function plainTriggerReason(reasons) {
   return unique(triggers).join('、') || '现有工程文件提供了直接证据';
 }
 
+function plainSignalLabel(signal) {
+  const labels = {
+    login: '登录或账号',
+    payment: '真实支付或收费',
+    cloud: '云端或服务端',
+    release: '发布或上架',
+    publicUsers: '面向外部用户',
+    messaging: '短信或微信',
+    health: '健康或医疗能力'
+  };
+  return labels[signal] || signal;
+}
+
 function conciseProtections(items) {
   const seen = new Set();
   return unique(items).filter((item) => {
     let key = item;
+    const documented = item.match(/^(?:已有资料 |保留已有约束（)([^）]+?)(?:）)?：(.+)$/i);
+    if (documented) key = `documented:${documented[1].toLowerCase()}:${documented[2].toLowerCase()}`;
     if (/(密钥|私钥|凭证|验证码|敏感样例).*(仓库|写进|写入)/.test(item)) key = 'protect-secrets';
     else if (/(不得声称|不代表).*(发布|提审|上线)|可以发布/.test(item)) key = 'require-release-proof';
     if (seen.has(key)) return false;
@@ -909,8 +1316,10 @@ function conciseProtections(items) {
 function synthesizeTaskPlan(context, execution) {
   const impactAreas = taskImpactAreas(context);
   const protections = taskProtections(context, execution);
-  const firstStage = firstStageTasks(context);
-  const laterStages = laterStageTasks(context);
+  const contributions = collectPlanContributions(execution);
+  const firstStage = firstStageTasks(context, contributions);
+  const laterStages = laterStageTasks(context, contributions);
+  const priorityTasks = priorityTaskRecords(contributions, ['firstStage', 'laterStages']);
   const testChecks = testChecksFor(context);
   const releaseChecks = releaseChecksFor(context);
   const blockers = context.blockingQuestions.length > 0
@@ -926,8 +1335,10 @@ function synthesizeTaskPlan(context, execution) {
     protections,
     firstStage,
     laterStages,
+    priorityTasks,
     testChecks,
     releaseChecks,
+    contributions,
     blockingQuestions: context.blockingQuestions,
     platformPending: context.platformPending,
     pendingDecision: context.pendingDecision,
@@ -969,6 +1380,9 @@ function taskProtections(context, execution) {
   if (context.inspection.project.buildSystems.length > 0) {
     protections.push(`保持现有构建方式可用：${context.inspection.project.buildSystems.join('、')}。`);
   }
+  if (context.negativeSignals.includes('release')) protections.push('用户明确要求本阶段不发布、不提审、不部署生产环境。');
+  if (context.negativeSignals.includes('payment')) protections.push('用户明确要求本阶段不连接真实支付或打开真实收费。');
+  if (context.signals.localOnly) protections.push('第一阶段仅使用本地假数据，不保存真实账号或支付信息。');
   for (const item of context.documentedProtections) {
     protections.push(`已有资料 ${item.source}：${item.statement}`);
   }
@@ -976,7 +1390,28 @@ function taskProtections(context, execution) {
   return conciseProtections(protections).slice(0, 20);
 }
 
-function firstStageTasks(context) {
+function collectPlanContributions(execution) {
+  return execution.agents
+    .filter((agent) => agent.status === 'completed' && agent.planContribution)
+    .map((agent) => ({
+      agentIds: agent.planContribution.agentIds,
+      agentNames: agent.planContribution.agentIds.map(agentName),
+      sections: agent.planContribution.sections,
+      tasks: agent.planContribution.tasks,
+      protections: agent.planContribution.protections,
+      blockingQuestions: agent.planContribution.blockingQuestions,
+      independentFinding: agent.independentFinding,
+      protectedConstraint: agent.protectedConstraint,
+      generatedTask: agent.generatedTask,
+      decisionImpact: agent.decisionImpact,
+      triggerReasons: agent.triggerReasons,
+      triggerReason: agent.triggerReason,
+      evidence: agent.evidence,
+      evidenceSources: agent.evidence.map((item) => item.source)
+    }));
+}
+
+function firstStageTasks(context, contributions) {
   if (context.blockingQuestions.length > 0) {
     return ['先解决“真正阻止开发的问题”中的缺口，再建立源码任务。'];
   }
@@ -987,17 +1422,19 @@ function firstStageTasks(context) {
       : unique([...context.inventory.sourceFiles.slice(0, 3), ...context.inventory.configFiles.slice(0, 1)]);
     const matchedTests = context.impactFiles.filter((file) => file.kind === 'test').map((file) => file.path);
     const tests = matchedTests.length > 0 ? matchedTests.slice(0, 3) : context.inventory.testFiles.slice(0, 3);
-    return [
+    const contributionTasks = prioritizedContributionTasks(contributions, 'firstStage');
+    return unique([
       files.length > 0
         ? (directFiles.length > 0
             ? `先读取与本次变化直接匹配的文件：${files.join('、')}。`
             : `先读取现有工程入口候选并确认影响范围：${files.join('、')}。`)
         : '先读取用户描述、现有资料、相关源码和测试，确认直接影响区域。',
+      ...contributionTasks,
       '只修改与本次变化直接相关的最小文件集合。',
       tests.length > 0
         ? `运行现有测试并补充最小回归验证，优先检查：${tests.join('、')}。`
         : '为本次变化补充一个最小可重复验证。'
-    ];
+    ]).slice(0, 10);
   }
   if (context.intake.answers.platform === 'iPhone') {
     return [
@@ -1030,14 +1467,117 @@ function firstStageTasks(context) {
   ];
 }
 
-function laterStageTasks(context) {
-  return [
+function laterStageTasks(context, contributions) {
+  const contributionTasks = prioritizedContributionTasks(contributions, 'laterStages');
+  return unique([
     '第一阶段经项目主人确认后，再补齐必要的加载、空内容、失败和成功状态。',
+    ...contributionTasks,
     '只有用户明确提出且证据充分时，才增加数据、权限、第三方服务或发布能力。',
     context.intake.mode === 'existing_project'
       ? '完成最小回归后，再评估是否需要扩大到相邻模块。'
       : '最小闭环可用后，再按用户反馈决定下一项能力。'
+  ]).slice(0, 10);
+}
+
+function prioritizedContributionTasks(contributions, section) {
+  return priorityTaskRecords(contributions, [section]).map((record) => {
+    const evidence = record.evidence.find((item) => item.source.startsWith('file:'))
+      || record.evidence.find((item) => item.source.startsWith('derived:'))
+      || record.evidence[0];
+    const trigger = record.triggerReason ? `；触发：${record.triggerReason}` : '';
+    return `${record.task}（来源：${record.contributingRoles.map(agentName).join('、')}${evidence ? `；依据：${evidence.source}` : ''}${trigger}）`;
+  });
+}
+
+export function priorityTaskRecords(contributions = [], sections = []) {
+  const priority = [
+    'backend_engineer', 'website_frontend', 'database_engineer', 'security_privacy',
+    'data_governance_dictionary', 'privacy_request_ops', 'product_manager', 'ui_ux',
+    'finance_tax', 'support_operations', 'iap_revenue_ops', 'qa_testing', 'project_tech_lead'
   ];
+  const records = [];
+  for (const item of contributions
+    .filter((item) => sections.some((section) => item.sections.includes(section)))
+    .sort((left, right) => {
+      const leftIndex = priority.indexOf(left.agentIds[0]);
+      const rightIndex = priority.indexOf(right.agentIds[0]);
+      return (leftIndex < 0 ? priority.length : leftIndex) - (rightIndex < 0 ? priority.length : rightIndex);
+    })) {
+    const task = item.tasks.find((candidate) => !/按第一阶段任务顺序|读取 tasks\/jumao-agent-plan\.md|核对第一阶段任务/.test(candidate));
+    if (!task) continue;
+    const taskKey = contractTextKey(task);
+    const findingKey = contractTextKey(item.independentFinding);
+    const existing = records.find((record) => record.taskKey === taskKey
+      || (findingKey && record.findingKeys.includes(findingKey)));
+    if (existing) {
+      const roleId = item.agentIds[0];
+      if (existing.contributingRoles.includes(roleId)) continue;
+      const originalImpact = item.decisionImpact || {
+        changedPlanDecision: `将 ${roleId} 的结论合并到现有任务。`,
+        affectedTaskIds: [existing.taskId],
+        impactType: 'created_task'
+      };
+      const mergedImpactType = originalImpact.impactType === 'changed_priority' ? 'changed_priority' : 'merged_task';
+      existing.contributingRoles.push(roleId);
+      existing.contributionImpacts.push({
+        roleId,
+        changedPlanDecision: mergedImpactType === 'changed_priority'
+          ? `该角色的风险判断使合并任务保持 high 优先级。`
+          : `该角色的重复结论合并到现有任务，不新增任务。`,
+        affectedTaskIds: [existing.taskId],
+        impactType: mergedImpactType,
+        lowContribution: mergedImpactType === 'merged_task'
+      });
+      existing.evidence = dedupeEvidence([...existing.evidence, ...(item.evidence || [])]);
+      existing.findings = unique([...existing.findings, item.independentFinding].filter(Boolean));
+      existing.findingKeys = unique([...existing.findingKeys, findingKey].filter(Boolean));
+      existing.triggerReasons = unique([...existing.triggerReasons, ...(item.triggerReasons || [])]);
+      if (mergedImpactType === 'changed_priority') existing.priority = 'high';
+      continue;
+    }
+    const taskId = taskIdFor(task);
+    const originalImpact = item.decisionImpact || {
+      changedPlanDecision: `将 ${item.agentIds[0]} 的可执行任务加入计划优先任务池。`,
+      affectedTaskIds: [taskId],
+      impactType: 'created_task',
+      lowContribution: false
+    };
+    const priorityLevel = originalImpact.impactType === 'changed_priority' ? 'high' : 'normal';
+    records.push({
+      taskId,
+      task,
+      priority: priorityLevel,
+      contributingRoles: [...item.agentIds],
+      contributionImpacts: [{
+        roleId: item.agentIds[0],
+        changedPlanDecision: originalImpact.changedPlanDecision,
+        affectedTaskIds: [taskId],
+        impactType: originalImpact.impactType,
+        lowContribution: false
+      }],
+      evidence: item.evidence || [],
+      triggerReasons: item.triggerReasons || [],
+      triggerReason: item.triggerReason || (item.triggerReasons || []).join('、'),
+      findings: item.independentFinding ? [item.independentFinding] : [],
+      independentFinding: item.independentFinding,
+      protectedConstraint: item.protectedConstraint,
+      taskKey,
+      findingKeys: findingKey ? [findingKey] : []
+    });
+  }
+  return records.map((record) => {
+    const { taskKey, findingKeys, ...publicRecord } = record;
+    return {
+      ...publicRecord,
+      decisionImpact: publicRecord.contributionImpacts
+    };
+  }).slice(0, 6);
+}
+
+function contractTextKey(value) {
+  return typeof value === 'string'
+    ? value.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, '')
+    : '';
 }
 
 function testChecksFor(context) {
@@ -1058,9 +1598,9 @@ function releaseChecksFor(context) {
   const checks = ['本次 plan 不执行发布，也不代表项目已经可以上线。'];
   if (context.intake.answers?.platform === 'iPhone' || context.signals.iphone) {
     checks.push('发布前再验证版本、真机、签名、隐私说明和分发材料。');
-  } else if (context.intake.answers?.platform === 'Mac') {
+  } else if (context.intake.answers?.platform === 'Mac' || context.signals.mac) {
     checks.push('发布前再验证版本、签名、公证、Gatekeeper 和分发包。');
-  } else if (context.intake.answers?.platform === '网页') {
+  } else if (context.intake.answers?.platform === '网页' || context.signals.web) {
     checks.push('发布前再确认部署环境、隐私说明、监控和回滚方式。');
   } else {
     checks.push('使用方式确定后，再采用对应的构建和发布检查。');
@@ -1154,7 +1694,9 @@ function buildManifest(context, execution) {
       intakeState: context.intake.state,
       mode: context.intake.mode,
       inspectSchemaVersion: context.inspection.schemaVersion,
-      workspaceKind: context.inspection.workspaceKind
+      workspaceKind: context.inspection.workspaceKind,
+      platforms: context.platforms,
+      negativeSignals: context.negativeSignals
     },
     counts: execution.counts,
     blockingQuestions: unique(execution.agents.flatMap((agent) => agent.blockingQuestions)),
@@ -1212,30 +1754,66 @@ function executionAfterFailure(context, execution, failure) {
     if (agent.id === 'documentation_delivery') {
       return {
         agentId: agent.id,
+        roleId: agent.id,
         groupId: agent.groupId,
         status: 'failed',
         summary: '写入 Agent 计划产物时发生真实错误。',
+        triggerReasons: ['runtime-baseline'],
+        triggerReason: 'runtime-baseline',
+        negativeSignals: context.negativeSignals || [],
+        intentEvidence: [],
+        projectEvidence: [],
+        roleEvidence: [{ source: 'runtime:write', detail: '运行已进入产物写入阶段。' }],
         evidence: [{ source: 'runtime:write', detail: '运行已进入产物写入阶段。' }],
+        evidenceQuality: { valid: false, validEvidence: [], invalidReasons: ['运行写入失败'] },
         findings: [],
+        independentFinding: null,
         decisions: [],
         protections: [],
+        protectedConstraint: null,
         tasks: [],
+        generatedTask: null,
+        decisionImpact: null,
+        changedPlanDecision: null,
+        affectedTaskIds: [],
+        impactType: null,
+        unusedEvidence: true,
         blockingQuestions: [],
+        planContribution: null,
+        incompleteEvidence: true,
         skippedReason: null,
         error: failure.message
       };
     }
     return existing.get(agent.id) || {
       agentId: agent.id,
+      roleId: agent.id,
       groupId: agent.groupId,
       status: 'skipped',
       summary: '',
+      triggerReasons: [],
+      triggerReason: null,
+      negativeSignals: context.negativeSignals || [],
+      intentEvidence: [],
+      projectEvidence: [],
+      roleEvidence: [],
       evidence: [],
+      evidenceQuality: { valid: false, validEvidence: [], invalidReasons: [] },
       findings: [],
+      independentFinding: null,
       decisions: [],
       protections: [],
+      protectedConstraint: null,
       tasks: [],
+      generatedTask: null,
+      decisionImpact: null,
+      changedPlanDecision: null,
+      affectedTaskIds: [],
+      impactType: null,
+      unusedEvidence: false,
       blockingQuestions: [],
+      planContribution: null,
+      incompleteEvidence: false,
       skippedReason: '运行在该 Agent 执行前失败。',
       error: null
     };
