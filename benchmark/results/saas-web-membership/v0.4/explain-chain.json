@@ -1,0 +1,314 @@
+[
+  {
+    "taskId": "task-bb9a99ec987b",
+    "task": "定义匿名、已登录和会员状态，保留匿名浏览作为可回归行为；使用本地假账号和假会员状态验证流程，不保存真实密码或支付信息。",
+    "contributingRoles": [
+      "backend_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "findings": [
+      "登录与会员状态需要明确区分匿名、已登录和会员三种状态，但第一阶段不自动扩大成生产后端。"
+    ],
+    "protectedConstraint": "没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。",
+    "decisionImpact": [
+      {
+        "roleId": "backend_engineer",
+        "changedPlanDecision": "将 后端工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-bb9a99ec987b"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-734c48aa5c86",
+    "task": "确认现有网页入口、匿名浏览入口以及登录后状态的最小界面变化。",
+    "contributingRoles": [
+      "website_frontend"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:web",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:src/access.js",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:src/catalog.js",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:test/catalog.test.js",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "findings": [
+      "当前需求和项目证据指向 Web 使用方式，网页任务不得混入 Apple 平台实现。"
+    ],
+    "protectedConstraint": "没有隐私政策和支持入口证据，Codex 不得声称可正式提审。",
+    "decisionImpact": [
+      {
+        "roleId": "website_frontend",
+        "changedPlanDecision": "将 官网前端 / Web 工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-734c48aa5c86"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-f2e5e0f71f4e",
+    "task": "列出账号与会员状态所需的最小字段，并标明哪些字段仅用于本地假数据。",
+    "contributingRoles": [
+      "database_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "findings": [
+      "登录与会员规划可能引入账号和权益字段，但本地假数据阶段不需要生产数据库。"
+    ],
+    "protectedConstraint": "第一阶段不得创建生产数据库或保存真实账号数据。",
+    "decisionImpact": [
+      {
+        "roleId": "database_engineer",
+        "changedPlanDecision": "将 数据库工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-f2e5e0f71f4e"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-be9b05fba92c",
+    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+    "contributingRoles": [
+      "security_privacy"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "findings": [
+      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
+    ],
+    "protectedConstraint": "不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。",
+    "decisionImpact": [
+      {
+        "roleId": "security_privacy",
+        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-be9b05fba92c"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-7dff08e584bb",
+    "task": "建立账号与会员状态的最小数据清单，标明用途、保存位置和删除条件。",
+    "contributingRoles": [
+      "data_governance_dictionary"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "findings": [
+      "账号和会员状态必须区分用途、保存位置和删除方式，不能因为规划登录就默认收集更多资料。"
+    ],
+    "protectedConstraint": "没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。",
+    "decisionImpact": [
+      {
+        "roleId": "data_governance_dictionary",
+        "changedPlanDecision": "将 数据治理 / 数据字典负责人 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-7dff08e584bb"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-1783dff0e110",
+    "task": "把真实账号注销和数据删除列为进入生产登录前的后续阶段条件。",
+    "contributingRoles": [
+      "privacy_request_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      }
+    ],
+    "findings": [
+      "如果后续启用真实账号，必须先定义注销和删除流程；本地假账号阶段不声称已具备生产能力。"
+    ],
+    "protectedConstraint": "没有 SUPPORT_REFUND_DELETION_PLAYBOOK.md，不得上线带登录和订阅的版本。",
+    "decisionImpact": [
+      {
+        "roleId": "privacy_request_ops",
+        "changedPlanDecision": "将 隐私请求运营负责人 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-1783dff0e110"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  }
+]

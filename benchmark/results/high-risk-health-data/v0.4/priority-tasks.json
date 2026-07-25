@@ -1,0 +1,357 @@
+[
+  {
+    "taskId": "task-be9b05fba92c",
+    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+    "priority": "high",
+    "contributingRoles": [
+      "security_privacy"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "security_privacy",
+        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-be9b05fba92c"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline",
+      "signal:health"
+    ],
+    "triggerReason": "runtime-baseline、signal:health",
+    "findings": [
+      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
+    ],
+    "independentFinding": "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。",
+    "protectedConstraint": "不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。",
+    "decisionImpact": [
+      {
+        "roleId": "security_privacy",
+        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-be9b05fba92c"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-2a25ac10da10",
+    "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+    "priority": "normal",
+    "contributingRoles": [
+      "product_manager"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-2a25ac10da10"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "第一版先把“读取用户授权的健康数据并展示趋势，不预测疾病；用户可以删除本地数据。”整理成一次能完成的使用过程。"
+    ],
+    "independentFinding": "第一版先把“读取用户授权的健康数据并展示趋势，不预测疾病；用户可以删除本地数据。”整理成一次能完成的使用过程。",
+    "protectedConstraint": "没有产品范围和页面状态，Codex 不得自行补功能。",
+    "decisionImpact": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-2a25ac10da10"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-198a71f92d34",
+    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+    "priority": "normal",
+    "contributingRoles": [
+      "ui_ux"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "ui_ux",
+        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-198a71f92d34"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
+    ],
+    "independentFinding": "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。",
+    "protectedConstraint": "没有页面状态矩阵，Codex 不得只实现顺利路径。",
+    "decisionImpact": [
+      {
+        "roleId": "ui_ux",
+        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-198a71f92d34"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-421e6c9e43d6",
+    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "priority": "high",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-421e6c9e43d6"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "未检测到现有测试文件，需要为第一阶段补充最小可重复验证。"
+    ],
+    "independentFinding": "未检测到现有测试文件，需要为第一阶段补充最小可重复验证。",
+    "protectedConstraint": "没有测试结果和发布清单，Codex 不得声称可提审或可上线。",
+    "decisionImpact": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-421e6c9e43d6"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-8b2b07bbcfa5",
+    "task": "在进入相关实现前整理并验证：字体适配。",
+    "priority": "normal",
+    "contributingRoles": [
+      "accessibility"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "accessibility",
+        "changedPlanDecision": "将 无障碍 / 可访问性负责人 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-8b2b07bbcfa5"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:iphone",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "triggerReasons": [
+      "signal:iphone"
+    ],
+    "triggerReason": "signal:iphone",
+    "findings": [
+      "帮你照顾看不清、点不准或需要辅助功能的用户；用户明确选择 iPhone。"
+    ],
+    "independentFinding": "帮你照顾看不清、点不准或需要辅助功能的用户；用户明确选择 iPhone。",
+    "protectedConstraint": "Codex 不得用颜色作为唯一状态表达。",
+    "decisionImpact": [
+      {
+        "roleId": "accessibility",
+        "changedPlanDecision": "将 无障碍 / 可访问性负责人 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-8b2b07bbcfa5"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-b2093efef0e6",
+    "task": "在进入相关实现前整理并验证：iOS 权限说明。",
+    "priority": "normal",
+    "contributingRoles": [
+      "ios_engineer"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "ios_engineer",
+        "changedPlanDecision": "将 iOS 工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-b2093efef0e6"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:iphone",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "triggerReasons": [
+      "signal:iphone"
+    ],
+    "triggerReason": "signal:iphone",
+    "findings": [
+      "帮你判断 iPhone App 这边要准备哪些能力；用户明确选择 iPhone。"
+    ],
+    "independentFinding": "帮你判断 iPhone App 这边要准备哪些能力；用户明确选择 iPhone。",
+    "protectedConstraint": "没有 RELEASE_MANAGER_CHECKLIST.md，不得提交 TestFlight 或 App Store 审核包。",
+    "decisionImpact": [
+      {
+        "roleId": "ios_engineer",
+        "changedPlanDecision": "将 iOS 工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-b2093efef0e6"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  }
+]
