@@ -35,13 +35,13 @@ function execute(label, sourceRoot, tempRoot, benchmarkCase) {
   const manifest = read(path.join(runRoot, 'manifest.json'));
   const agentOutputs = manifest.agents.map((agent) => read(path.join(runRoot, agent.output)));
   const nativePriorityTasks = read(path.join(runRoot, 'task-plan.json')).priorityTasks || [];
-  const priorityTasks = nativePriorityTasks.length > 0
-    ? nativePriorityTasks
-    : agentOutputs.filter((agent) => agent.status === 'completed').flatMap((agent) => (agent.tasks || []).map((task) => ({
+  const priorityTasks = label === 'v0.3.1' && nativePriorityTasks.length === 0
+    ? agentOutputs.filter((agent) => agent.status === 'completed').flatMap((agent) => (agent.tasks || []).map((task) => ({
       task,
       contributingRoles: [agent.agentId],
       decisionImpact: []
-    })));
+    })))
+    : nativePriorityTasks;
   return { manifest, priorityTasks, agentOutputs };
 }
 
@@ -50,7 +50,12 @@ function observed(snapshot) {
     priorityTaskCount: snapshot.priorityTasks.length,
     blockingQuestions: snapshot.manifest.blockingQuestions,
     completedAgents: snapshot.agentOutputs.filter((agent) => agent.status === 'completed').map((agent) => agent.agentId),
-    tasks: snapshot.priorityTasks.map((task) => ({ task: task.task, roles: task.contributingRoles, impact: task.decisionImpact }))
+    tasks: snapshot.priorityTasks.map((task) => ({
+      task: task.task,
+      roles: task.contributingRoles,
+      scope: task.scope || null,
+      impact: task.decisionImpact
+    }))
   };
 }
 

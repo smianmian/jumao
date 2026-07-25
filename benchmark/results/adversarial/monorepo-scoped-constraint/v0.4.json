@@ -1,5 +1,5 @@
 {
-  "priorityTaskCount": 5,
+  "priorityTaskCount": 2,
   "blockingQuestions": [],
   "completedAgents": [
     "founder_decision",
@@ -14,23 +14,6 @@
   ],
   "tasks": [
     {
-      "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
-      "roles": [
-        "security_privacy"
-      ],
-      "impact": [
-        {
-          "roleId": "security_privacy",
-          "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
-          "affectedTaskIds": [
-            "task-be9b05fba92c"
-          ],
-          "impactType": "changed_priority",
-          "lowContribution": false
-        }
-      ]
-    },
-    {
       "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
       "roles": [
         "product_manager"
@@ -41,23 +24,6 @@
           "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
           "affectedTaskIds": [
             "task-2a25ac10da10"
-          ],
-          "impactType": "created_task",
-          "lowContribution": false
-        }
-      ]
-    },
-    {
-      "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
-      "roles": [
-        "ui_ux"
-      ],
-      "impact": [
-        {
-          "roleId": "ui_ux",
-          "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
-          "affectedTaskIds": [
-            "task-198a71f92d34"
           ],
           "impactType": "created_task",
           "lowContribution": false
@@ -77,23 +43,6 @@
             "task-421e6c9e43d6"
           ],
           "impactType": "changed_priority",
-          "lowContribution": false
-        }
-      ]
-    },
-    {
-      "task": "保留现有构建和测试命令，并记录本次真实运行结果。",
-      "roles": [
-        "cicd_build"
-      ],
-      "impact": [
-        {
-          "roleId": "cicd_build",
-          "changedPlanDecision": "将 CI/CD 与构建负责人 Agent 的可执行任务加入计划优先任务池。",
-          "affectedTaskIds": [
-            "task-0f8f713a158a"
-          ],
-          "impactType": "created_task",
           "lowContribution": false
         }
       ]

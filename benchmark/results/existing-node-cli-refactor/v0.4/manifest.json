@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "runId": "20260725141116713-bebbccd4",
+  "runId": "20260725153332689-af43b2b4",
   "state": "ready",
   "executionMode": "sequential",
-  "startedAt": "2026-07-25T14:11:16.713Z",
-  "completedAt": "2026-07-25T14:11:16.724Z",
-  "durationMs": 11,
+  "startedAt": "2026-07-25T15:33:32.689Z",
+  "completedAt": "2026-07-25T15:33:32.701Z",
+  "durationMs": 12,
   "inputFingerprint": "8591f06ee185267a7fd4560f5b99345e5103b3c953e1a3351597e2bccf8d7ef0",
   "input": {
     "intake": ".jumao/intake-answers.json",
@@ -23,8 +23,8 @@
     ]
   },
   "counts": {
-    "completed": 9,
-    "skipped": 35,
+    "completed": 8,
+    "skipped": 36,
     "blocked": 0,
     "failed": 0
   },
@@ -78,7 +78,7 @@
       "agentId": "ui_ux",
       "agentName": "UI / UX 设计师 Agent",
       "groupId": "product_design",
-      "status": "completed",
+      "status": "skipped",
       "output": "agents/ui_ux.json"
     },
     {
@@ -357,8 +357,8 @@
       "groupId": "product_design",
       "sequence": 2,
       "counts": {
-        "completed": 3,
-        "skipped": 4,
+        "completed": 2,
+        "skipped": 5,
         "blocked": 0,
         "failed": 0
       },

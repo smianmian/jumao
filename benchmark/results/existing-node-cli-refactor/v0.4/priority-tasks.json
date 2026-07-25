@@ -1,64 +1,7 @@
 [
   {
-    "taskId": "task-be9b05fba92c",
-    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
-    "priority": "high",
-    "contributingRoles": [
-      "security_privacy"
-    ],
-    "contributionImpacts": [
-      {
-        "roleId": "security_privacy",
-        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
-        "affectedTaskIds": [
-          "task-be9b05fba92c"
-        ],
-        "impactType": "changed_priority",
-        "lowContribution": false
-      }
-    ],
-    "evidence": [
-      {
-        "source": "intake.answers.requestedChange",
-        "detail": "用户描述了本次希望发生的变化。"
-      },
-      {
-        "source": "inspect.project.languages",
-        "detail": "JavaScript"
-      },
-      {
-        "source": "inspect.project.platforms",
-        "detail": "Node CLI"
-      },
-      {
-        "source": "inspect.project.buildSystems",
-        "detail": "npm"
-      }
-    ],
-    "triggerReasons": [
-      "runtime-baseline"
-    ],
-    "triggerReason": "runtime-baseline",
-    "findings": [
-      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
-    ],
-    "independentFinding": "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。",
-    "protectedConstraint": "不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。",
-    "decisionImpact": [
-      {
-        "roleId": "security_privacy",
-        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
-        "affectedTaskIds": [
-          "task-be9b05fba92c"
-        ],
-        "impactType": "changed_priority",
-        "lowContribution": false
-      }
-    ]
-  },
-  {
-    "taskId": "task-2a25ac10da10",
-    "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+    "taskId": "task-3f3cdb6eca05",
+    "task": "为现有 CLI 增加 --json 输出，并保留原有人类可读文本输出作为兼容行为。",
     "priority": "normal",
     "contributingRoles": [
       "product_manager"
@@ -68,7 +11,7 @@
         "roleId": "product_manager",
         "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
         "affectedTaskIds": [
-          "task-2a25ac10da10"
+          "task-3f3cdb6eca05"
         ],
         "impactType": "created_task",
         "lowContribution": false
@@ -101,12 +44,17 @@
     ],
     "independentFinding": "本次计划只处理用户描述的变化，不自动扩大到相邻功能。",
     "protectedConstraint": "没有产品范围和页面状态，Codex 不得自行补功能。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
     "decisionImpact": [
       {
         "roleId": "product_manager",
         "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
         "affectedTaskIds": [
-          "task-2a25ac10da10"
+          "task-3f3cdb6eca05"
         ],
         "impactType": "created_task",
         "lowContribution": false
@@ -114,65 +62,8 @@
     ]
   },
   {
-    "taskId": "task-198a71f92d34",
-    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
-    "priority": "normal",
-    "contributingRoles": [
-      "ui_ux"
-    ],
-    "contributionImpacts": [
-      {
-        "roleId": "ui_ux",
-        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
-        "affectedTaskIds": [
-          "task-198a71f92d34"
-        ],
-        "impactType": "created_task",
-        "lowContribution": false
-      }
-    ],
-    "evidence": [
-      {
-        "source": "intake.answers.requestedChange",
-        "detail": "用户描述了本次希望发生的变化。"
-      },
-      {
-        "source": "inspect.project.languages",
-        "detail": "JavaScript"
-      },
-      {
-        "source": "inspect.project.platforms",
-        "detail": "Node CLI"
-      },
-      {
-        "source": "inspect.project.buildSystems",
-        "detail": "npm"
-      }
-    ],
-    "triggerReasons": [
-      "runtime-baseline"
-    ],
-    "triggerReason": "runtime-baseline",
-    "findings": [
-      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
-    ],
-    "independentFinding": "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。",
-    "protectedConstraint": "没有页面状态矩阵，Codex 不得只实现顺利路径。",
-    "decisionImpact": [
-      {
-        "roleId": "ui_ux",
-        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
-        "affectedTaskIds": [
-          "task-198a71f92d34"
-        ],
-        "impactType": "created_task",
-        "lowContribution": false
-      }
-    ]
-  },
-  {
-    "taskId": "task-421e6c9e43d6",
-    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "taskId": "task-0ad0fa280122",
+    "task": "验证 --json 输出与原有人类可读文本输出都保持兼容，并运行现有 CLI 测试。",
     "priority": "high",
     "contributingRoles": [
       "qa_testing"
@@ -182,7 +73,7 @@
         "roleId": "qa_testing",
         "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
         "affectedTaskIds": [
-          "task-421e6c9e43d6"
+          "task-0ad0fa280122"
         ],
         "impactType": "changed_priority",
         "lowContribution": false
@@ -227,75 +118,19 @@
     ],
     "independentFinding": "检测到 1 个测试相关文件，改动后必须运行现有测试。",
     "protectedConstraint": "没有测试结果和发布清单，Codex 不得声称可提审或可上线。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
     "decisionImpact": [
       {
         "roleId": "qa_testing",
         "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
         "affectedTaskIds": [
-          "task-421e6c9e43d6"
+          "task-0ad0fa280122"
         ],
         "impactType": "changed_priority",
-        "lowContribution": false
-      }
-    ]
-  },
-  {
-    "taskId": "task-0f8f713a158a",
-    "task": "保留现有构建和测试命令，并记录本次真实运行结果。",
-    "priority": "normal",
-    "contributingRoles": [
-      "cicd_build"
-    ],
-    "contributionImpacts": [
-      {
-        "roleId": "cicd_build",
-        "changedPlanDecision": "将 CI/CD 与构建负责人 Agent 的可执行任务加入计划优先任务池。",
-        "affectedTaskIds": [
-          "task-0f8f713a158a"
-        ],
-        "impactType": "created_task",
-        "lowContribution": false
-      }
-    ],
-    "evidence": [
-      {
-        "source": "intake.answers.requestedChange",
-        "detail": "用户描述了本次希望发生的变化。"
-      },
-      {
-        "source": "inspect.project.languages",
-        "detail": "JavaScript"
-      },
-      {
-        "source": "inspect.project.platforms",
-        "detail": "Node CLI"
-      },
-      {
-        "source": "inspect.project.buildSystems",
-        "detail": "npm"
-      },
-      {
-        "source": "file:package.json",
-        "detail": "文件名或内容与该角色职责直接相关。"
-      }
-    ],
-    "triggerReasons": [
-      "existing-config"
-    ],
-    "triggerReason": "existing-config",
-    "findings": [
-      "检测到现有构建配置，但没有足够证据要求新增发布证书或签名流程。"
-    ],
-    "independentFinding": "检测到现有构建配置，但没有足够证据要求新增发布证书或签名流程。",
-    "protectedConstraint": "Codex 不得把证书、私钥或密钥写进仓库。",
-    "decisionImpact": [
-      {
-        "roleId": "cicd_build",
-        "changedPlanDecision": "将 CI/CD 与构建负责人 Agent 的可执行任务加入计划优先任务池。",
-        "affectedTaskIds": [
-          "task-0f8f713a158a"
-        ],
-        "impactType": "created_task",
         "lowContribution": false
       }
     ]

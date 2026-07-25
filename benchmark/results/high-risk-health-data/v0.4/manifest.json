@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "runId": "20260725141116568-d3ba90fc",
+  "runId": "20260725153332541-2af83c43",
   "state": "ready",
   "executionMode": "sequential",
-  "startedAt": "2026-07-25T14:11:16.568Z",
-  "completedAt": "2026-07-25T14:11:16.579Z",
-  "durationMs": 11,
+  "startedAt": "2026-07-25T15:33:32.541Z",
+  "completedAt": "2026-07-25T15:33:32.553Z",
+  "durationMs": 12,
   "inputFingerprint": "3c39241b0aac5745158c94e740ccdd9d4c97b4cd286166282cec320f0443c0ca",
   "input": {
     "intake": ".jumao/intake-answers.json",
@@ -22,8 +22,8 @@
     ]
   },
   "counts": {
-    "completed": 17,
-    "skipped": 27,
+    "completed": 18,
+    "skipped": 26,
     "blocked": 0,
     "failed": 0
   },
@@ -182,7 +182,7 @@
       "agentId": "privacy_request_ops",
       "agentName": "隐私请求运营负责人 Agent",
       "groupId": "data_privacy",
-      "status": "skipped",
+      "status": "completed",
       "output": "agents/privacy_request_ops.json"
     },
     {
@@ -378,8 +378,8 @@
       "groupId": "data_privacy",
       "sequence": 4,
       "counts": {
-        "completed": 2,
-        "skipped": 4,
+        "completed": 3,
+        "skipped": 3,
         "blocked": 0,
         "failed": 0
       },

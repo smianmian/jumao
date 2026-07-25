@@ -226,7 +226,10 @@ function main() {
   const baselineRoot = path.join(tempRoot, 'v0.3.1-source');
   try {
     run('git', ['worktree', 'add', '--detach', baselineRoot, 'v0.3.1'], repoRoot);
-    fs.rmSync(resultsRoot, { recursive: true, force: true });
+    for (const benchmarkCase of benchmarkCases) {
+      fs.rmSync(path.join(resultsRoot, benchmarkCase.id), { recursive: true, force: true });
+    }
+    fs.rmSync(path.join(resultsRoot, 'comparison-report.md'), { force: true });
     const results = benchmarkCases.map((benchmarkCase) => {
       const snapshots = {
         'v0.3.1': runVersion(versions[0], baselineRoot, tempRoot, benchmarkCase),

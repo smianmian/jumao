@@ -1,5 +1,5 @@
 {
-  "priorityTaskCount": 6,
+  "priorityTaskCount": 8,
   "blockingQuestions": [],
   "completedAgents": [
     "founder_decision",
@@ -24,7 +24,7 @@
   ],
   "tasks": [
     {
-      "task": "定义匿名、已登录和会员状态，保留匿名浏览作为可回归行为；使用本地假账号和假会员状态验证流程，不保存真实密码或支付信息。",
+      "task": "定义匿名、已登录和会员状态及权益行为，保留匿名浏览作为可回归行为。 使用本地假账号和假会员状态验证流程，不保存真实密码或支付信息。",
       "roles": [
         "backend_engineer"
       ],
@@ -33,7 +33,7 @@
           "roleId": "backend_engineer",
           "changedPlanDecision": "将 后端工程师 Agent 的可执行任务加入计划优先任务池。",
           "affectedTaskIds": [
-            "task-bb9a99ec987b"
+            "task-2eba17bd8f0d"
           ],
           "impactType": "created_task",
           "lowContribution": false
@@ -58,19 +58,29 @@
       ]
     },
     {
-      "task": "列出账号与会员状态所需的最小字段，并标明哪些字段仅用于本地假数据。",
+      "task": "定义本地账号状态的数据边界，标明字段用途、保存位置、删除条件和假数据范围。",
       "roles": [
-        "database_engineer"
+        "database_engineer",
+        "data_governance_dictionary"
       ],
       "impact": [
         {
           "roleId": "database_engineer",
           "changedPlanDecision": "将 数据库工程师 Agent 的可执行任务加入计划优先任务池。",
           "affectedTaskIds": [
-            "task-f2e5e0f71f4e"
+            "task-1e48a15728f5"
           ],
           "impactType": "created_task",
           "lowContribution": false
+        },
+        {
+          "roleId": "data_governance_dictionary",
+          "changedPlanDecision": "该角色的重复结论合并到现有任务，不新增任务。",
+          "affectedTaskIds": [
+            "task-1e48a15728f5"
+          ],
+          "impactType": "merged_task",
+          "lowContribution": true
         }
       ]
     },
@@ -92,16 +102,16 @@
       ]
     },
     {
-      "task": "建立账号与会员状态的最小数据清单，标明用途、保存位置和删除条件。",
+      "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
       "roles": [
-        "data_governance_dictionary"
+        "product_manager"
       ],
       "impact": [
         {
-          "roleId": "data_governance_dictionary",
-          "changedPlanDecision": "将 数据治理 / 数据字典负责人 Agent 的可执行任务加入计划优先任务池。",
+          "roleId": "product_manager",
+          "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
           "affectedTaskIds": [
-            "task-7dff08e584bb"
+            "task-2a25ac10da10"
           ],
           "impactType": "created_task",
           "lowContribution": false
@@ -109,18 +119,52 @@
       ]
     },
     {
-      "task": "把真实账号注销和数据删除列为进入生产登录前的后续阶段条件。",
+      "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
       "roles": [
-        "privacy_request_ops"
+        "ui_ux"
       ],
       "impact": [
         {
-          "roleId": "privacy_request_ops",
-          "changedPlanDecision": "将 隐私请求运营负责人 Agent 发现的风险任务提升为 high 优先级。",
+          "roleId": "ui_ux",
+          "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
           "affectedTaskIds": [
-            "task-1783dff0e110"
+            "task-198a71f92d34"
+          ],
+          "impactType": "created_task",
+          "lowContribution": false
+        }
+      ]
+    },
+    {
+      "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+      "roles": [
+        "qa_testing"
+      ],
+      "impact": [
+        {
+          "roleId": "qa_testing",
+          "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+          "affectedTaskIds": [
+            "task-421e6c9e43d6"
           ],
           "impactType": "changed_priority",
+          "lowContribution": false
+        }
+      ]
+    },
+    {
+      "task": "在进入相关实现前整理并验证：隐私政策。",
+      "roles": [
+        "legal_compliance"
+      ],
+      "impact": [
+        {
+          "roleId": "legal_compliance",
+          "changedPlanDecision": "将 法务 / 合规 Agent 的可执行任务加入计划优先任务池。",
+          "affectedTaskIds": [
+            "task-f50fc3d110c3"
+          ],
+          "impactType": "created_task",
           "lowContribution": false
         }
       ]

@@ -1,7 +1,7 @@
 [
   {
-    "taskId": "task-bb9a99ec987b",
-    "task": "定义匿名、已登录和会员状态，保留匿名浏览作为可回归行为；使用本地假账号和假会员状态验证流程，不保存真实密码或支付信息。",
+    "taskId": "task-81989b39959f",
+    "task": "定义匿名与已登录状态，保留匿名浏览，并实现本次明确的核心操作。 使用本地假账号验证流程，不保存真实密码或支付信息。",
     "contributingRoles": [
       "backend_engineer"
     ],
@@ -28,7 +28,7 @@
       }
     ],
     "findings": [
-      "登录与会员状态需要明确区分匿名、已登录和会员三种状态，但第一阶段不自动扩大成生产后端。"
+      "登录需求只要求匿名与已登录状态；没有会员、订阅或生产后端证据。"
     ],
     "protectedConstraint": "没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。",
     "decisionImpact": [
@@ -36,7 +36,7 @@
         "roleId": "backend_engineer",
         "changedPlanDecision": "将 后端工程师 Agent 的可执行任务加入计划优先任务池。",
         "affectedTaskIds": [
-          "task-bb9a99ec987b"
+          "task-81989b39959f"
         ],
         "impactType": "created_task",
         "lowContribution": false
@@ -83,52 +83,6 @@
         "changedPlanDecision": "将 官网前端 / Web 工程师 Agent 的可执行任务加入计划优先任务池。",
         "affectedTaskIds": [
           "task-734c48aa5c86"
-        ],
-        "impactType": "created_task",
-        "lowContribution": false
-      }
-    ],
-    "traceable": true,
-    "note": "原生 v0.4 priorityTask explain chain。"
-  },
-  {
-    "taskId": "task-f2e5e0f71f4e",
-    "task": "列出账号与会员状态所需的最小字段，并标明哪些字段仅用于本地假数据。",
-    "contributingRoles": [
-      "database_engineer"
-    ],
-    "evidence": [
-      {
-        "source": "intake.answers.requestedChange",
-        "detail": "用户描述了本次希望发生的变化。"
-      },
-      {
-        "source": "derived:login",
-        "detail": "由用户描述中的明确正向表达触发。"
-      },
-      {
-        "source": "inspect.project.languages",
-        "detail": "JavaScript"
-      },
-      {
-        "source": "inspect.project.platforms",
-        "detail": "Web"
-      },
-      {
-        "source": "inspect.project.buildSystems",
-        "detail": "npm"
-      }
-    ],
-    "findings": [
-      "登录与会员规划可能引入账号和权益字段，但本地假数据阶段不需要生产数据库。"
-    ],
-    "protectedConstraint": "没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。",
-    "decisionImpact": [
-      {
-        "roleId": "database_engineer",
-        "changedPlanDecision": "将 数据库工程师 Agent 的可执行任务加入计划优先任务池。",
-        "affectedTaskIds": [
-          "task-f2e5e0f71f4e"
         ],
         "impactType": "created_task",
         "lowContribution": false
@@ -188,19 +142,15 @@
     "note": "原生 v0.4 priorityTask explain chain。"
   },
   {
-    "taskId": "task-7dff08e584bb",
-    "task": "建立账号与会员状态的最小数据清单，标明用途、保存位置和删除条件。",
+    "taskId": "task-9c4951e5b241",
+    "task": "实现登录后的活动报名草稿，保留访客查看活动，并明确草稿的可见结果。",
     "contributingRoles": [
-      "data_governance_dictionary"
+      "product_manager"
     ],
     "evidence": [
       {
         "source": "intake.answers.requestedChange",
         "detail": "用户描述了本次希望发生的变化。"
-      },
-      {
-        "source": "derived:login",
-        "detail": "由用户描述中的明确正向表达触发。"
       },
       {
         "source": "inspect.project.languages",
@@ -216,15 +166,15 @@
       }
     ],
     "findings": [
-      "账号和会员状态必须区分用途、保存位置和删除方式，不能因为规划登录就默认收集更多资料。"
+      "本次计划只处理用户描述的变化，不自动扩大到相邻功能。"
     ],
-    "protectedConstraint": "没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。",
+    "protectedConstraint": "没有产品范围和页面状态，Codex 不得自行补功能。",
     "decisionImpact": [
       {
-        "roleId": "data_governance_dictionary",
-        "changedPlanDecision": "将 数据治理 / 数据字典负责人 Agent 的可执行任务加入计划优先任务池。",
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
         "affectedTaskIds": [
-          "task-7dff08e584bb"
+          "task-9c4951e5b241"
         ],
         "impactType": "created_task",
         "lowContribution": false
@@ -234,19 +184,15 @@
     "note": "原生 v0.4 priorityTask explain chain。"
   },
   {
-    "taskId": "task-1783dff0e110",
-    "task": "把真实账号注销和数据删除列为进入生产登录前的后续阶段条件。",
+    "taskId": "task-198a71f92d34",
+    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
     "contributingRoles": [
-      "privacy_request_ops"
+      "ui_ux"
     ],
     "evidence": [
       {
         "source": "intake.answers.requestedChange",
         "detail": "用户描述了本次希望发生的变化。"
-      },
-      {
-        "source": "derived:login",
-        "detail": "由用户描述中的明确正向表达触发。"
       },
       {
         "source": "inspect.project.languages",
@@ -262,15 +208,69 @@
       }
     ],
     "findings": [
-      "如果后续启用真实账号，必须先定义注销和删除流程；本地假账号阶段不声称已具备生产能力。"
+      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
     ],
-    "protectedConstraint": "没有 SUPPORT_REFUND_DELETION_PLAYBOOK.md，不得上线带登录和订阅的版本。",
+    "protectedConstraint": "没有页面状态矩阵，Codex 不得只实现顺利路径。",
     "decisionImpact": [
       {
-        "roleId": "privacy_request_ops",
-        "changedPlanDecision": "将 隐私请求运营负责人 Agent 发现的风险任务提升为 high 优先级。",
+        "roleId": "ui_ux",
+        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
         "affectedTaskIds": [
-          "task-1783dff0e110"
+          "task-198a71f92d34"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-421e6c9e43d6",
+    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "检测到与验证职责直接相关的现有测试。"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "findings": [
+      "检测到 1 个测试相关文件，改动后必须运行现有测试。"
+    ],
+    "protectedConstraint": "没有测试结果和发布清单，Codex 不得声称可提审或可上线。",
+    "decisionImpact": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-421e6c9e43d6"
         ],
         "impactType": "changed_priority",
         "lowContribution": false

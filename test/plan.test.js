@@ -16,9 +16,9 @@ const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const cli = path.join(repoRoot, 'bin', 'jumao.js');
 const agentOutputKeys = [
   'agentId', 'roleId', 'groupId', 'status', 'summary', 'triggerReasons', 'triggerReason',
-  'negativeSignals', 'intentEvidence', 'projectEvidence', 'roleEvidence', 'evidence',
+  'negativeSignals', 'scope', 'intentEvidence', 'projectEvidence', 'roleEvidence', 'evidence',
   'evidenceQuality', 'findings', 'independentFinding', 'decisions', 'protections',
-  'protectedConstraint', 'tasks', 'generatedTask', 'decisionImpact', 'changedPlanDecision',
+  'protectedConstraint', 'tasks', 'assessmentOutcome', 'generatedTask', 'decisionImpact', 'changedPlanDecision',
   'affectedTaskIds', 'impactType', 'unusedEvidence', 'blockingQuestions', 'planContribution',
   'incompleteEvidence', 'skippedReason', 'error'
 ];
@@ -222,8 +222,146 @@ test('evidence with no task, constraint, or priority decision is orphaned and in
   });
 
   assert.equal(validation.valid, false);
-  assert.equal(validation.unusedEvidence, true);
-  assert.ok(validation.issues.includes('unusedEvidence'));
+  assert.equal(validation.unusedEvidence, false);
+  assert.ok(validation.issues.includes('no_change 不得生成任务、约束、影响或贡献'));
+});
+
+test('a completed no-change assessment needs evidence and a finding but no task or decision impact', () => {
+  const validation = validateAgentEvidence({
+    roleId: 'security_privacy',
+    triggerReason: 'signal:sensitive',
+    evidence: [{ source: 'file:src/export.js', detail: '导出工具只处理公开示例名称。' }],
+    independentFinding: '已检查当前本地导出范围，没有账号、网络或敏感数据风险，现有计划足够。',
+    assessmentOutcome: 'no_change',
+    protectedConstraint: null,
+    generatedTask: null,
+    decisionImpact: null,
+    planContribution: null
+  });
+
+  assert.equal(validation.valid, true);
+  assert.equal(validation.unusedEvidence, false);
+});
+
+test('no-change completed Agents do not manufacture tasks or priority impacts', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'stable-cli', type: 'module', bin: { stable: 'bin/stable.js' } }));
+  write(root, 'bin/stable.js', '#!/usr/bin/env node\nconsole.log("stable");\n');
+  existingIntake(root, '复核现有 stable 命令计划；已确认目标、约束和测试都正确，本次不需要任何代码或计划变化。');
+
+  planWorkspace(root);
+
+  const founder = agentOutput(root, 'founder_decision');
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  assert.equal(founder.status, 'completed');
+  assert.equal(founder.assessmentOutcome, 'no_change');
+  assert.equal(founder.generatedTask, null);
+  assert.equal(founder.decisionImpact, null);
+  assert.equal(taskPlan.priorityTasks.length, 0);
+});
+
+test('insufficient future login language blocks account roles without generating tasks', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'notes-cli', type: 'module', bin: { notes: 'bin/notes.js' } }));
+  write(root, 'bin/notes.js', '#!/usr/bin/env node\nconsole.log("notes");\n');
+  existingIntake(root, '修正文案；以后可能考虑 login，但当前不做账号、数据库或任何登录流程。');
+
+  planWorkspace(root);
+
+  const backend = agentOutput(root, 'backend_engineer');
+  assert.equal(backend.status, 'blocked');
+  assert.equal(backend.generatedTask, null);
+  assert.equal(backend.planContribution, null);
+});
+
+test('an applicable role with no risk completes with no_change and no fabricated high impact', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'local-exporter', type: 'module' }));
+  write(root, 'src/export.js', 'export const exportNames = (names) => names.join("\\n");\n');
+  existingIntake(root, '审核本地导出工具的安全边界：只处理公开示例名称，没有账号、权限、网络或敏感数据；不需要改动。');
+
+  planWorkspace(root);
+
+  const security = agentOutput(root, 'security_privacy');
+  assert.equal(security.status, 'completed');
+  assert.equal(security.assessmentOutcome, 'no_change');
+  assert.equal(security.decisionImpact, null);
+});
+
+test('Node CLI changes skip webpage UI work and retain the CLI goal', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'report-cli', type: 'module', bin: { report: 'bin/report.js' } }));
+  write(root, 'bin/report.js', '#!/usr/bin/env node\nconsole.log("items: 0");\n');
+  write(root, 'test/report.test.js', 'import test from "node:test";\ntest("report", () => {});\n');
+  existingIntake(root, '给现有 report 命令增加 --json 输出，并保留现有文本输出；不要改造成网页、云服务或账号系统。');
+
+  planWorkspace(root);
+
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  assert.equal(agentOutput(root, 'ui_ux').status, 'skipped');
+  assert.ok(taskPlan.priorityTasks.some((task) => /--json/.test(task.task)));
+  assert.ok(taskPlan.priorityTasks.some((task) => /文本输出/.test(task.task)));
+});
+
+test('evidence gate blocks conflicting access constraints before any priority task is created', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'catalog', type: 'module' }));
+  write(root, 'src/access.js', 'export const canBrowse = () => true;\n');
+  write(root, 'product/boundaries.md', '# 边界\n\n- 必须保留匿名浏览。\n');
+  existingIntake(root, '所有访问都必须登录，禁止匿名浏览。');
+
+  planWorkspace(root);
+
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  assert.equal(agentOutput(root, 'backend_engineer').status, 'blocked');
+  assert.equal(taskPlan.priorityTasks.length, 0);
+  assert.ok(taskPlan.blockingQuestions.some((item) => /冲突/.test(item)));
+});
+
+test('health planning keeps HealthKit, refusal, deletion, and non-diagnostic boundaries', () => {
+  const root = workspace();
+  newIntake(root, {
+    idea: '一个查看健康趋势的 iPhone 工具，不提供诊断或治疗。',
+    features: '读取用户授权的 HealthKit 健康数据并展示趋势；展示授权拒绝状态，用户可以删除本地数据，不预测疾病。',
+    platform: 'iPhone'
+  });
+
+  planWorkspace(root);
+
+  const tasks = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json')).priorityTasks.map((item) => item.task).join('\n');
+  assert.match(tasks, /HealthKit/);
+  assert.match(tasks, /授权拒绝/);
+  assert.match(tasks, /删除本地健康趋势数据/);
+  assert.match(tasks, /非诊断/);
+});
+
+test('signup planning keeps the draft goal without inventing membership', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'event-signup', type: 'module' }));
+  write(root, 'src/signup.js', 'export const submitDraft = () => ({ state: "draft" });\n');
+  existingIntake(root, '给现有网页活动页增加邮箱登录后的报名草稿，保留访客查看活动；不要接真实支付，不发送短信或邮件，不收集定位，也不要发布。');
+
+  planWorkspace(root);
+
+  const tasks = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json')).priorityTasks.map((item) => item.task).join('\n');
+  assert.match(tasks, /活动报名草稿/);
+  assert.doesNotMatch(tasks, /会员|订阅/);
+});
+
+test('monorepo priority tasks retain the requested package scope', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'workspace', private: true, workspaces: ['packages/*'] }));
+  write(root, 'packages/mobile/product-boundaries.md', '# Mobile\n\n- 不得云同步。\n');
+  write(root, 'packages/admin/src/report.js', 'export const report = () => "admin";\n');
+  write(root, 'packages/admin/test/report.test.js', 'import test from "node:test";\ntest("report", () => {});\n');
+  existingIntake(root, '只修改 packages/admin 的 report 输出，保留文本格式。');
+
+  planWorkspace(root);
+
+  const tasks = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json')).priorityTasks;
+  assert.ok(tasks.length > 0);
+  assert.ok(tasks.every((task) => task.scope.paths.includes('packages/admin/**')));
+  assert.doesNotMatch(readText(root, 'tasks/jumao-agent-plan.md'), /不得云同步/);
 });
 
 test('risk finding that raises task priority satisfies the decision impact contract', () => {
@@ -692,15 +830,23 @@ test('manifest contains all 44 registered Agents with the exact auditable output
       assert.ok(output.intentEvidence.length > 0 || output.projectEvidence.length > 0 || output.roleEvidence.length > 0, item.agentId);
       assert.equal(output.evidenceQuality.valid, true, item.agentId);
       assert.ok(output.independentFinding, item.agentId);
-      assert.ok(output.protectedConstraint || output.generatedTask, item.agentId);
-      assert.ok(output.decisionImpact, item.agentId);
-      assert.ok(output.changedPlanDecision, item.agentId);
-      assert.ok(Array.isArray(output.affectedTaskIds), item.agentId);
-      assert.ok([
-        'created_task', 'removed_risk', 'protected_constraint', 'changed_priority', 'merged_task'
-      ].includes(output.impactType), item.agentId);
+      assert.ok(['changed_plan', 'no_change'].includes(output.assessmentOutcome), item.agentId);
+      if (output.assessmentOutcome === 'changed_plan') {
+        assert.ok(output.protectedConstraint || output.generatedTask, item.agentId);
+        assert.ok(output.decisionImpact, item.agentId);
+        assert.ok(output.changedPlanDecision, item.agentId);
+        assert.ok(Array.isArray(output.affectedTaskIds), item.agentId);
+        assert.ok([
+          'created_task', 'removed_risk', 'protected_constraint', 'changed_priority', 'merged_task'
+        ].includes(output.impactType), item.agentId);
+        assert.ok(output.planContribution, item.agentId);
+      } else {
+        assert.equal(output.generatedTask, null, item.agentId);
+        assert.equal(output.protectedConstraint, null, item.agentId);
+        assert.equal(output.decisionImpact, null, item.agentId);
+        assert.equal(output.planContribution, null, item.agentId);
+      }
       assert.equal(output.unusedEvidence, false, item.agentId);
-      assert.ok(output.planContribution, item.agentId);
       assert.equal(output.incompleteEvidence, false, item.agentId);
       if (!output.triggerReasons.includes('runtime-baseline')) {
         assert.ok(
