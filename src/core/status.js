@@ -174,7 +174,7 @@ export function writePlanningStatus(targetDir, state, run) {
   const nextSafeTask = state === 'checking'
     ? '等待 Agent 规划流水线完成，不要把检查中状态当成最终结论。'
     : state === 'ready'
-      ? '先让 Codex 读取 tasks/jumao-agent-plan.md 并总结，确认后再修改代码。'
+      ? '先让 Codex 读取 tasks/jumao-agent-plan.md 并总结；当前明确的实现请求已允许本范围内的 prepare 和 validate，真实 execute 仍需单独授权。'
       : blockers[0]?.message || '先处理真实阻塞，再重新运行 jumao plan。';
 
   return writeStatus(targetDir, makeStatus(targetDir, state, {

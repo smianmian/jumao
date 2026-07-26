@@ -235,7 +235,7 @@ function renderFocusedCodexTaskPack(answers) {
     '',
     '## 开始前',
     '请先读取 AGENTS.md、product/product-brief.md、product/scope-gate.md、product/screen-states.md、product/data-safety.md 和本文件。',
-    '先总结想做什么、希望它能做哪些事、需要确认的事和第一阶段任务；在项目主人确认前，不要修改代码。'
+    '先总结想做什么、希望它能做哪些事、需要确认的事和第一阶段任务；明确的实现请求允许当前范围内的 prepare 和 validate，真实生产 execute 仍需单独授权。'
   ].join('\n') + '\n';
 }
 

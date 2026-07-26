@@ -5,11 +5,13 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import { responsibilityAgents, agentGroups } from '../src/core/agent-registry.js';
+import { sandboxExecutionContext } from '../src/core/execution-handoff.js';
 import {
   planWorkspace,
   priorityTaskRecords,
   validateAgentEvidence,
-  validateEvidenceQuality
+  validateEvidenceQuality,
+  validateGoalCoverage
 } from '../src/core/planning-runtime.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
@@ -362,6 +364,101 @@ test('monorepo priority tasks retain the requested package scope', () => {
   assert.ok(tasks.length > 0);
   assert.ok(tasks.every((task) => task.scope.paths.includes('packages/admin/**')));
   assert.doesNotMatch(readText(root, 'tasks/jumao-agent-plan.md'), /不得云同步/);
+});
+
+test('irreversible work keeps prepare and validate tasks while blocking execute', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'migration-tool', type: 'module' }));
+  write(root, 'src/migrate.js', 'export const migrate = () => "dry-run";\n');
+  existingIntake(root, '实现认证切换和生产数据迁移，准备备份、迁移脚本、回滚和测试；不要执行真实生产迁移。');
+
+  planWorkspace(root);
+
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  const tasks = taskPlan.priorityTasks.map((item) => item.task).join('\n');
+  assert.match(tasks, /备份/);
+  assert.match(tasks, /迁移脚本/);
+  assert.match(tasks, /回滚/);
+  assert.match(tasks, /测试/);
+  assert.ok(taskPlan.executionBoundaries.some((item) => item.phase === 'execute' && item.status === 'blocked'));
+  assert.doesNotMatch(tasks, /立即执行生产迁移/);
+});
+
+test('health preparation is not blocked by missing production authorization', () => {
+  const root = workspace();
+  newIntake(root, {
+    idea: '一个查看健康趋势的 iPhone 工具，不提供诊断或治疗。',
+    features: '读取用户授权的健康数据并展示趋势；展示授权拒绝状态，用户可以删除本地数据，不预测疾病。',
+    platform: 'iPhone'
+  });
+
+  planWorkspace(root);
+
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  const tasks = taskPlan.priorityTasks.map((item) => item.task).join('\n');
+  assert.match(tasks, /HealthKit/);
+  assert.match(tasks, /授权拒绝/);
+  assert.match(tasks, /删除本地健康趋势数据/);
+  assert.match(tasks, /非诊断/);
+  assert.match(tasks, /本地模拟|模拟数据/);
+  assert.ok(taskPlan.executionBoundaries.some((item) => item.phase === 'execute' && item.status === 'blocked'));
+});
+
+test('SaaS handoff covers every explicit membership goal', () => {
+  const root = workspace();
+  existingWebMembershipProject(root, '为现有网页商品目录增加邮箱登录与订阅会员，保留匿名浏览；第一阶段仅使用本地假数据，不连接真实支付，也不要发布。');
+
+  planWorkspace(root);
+
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  const required = new Set(['goal:web-entry', 'goal:anonymous-browsing', 'goal:login-flow', 'goal:membership-state', 'goal:membership-entitlement']);
+  const covered = new Set(taskPlan.goalCoverage.filter((item) => item.status === 'covered').map((item) => item.goalId));
+  for (const goalId of required) assert.equal(covered.has(goalId), true, goalId);
+  assert.ok(taskPlan.priorityTasks.some((item) => item.goalIds.includes('goal:web-entry')));
+  assert.ok(taskPlan.priorityTasks.some((item) => item.goalIds.includes('goal:membership-entitlement')));
+  assert.doesNotMatch(taskPlan.priorityTasks.map((item) => item.task).join('\n'), /(?:实现|接入|连接|启用).{0,8}真实支付/);
+});
+
+test('Node CLI handoff covers JSON and text compatibility without UI goals', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'report-cli', type: 'module', bin: { report: 'bin/report.js' } }));
+  write(root, 'bin/report.js', '#!/usr/bin/env node\nconsole.log("items: 0");\n');
+  write(root, 'test/report.test.js', 'import test from "node:test";\ntest("report", () => {});\n');
+  existingIntake(root, '给现有 report 命令增加 --json 输出，并保留现有文本输出；不要改造成网页、云服务或账号系统。');
+
+  planWorkspace(root);
+
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  const covered = new Set(taskPlan.goalCoverage.filter((item) => item.status === 'covered').map((item) => item.goalId));
+  assert.equal(covered.has('goal:cli-json'), true);
+  assert.equal(covered.has('goal:cli-text-compatibility'), true);
+  assert.doesNotMatch(taskPlan.priorityTasks.map((item) => item.task).join('\n'), /页面 UI|网页入口/);
+});
+
+test('goal coverage validator rejects a handoff with an uncovered required goal', () => {
+  const result = validateGoalCoverage([
+    { goalId: 'goal:web-entry', label: '网页登录入口' }
+  ], [
+    { taskId: 'task-login-data', goalIds: ['goal:login-flow'] }
+  ], []);
+
+  assert.equal(result.valid, false);
+  assert.equal(result.goals[0].status, 'missing');
+  assert.equal(result.goals[0].blockingReason, null);
+});
+
+test('sandbox execution context authorizes prepare and validate without durable production approval', () => {
+  const context = sandboxExecutionContext(['current temporary worktree']);
+
+  assert.deepEqual(context, {
+    executionMode: 'sandbox_implementation',
+    authorizedScope: ['current temporary worktree'],
+    allowPrepare: true,
+    allowValidate: true,
+    allowProductionEffects: false
+  });
+  assert.equal(Object.hasOwn(context, 'ownerConfirmed'), false);
+  assert.equal(Object.hasOwn(context, 'allowExecute'), false);
 });
 
 test('risk finding that raises task priority satisfies the decision impact contract', () => {
@@ -1047,7 +1144,9 @@ test('task plan has all ten Codex-ready sections without professional questionna
   const taskPlan = readText(root, 'tasks/jumao-agent-plan.md');
   for (let index = 1; index <= 10; index += 1) assert.match(taskPlan, new RegExp(`## ${index}\\.`));
   assert.match(taskPlan, /先总结项目目标/);
-  assert.match(taskPlan, /在项目主人确认前，不要修改代码/);
+  assert.match(taskPlan, /prepare 和 validate/);
+  assert.match(taskPlan, /execute.*blocked/);
+  assert.doesNotMatch(taskPlan, /在项目主人确认前，不要修改代码/);
   assert.doesNotMatch(taskPlan, /风险矩阵|优先级矩阵|架构方案问卷|专业验收标准问卷/);
 });
 
