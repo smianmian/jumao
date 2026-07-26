@@ -193,8 +193,32 @@ export function readAnswersFile(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-export function runInterview(targetDir, answers, options = {}) {
-  const focusedIntake = focusedIntakeFrom(answers);
+export function normalizeCoreAnswers(rawAnswers = {}) {
+  const answers = {
+    ...rawAnswers,
+    mainScreen: { ...(rawAnswers.mainScreen || {}) },
+    dataSafety: { ...(rawAnswers.dataSafety || {}) }
+  };
+  const filled = (value) => (Array.isArray(value) ? value.length > 0 : hasValue(value));
+  const fallback = (value, substitute) => (filled(value) ? value : substitute);
+
+  answers.successEvidence = fallback(answers.successEvidence, answers.firstVersionGoal);
+  answers.cannotCollect = fallback(answers.cannotCollect, '没提到的个人信息一律不收集');
+  answers.aiMustNotAdd = fallback(answers.aiMustNotAdd, Array.isArray(answers.wontDo) ? [...answers.wontDo] : answers.wontDo);
+  answers.mainScreen.name = fallback(answers.mainScreen.name, '首页');
+  answers.mainScreen.userGoal = fallback(answers.mainScreen.userGoal, answers.userCanDo);
+  answers.mainScreen.loading = fallback(answers.mainScreen.loading, '正在处理，请稍等。');
+  answers.mainScreen.empty = fallback(answers.mainScreen.empty, '第一次来还没有内容，从第一步开始就行。');
+  answers.mainScreen.error = fallback(answers.mainScreen.error, '刚才没做好，内容还在，可以再试一次。');
+  answers.mainScreen.success = fallback(answers.mainScreen.success, '已经做好了。');
+  answers.mainScreen.permissionDenied = fallback(answers.mainScreen.permissionDenied, '不涉及');
+  answers.dataSafety.doesNotCollect = fallback(answers.dataSafety.doesNotCollect, '除了上面说的，其他个人信息一律不收集');
+  answers.dataSafety.retention = fallback(answers.dataSafety.retention, '清掉就是真的清掉，不保留副本');
+  return answers;
+}
+
+export function runInterview(targetDir, rawAnswers, options = {}) {
+  const focusedIntake = focusedIntakeFrom(rawAnswers);
   if (focusedIntake) {
     const outputPath = path.join(targetDir, '.jumao', 'intake-answers.json');
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
@@ -217,6 +241,7 @@ export function runInterview(targetDir, answers, options = {}) {
     };
   }
 
+  const answers = normalizeCoreAnswers(rawAnswers);
   const files = renderCoreFiles(answers);
   for (const [file, text] of Object.entries(files)) {
     const fullPath = path.join(targetDir, file);

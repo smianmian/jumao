@@ -5,7 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { PassThrough, Writable } from 'node:stream';
 import test from 'node:test';
-import { collectInterviewAnswers, orderedInterviewQuestions, runInterview } from '../src/core/interview.js';
+import { collectInterviewAnswers, normalizeCoreAnswers, orderedInterviewQuestions, runInterview } from '../src/core/interview.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const cli = path.join(repoRoot, 'bin', 'jumao.js');
@@ -15,24 +15,12 @@ const interviewAnswerPaths = [
   'primaryUser',
   'firstVersionGoal',
   'userCanDo',
-  'successEvidence',
-  'cannotCollect',
-  'humanConfirmActions',
   'mustDo',
   'wontDo',
-  'aiMustNotAdd',
-  'mainScreen.name',
-  'mainScreen.userGoal',
-  'mainScreen.loading',
-  'mainScreen.empty',
-  'mainScreen.error',
-  'mainScreen.success',
-  'mainScreen.permissionDenied',
+  'humanConfirmActions',
   'dataSafety.collects',
-  'dataSafety.doesNotCollect',
   'dataSafety.thirdParties',
-  'dataSafety.deletion',
-  'dataSafety.retention'
+  'dataSafety.deletion'
 ];
 
 function tempDir() {
@@ -736,12 +724,12 @@ test('undecided or retired platforms stay pending without blocking task-pack gen
   }
 });
 
-test('interview schema preserves the 21 ordered answer paths', () => {
+test('interview schema preserves the 9 ordered answer paths', () => {
   const schema = JSON.parse(fs.readFileSync(interviewSchemaPath, 'utf8'));
 
   assert.equal(schema.schemaVersion, 2);
-  assert.equal(schema.questions.length, 21);
-  assert.deepEqual(schema.questions.map((question) => question.order), Array.from({ length: 22 }, (_, index) => index + 1).filter((order) => order !== 5));
+  assert.equal(schema.questions.length, 9);
+  assert.deepEqual(schema.questions.map((question) => question.order), Array.from({ length: 9 }, (_, index) => index + 1));
   assert.deepEqual(schema.questions.map((question) => question.answerPath), interviewAnswerPaths);
   for (const question of schema.questions) {
     assert.equal(typeof question.id, 'string');
@@ -769,7 +757,7 @@ test('interview schema groups all questions into the three ordered stages', () =
   assert.deepEqual(orderedStages.map((stage) => stage.id), ['idea', 'prototype', 'release']);
   assert.deepEqual(
     orderedStages.map((stage) => schema.questions.filter((question) => question.stage === stage.id).length),
-    [5, 10, 6]
+    [5, 1, 3]
   );
   assert.deepEqual(
     [...new Set(schema.questions.map((question) => question.answerPath))].sort(),
@@ -779,11 +767,8 @@ test('interview schema groups all questions into the three ordered stages', () =
     orderedInterviewQuestions(schema).map((question) => question.answerPath),
     [
       'primaryUser', 'firstVersionGoal', 'userCanDo', 'mustDo', 'wontDo',
-      'successEvidence', 'humanConfirmActions', 'aiMustNotAdd',
-      'mainScreen.name', 'mainScreen.userGoal', 'mainScreen.loading', 'mainScreen.empty',
-      'mainScreen.error', 'mainScreen.success', 'mainScreen.permissionDenied',
-      'cannotCollect', 'dataSafety.collects', 'dataSafety.doesNotCollect',
-      'dataSafety.thirdParties', 'dataSafety.deletion', 'dataSafety.retention'
+      'humanConfirmActions',
+      'dataSafety.collects', 'dataSafety.thirdParties', 'dataSafety.deletion'
     ]
   );
 });
@@ -812,7 +797,8 @@ test('interview omits unanswered optional fields without breaking strict check',
   const brief = fs.readFileSync(path.join(workspace, 'product', 'product-brief.zh-CN.md'), 'utf8');
   assert.doesNotMatch(brief, /不能承诺|undefined/);
   const scope = fs.readFileSync(path.join(workspace, 'product', 'scope-gate.zh-CN.md'), 'utf8');
-  assert.doesNotMatch(scope, /不要让 AI 自己加|需要人工确认的动作/);
+  assert.match(scope, /不要让 AI 自己加/);
+  assert.doesNotMatch(scope, /需要人工确认的动作/);
 });
 
 test('interview --schema prints the source schema without writing project files', () => {
@@ -828,7 +814,7 @@ test('interview --schema prints the source schema without writing project files'
   assert.equal(result.stderr, '');
   assert.deepEqual(schema, sourceSchema);
   assert.equal(schema.schemaVersion, 2);
-  assert.equal(schema.questions.length, 21);
+  assert.equal(schema.questions.length, 9);
   assert.deepEqual(fs.readdirSync(workspace), originalEntries);
 });
 
@@ -855,8 +841,8 @@ test('interactive interview still writes the existing core Markdown output', asy
 
   assert.equal(result.ok, true);
   assert.match(prompts, /最先会来用的人是谁？/);
-  assert.match(prompts, /清掉以后，内容会不会还在？/);
-  assertInterviewFiles(workspace, answers);
+  assert.match(prompts, /会不会把内容交给别的公司处理？/);
+  assertInterviewFiles(workspace, normalizeCoreAnswers(collectedAnswers));
 });
 
 test('interview output passes strict check with completion proof warning', () => {
