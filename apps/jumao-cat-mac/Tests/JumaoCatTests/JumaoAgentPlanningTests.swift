@@ -191,6 +191,22 @@ final class JumaoAgentPlanningTests: XCTestCase {
     XCTAssertTrue(NSPasteboard.general.string(forType: .string)?.contains("tasks/jumao-agent-plan.md") == true)
   }
 
+  func testCopyForClaudeCodeSharesInstructionWithClaudeGuidance() throws {
+    let workspace = try Fixture.makeWorkspace(named: "复制交接Claude")
+    let loader = RecordingPlanLoader(result: .loaded(finalSession(workspaceURL: workspace)))
+    let fixture = try Fixture(workspaceURL: workspace, loader: loader)
+    defer { fixture.cleanUp() }
+
+    fixture.appState.copyAgentPlanningInstruction(for: .claudeCode)
+
+    XCTAssertEqual(
+      fixture.appState.agentPlanningCopyFeedback,
+      "已复制。接下来：打开 Claude Code，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
+    )
+    XCTAssertEqual(fixture.appState.menuBarActivity, .copied)
+    XCTAssertTrue(NSPasteboard.general.string(forType: .string)?.contains("tasks/jumao-agent-plan.md") == true)
+  }
+
   func testBundledRuntimeStreamsAndLoadsARealNewProjectPlan() async throws {
     let workspace = try Fixture.makeWorkspace(named: "真实 新项目")
     defer { try? FileManager.default.removeItem(at: workspace.deletingLastPathComponent()) }

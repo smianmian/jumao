@@ -166,6 +166,9 @@ export function runAgentSession({ command, args = [], cwd, env, evidenceDir, tim
       }
     });
 
+    // 同一解析器同时理解两种一次性 Agent 的 JSONL 方言：
+    // codex exec --json（thread.started / item.* / turn.completed）
+    // claude -p --output-format stream-json（system.init / assistant / user / result）
     const observeEvent = (line) => {
       session.eventCount += 1;
       lastActivityAt = Date.now();
@@ -199,6 +202,36 @@ export function runAgentSession({ command, args = [], cwd, env, evidenceDir, tim
         if (event.type === 'item.completed' && item.type === 'agent_message' && typeof item.text === 'string') {
           session.finalMessage = item.text;
         }
+        return;
+      }
+      if (event.type === 'system' && event.subtype === 'init') {
+        session.milestones.threadStarted ??= now;
+        session.threadId = event.session_id || session.threadId;
+        return;
+      }
+      if (event.type === 'assistant') {
+        session.milestones.modelResponseStarted ??= now;
+        const blocks = Array.isArray(event.message?.content) ? event.message.content : [];
+        if (blocks.some((block) => block?.type === 'tool_use')) {
+          session.milestones.firstToolStarted ??= now;
+          session.milestones.effectiveWorkStarted ??= now;
+        }
+        const text = blocks.filter((block) => block?.type === 'text' && typeof block.text === 'string')
+          .map((block) => block.text).join('\n');
+        if (text) session.finalMessage = text;
+        return;
+      }
+      if (event.type === 'user') {
+        const blocks = Array.isArray(event.message?.content) ? event.message.content : [];
+        if (blocks.some((block) => block?.type === 'tool_result')) {
+          session.milestones.firstToolCompleted ??= now;
+        }
+        return;
+      }
+      if (event.type === 'result') {
+        session.milestones.turnCompleted ??= now;
+        session.usage = event.usage || session.usage;
+        if (typeof event.result === 'string' && event.result) session.finalMessage = event.result;
       }
     };
 

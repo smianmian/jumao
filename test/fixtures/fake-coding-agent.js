@@ -45,6 +45,15 @@ function finish(message = finalMessage) {
 }
 
 async function main() {
+  if (scenario === 'claude_complete_and_exit') {
+    // Claude Code 的 stream-json 方言：system.init → assistant(tool_use) → user(tool_result) → result。
+    emit({ type: 'system', subtype: 'init', session_id: 'fake-claude-session', model: 'claude-sonnet-4-6' });
+    emit({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'tool_use', id: 'tool_1', name: 'Bash', input: { command: 'echo ok' } }] } });
+    emit({ type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tool_1', content: 'ok' }] } });
+    emit({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: '完成了。' }] } });
+    emit({ type: 'result', subtype: 'success', result: finalMessage, usage: { input_tokens: 12, output_tokens: 6 } });
+    return;
+  }
   if (scenario === 'never_start') {
     // The process and event stream come up, but the model never begins work.
     threadStart();

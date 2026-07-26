@@ -155,6 +155,23 @@ test('scenario: endless event activity is stopped by the global timeout only', a
   assert.equal(lifecycleResultFor({ session, receiptLegal: false }), 'incomplete');
 });
 
+test('scenario: the Claude Code stream-json dialect maps to the same milestones and clean exit', async () => {
+  const { session } = await runScenario('claude_complete_and_exit');
+  assert.equal(session.exit.natural, true);
+  assert.equal(session.threadId, 'fake-claude-session');
+  assert.ok(session.milestones.threadStarted);
+  assert.ok(session.milestones.modelResponseStarted);
+  assert.ok(session.milestones.firstToolStarted);
+  assert.ok(session.milestones.firstToolCompleted);
+  assert.ok(session.milestones.effectiveWorkStarted);
+  assert.ok(session.milestones.turnCompleted);
+  assert.ok(session.finalMessage.includes('jumaoCompletion'), 'result payload becomes the final message');
+  const legal = receiptLegalFor(session);
+  assert.equal(legal, true);
+  assert.equal(startupResultFor({ session, receiptLegal: legal }), 'started');
+  assert.equal(lifecycleResultFor({ session, receiptLegal: legal }), 'clean_exit');
+});
+
 test('scenario: spawn failure is an environment failure, not a receipt failure', async () => {
   const evidenceDir = tempDir('jumao-session-evidence-');
   const session = await runAgentSession({

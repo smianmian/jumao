@@ -193,11 +193,18 @@ struct InterviewForm: View {
           .textSelection(.enabled)
       }
 
-      Button("交给 Codex") {
-        appState.copyAgentPlanningCodexInstruction()
+      HStack {
+        Button("交给 Codex") {
+          appState.copyAgentPlanningCodexInstruction()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+
+        Button("交给 Claude Code") {
+          appState.copyAgentPlanningInstruction(for: .claudeCode)
+        }
+        .buttonStyle(.bordered)
       }
-      .buttonStyle(.borderedProminent)
-      .tint(.orange)
 
       HStack {
         Button("查看开发计划") { appState.openAgentDevelopmentPlan() }

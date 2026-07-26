@@ -803,7 +803,23 @@ final class AppState: ObservableObject {
     }
   }
 
+  enum HandoffTool {
+    case codex
+    case claudeCode
+
+    var displayName: String {
+      switch self {
+      case .codex: return "Codex"
+      case .claudeCode: return "Claude Code"
+      }
+    }
+  }
+
   func copyAgentPlanningCodexInstruction() {
+    copyAgentPlanningInstruction(for: .codex)
+  }
+
+  func copyAgentPlanningInstruction(for tool: HandoffTool) {
     guard let session = agentPlanningSession,
           let runPath = session.runPath,
           !runPath.isEmpty else {
@@ -820,7 +836,7 @@ final class AppState: ObservableObject {
     menuBarActivityCoordinator.showCopied()
     let token = UUID()
     agentPlanningCopyFeedbackToken = token
-    agentPlanningCopyFeedback = "已复制。接下来：打开 Codex，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
+    agentPlanningCopyFeedback = "已复制。接下来：打开 \(tool.displayName)，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
     Task { @MainActor [weak self] in
       try? await Task.sleep(nanoseconds: 2_500_000_000)
       guard !Task.isCancelled, self?.agentPlanningCopyFeedbackToken == token else { return }

@@ -26,7 +26,9 @@ const baselineRef = process.env.BASELINE_REF || '3cc08cb4461f364f9e99c8eea9f4c70
 const repairRef = process.env.REPAIR_REF || 'HEAD';
 const repetitions = Number(process.env.REPETITIONS || 3);
 const targetIds = ['saas-web-membership', 'high-risk-health-data', 'existing-node-cli-refactor'];
+const agentKind = process.env.JUMAO_AGENT || 'codex';
 const agentBinary = process.env.CODEX_BIN || 'codex';
+const claudeBinary = process.env.CLAUDE_BIN || 'claude';
 const envInt = (name, fallback) => (process.env[name] ? Number(process.env[name]) : fallback);
 const sessionTimeouts = {
   startupMs: envInt('JUMAO_SESSION_STARTUP_MS', 5 * 60 * 1000),
@@ -278,6 +280,19 @@ async function codexRun(sourceRoot, workspace, outputFile, handoff, evidenceDir)
   const contextFile = path.join(workspace, 'execution-context.json');
   writeJSON(contextFile, executionContext);
   writeJSON(path.join(workspace, 'execution-handoff.json'), handoff);
+  if (agentKind === 'claude') {
+    return runAgentSession({
+      command: claudeBinary,
+      args: [
+        '-p', executionPrompt, '--output-format', 'stream-json', '--verbose',
+        '--permission-mode', 'bypassPermissions'
+      ],
+      cwd: workspace,
+      env: process.env,
+      evidenceDir,
+      timeouts: sessionTimeouts
+    });
+  }
   return runAgentSession({
     command: agentBinary,
     args: [
