@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { auditWorkspace } from './core/audit.js';
-import { runDoctor } from './core/doctor.js';
+import { collectDoctorAnswers, runDoctor } from './core/doctor.js';
 import { responsibilityAgents } from './core/agent-registry.js';
 import { inspectWorkspace } from './core/inspect.js';
 import { collectFocusedInterviewAnswers, collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
@@ -58,7 +58,7 @@ function helpText() {
     '  jumao new <product-name> --dir [dir]',
     '  jumao check [dir] [--strict]',
     '  jumao audit [dir] [--write]',
-    '  jumao doctor [dir] --answers file [--write]',
+    '  jumao doctor [dir] [--answers file] [--write]',
     '  jumao inspect <workspace> --json',
     '  jumao interview [dir] [--answers file] [--full] [--force]',
     '  jumao interview --schema',
@@ -180,9 +180,18 @@ function auditCommand(args, io) {
   return 0;
 }
 
-function doctorCommand(args, io) {
+async function doctorCommand(args, io) {
   const { targetDir, answersFile, write } = parseDoctorArgs(args);
-  const result = runDoctor(targetDir, { answersFile, write });
+  let interactiveAnswers;
+  if (!answersFile) {
+    const collected = await collectDoctorAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+    if (!collected.ok) {
+      io.stderr.write(`${collected.message}\n`);
+      return 1;
+    }
+    interactiveAnswers = collected.answers;
+  }
+  const result = runDoctor(targetDir, { answersFile, answers: interactiveAnswers, write });
 
   if (!result.ok) {
     io.stderr.write(`${result.message}\n`);

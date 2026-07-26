@@ -95,7 +95,7 @@ async function focusedModeFor(targetDir, reader, output) {
   return { ok: false, message: '还没告诉橘猫这个文件夹的用途，先想好再重新运行。' };
 }
 
-function createLineReader(input, output) {
+export function createLineReader(input, output) {
   const rl = createInterface({ input, output });
   const bufferedLines = [];
   const waiters = [];

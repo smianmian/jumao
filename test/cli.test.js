@@ -923,6 +923,39 @@ test('interview --full keeps the complete questionnaire with visible skip hints'
   assert.match(result.stdout, /想不到可以直接回车跳过/);
 });
 
+test('interactive doctor asks plain choice questions and maps answers to governance fields', () => {
+  const workspace = createProductWorkspace();
+  const result = spawnSync(process.execPath, [cli, 'doctor', workspace, '--write'], {
+    encoding: 'utf8',
+    input: '3\n3\n1\n3\n1\n1,3\n1\n'
+  });
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /这个产品现在做到哪一步了？/);
+  assert.match(result.stdout, /要不要收钱？/);
+  assert.doesNotMatch(result.stdout, /projectStage|launchIntent/);
+  const findings = JSON.parse(fs.readFileSync(path.join(workspace, 'governance', 'agent-findings.json'), 'utf8'));
+  assert.equal(findings.answers.projectStage, 'ready_to_release');
+  assert.equal(findings.answers.launchIntent, 'public_launch');
+  assert.equal(findings.answers.storePlan, 'app_store');
+  assert.equal(findings.answers.loginNeeded, true);
+  assert.equal(findings.answers.chargingPlan, 'subscription');
+  assert.deepEqual(findings.answers.sensitiveData, ['health', 'payment']);
+  assert.deepEqual(findings.answers.supportNeeds, ['account', 'refund', 'deletion']);
+});
+
+test('interactive doctor re-asks invalid choices and aborts in plain language', () => {
+  const workspace = createProductWorkspace();
+  const result = spawnSync(process.execPath, [cli, 'doctor', workspace], {
+    encoding: 'utf8',
+    input: '不知道\n也不知道\n'
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /输入选项前面的数字就行。/);
+  assert.match(result.stderr, /还没有回答，先想好再重新运行。/);
+});
+
 test('interview refuses to overwrite filled core files without force', () => {
   const workspace = createProductWorkspace();
   writeMinimalValidCore(workspace);
