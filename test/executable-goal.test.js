@@ -150,6 +150,25 @@ test('an Xcode project without a test action gets a minimal validation bootstrap
   assert.match(task.doneWhen, /xcodebuild test/);
 });
 
+test('a Health plan retains its Xcode test bootstrap in a priority task', () => {
+  const root = workspace();
+  write(root, '.jumao/intake-answers.json', `${JSON.stringify({
+    schemaVersion: 1,
+    mode: 'new_project',
+    answers: {
+      idea: '一个查看健康趋势的 iPhone 工具，不提供诊断或治疗。',
+      features: '读取用户授权的健康数据并展示趋势，不预测疾病；用户可以删除本地数据。',
+      platform: 'iPhone'
+    }
+  }, null, 2)}\n`);
+
+  planWorkspace(root);
+
+  const task = taskPlan(root).priorityTasks.find((item) => item.contributingRoles.includes('qa_testing'));
+  assert.match(task.task, /test action/);
+  assert.match(task.task, /xcodebuild test/);
+});
+
 test('an existing runnable Xcode test action is reused without bootstrap', () => {
   const task = validationBootstrapFor({
     platforms: ['iOS'],

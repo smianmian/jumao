@@ -1496,10 +1496,6 @@ function analyzeAgent(agent, context, reasons) {
     tasks.push(requestsCLIJSON
       ? '验证 --json 输出与原有人类可读文本输出都保持兼容，并运行现有 CLI 测试。'
       : '为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。');
-    if (context.validationBootstrap) {
-      const bootstrap = context.validationBootstrap;
-      tasks.unshift(`${bootstrap.action} 目标：${bootstrap.target}。完成条件：${bootstrap.doneWhen}`);
-    }
   } else if (agent.id === 'project_tech_lead') {
     findings.push(technicalFinding(context));
     decisions.push('按顺序执行最小任务，每一步完成后报告真实验证证据。');
@@ -1531,7 +1527,13 @@ function analyzeAgent(agent, context, reasons) {
     }
   }
   if (context.executionBoundary.realHealthData && agent.id === 'qa_testing') {
-    tasks.unshift('validate：使用本地模拟健康数据验证授权、拒绝、删除和非诊断边界；不得读取真实用户健康数据。');
+    const validation = 'validate：使用本地模拟健康数据验证授权、拒绝、删除和非诊断边界；不得读取真实用户健康数据。';
+    if (context.validationBootstrap) {
+      const bootstrap = context.validationBootstrap;
+      tasks.unshift(`${bootstrap.action} 目标：${bootstrap.target}。完成条件：${bootstrap.doneWhen} ${validation}`);
+    } else {
+      tasks.unshift(validation);
+    }
   }
 
   if (context.platformPending && ['project_tech_lead', 'qa_testing', 'release_manager', 'documentation_delivery'].includes(agent.id)) {

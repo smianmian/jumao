@@ -69,7 +69,7 @@ export function validationBootstrapFor({ platforms = [], files = [], goalIds = [
       ? '检查现有 Xcode project、scheme 和 test action；若缺失，为本次健康目标创建或关联最小单元测试 target。'
       : '创建 iPhone 最小工程时同时创建本次健康目标的最小单元测试 target 和可运行 test action。',
     target: project || '新建 iPhone 工程的共享 scheme 与 HealthTrendTests target',
-    doneWhen: 'HealthKit 授权、拒绝、本地删除和非诊断状态可由本地 mock 验证，且 xcodebuild test 返回 0。',
+    doneWhen: 'HealthKit 授权拒绝状态、本地删除和非诊断状态可由本地 mock 验证，且 xcodebuild test 返回 0。',
     surface: 'test'
   };
 }
@@ -97,6 +97,7 @@ function actionableTaskFor(task, workspace) {
     };
   }
   if (goalIds.some((goalId) => goalId.startsWith('goal:health-'))) {
+    const requiresXcodeTest = /xcodebuild test/i.test(source);
     return {
       taskId: task.taskId,
       goalIds,
@@ -104,7 +105,9 @@ function actionableTaskFor(task, workspace) {
       surface: 'health',
       action: source,
       target: 'HealthTrend 授权状态、局部数据存储和 HealthTrendTests',
-      doneWhen: '授权、拒绝、本地删除和非诊断状态可由本地 mock 验证，且不读取或上传真实健康数据。'
+      doneWhen: requiresXcodeTest
+        ? '授权拒绝状态、本地删除和非诊断状态可由本地 mock 验证，xcodebuild test 返回 0，且不读取或上传真实健康数据。'
+        : '授权拒绝状态、本地删除和非诊断状态可由本地 mock 验证，且不读取或上传真实健康数据。'
     };
   }
   if (goalIds.some((goalId) => goalId.startsWith('goal:cli-'))) {
