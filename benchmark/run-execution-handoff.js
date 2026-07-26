@@ -232,12 +232,27 @@ function runProjectChecks(caseId, workspace) {
   if (project) {
     const projectPath = path.join(workspace, project);
     const scheme = path.basename(project, '.xcodeproj');
-    const build = command('xcodebuild', ['-project', projectPath, '-scheme', scheme, '-sdk', 'iphonesimulator', 'CODE_SIGNING_ALLOWED=NO', 'build'], workspace, { timeout: 600000 });
+    const destination = concreteSimulatorDestination();
+    const destinationArgs = destination ? ['-destination', destination] : [];
+    const build = command('xcodebuild', ['-project', projectPath, '-scheme', scheme, '-sdk', 'iphonesimulator', ...destinationArgs, 'CODE_SIGNING_ALLOWED=NO', 'build'], workspace, { timeout: 600000 });
     results.push({ label: 'xcodebuild build', ...build });
-    const test = command('xcodebuild', ['-project', projectPath, '-scheme', scheme, '-sdk', 'iphonesimulator', 'CODE_SIGNING_ALLOWED=NO', 'test'], workspace, { timeout: 600000 });
+    const test = command('xcodebuild', ['-project', projectPath, '-scheme', scheme, '-sdk', 'iphonesimulator', ...destinationArgs, 'CODE_SIGNING_ALLOWED=NO', 'test'], workspace, { timeout: 600000 });
     results.push({ label: 'xcodebuild test', ...test });
   }
   return results;
+}
+
+function concreteSimulatorDestination() {
+  const result = command('xcrun', ['simctl', 'list', 'devices', 'available', '--json'], repoRoot);
+  if (result.status !== 0) return null;
+  try {
+    const devices = Object.values(JSON.parse(result.stdout).devices || {}).flat();
+    const device = devices.find((item) => item.isAvailable && /^iPhone/.test(item.name) && item.udid)
+      || devices.find((item) => item.isAvailable && item.udid);
+    return device ? `platform=iOS Simulator,id=${device.udid}` : null;
+  } catch {
+    return null;
+  }
 }
 
 function codexRun(sourceRoot, workspace, outputFile, handoff) {
