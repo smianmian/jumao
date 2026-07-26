@@ -402,12 +402,10 @@ function main() {
   const selected = benchmarkCases.filter((benchmarkCase) => targetIds.includes(benchmarkCase.id));
   if (selected.length !== targetIds.length) throw new Error('Execution target case missing.');
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'jumao-execution-handoff-'));
-  const baselineRoot = path.join(tempRoot, 'sources', 'v0.3.1');
   const repairRoot = path.join(tempRoot, 'sources', 'repair');
   fs.rmSync(resultsRoot, { recursive: true, force: true });
   fs.mkdirSync(resultsRoot, { recursive: true });
   try {
-    archive(baselineRef, baselineRoot);
     archive(repairRef, repairRoot);
     const adversarial = runFrozenAdversarialChecks(repairRoot, tempRoot);
     writeJSON(path.join(resultsRoot, 'adversarial.json'), adversarial);
@@ -425,21 +423,18 @@ function main() {
     }
     const runs = [];
     for (const benchmarkCase of selected) {
-      for (const version of ['v0.3.1', 'repair']) {
-        const sourceRoot = version === 'v0.3.1' ? baselineRoot : repairRoot;
-        for (let repetition = 1; repetition <= repetitions; repetition += 1) {
-          process.stdout.write(`Running ${benchmarkCase.id} ${version} ${repetition}/${repetitions}\n`);
-          const result = runOne({ sourceRoot, benchmarkCase, version, repetition, tempRoot, expectedGoals: expectedGoals.get(benchmarkCase.id) });
-          runs.push(result);
-          writeJSON(path.join(resultsRoot, 'runs', benchmarkCase.id, `${version}-${repetition}.json`), result);
-        }
+      for (let repetition = 1; repetition <= repetitions; repetition += 1) {
+        process.stdout.write(`Running ${benchmarkCase.id} repair ${repetition}/${repetitions}\n`);
+        const result = runOne({ sourceRoot: repairRoot, benchmarkCase, version: 'repair', repetition, tempRoot, expectedGoals: expectedGoals.get(benchmarkCase.id) });
+        runs.push(result);
+        writeJSON(path.join(resultsRoot, 'runs', benchmarkCase.id, `repair-${repetition}.json`), result);
       }
     }
     writeJSON(path.join(resultsRoot, 'summary.json'), {
       generatedAt: new Date().toISOString(),
       baselineRef,
       repairRef,
-      baselineResolvedRef: mustCommand('git', ['rev-parse', baselineRef], repoRoot).stdout.trim(),
+      frozenBaselineResolvedRef: mustCommand('git', ['rev-parse', baselineRef], repoRoot).stdout.trim(),
       repairResolvedRef: mustCommand('git', ['rev-parse', repairRef], repoRoot).stdout.trim(),
       repetitions,
       executionPrompt,
@@ -450,7 +445,7 @@ function main() {
     });
     writeText(path.join(resultsRoot, 'README.md'), [
       '# Execution Handoff Validation', '',
-      `- baseline: ${baselineRef}`,
+      `- frozen baseline (not re-run): ${baselineRef}`,
       `- repair: ${repairRef}`,
       `- repetitions: ${repetitions}`,
       `- runs: ${runs.length}`,
