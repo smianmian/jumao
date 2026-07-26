@@ -185,7 +185,7 @@ final class JumaoAgentPlanningTests: XCTestCase {
 
     XCTAssertEqual(
       fixture.appState.agentPlanningCopyFeedback,
-      "已复制。请在 Codex 中打开这个项目文件夹，然后粘贴发送。"
+      "已复制。接下来：打开 Codex，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
     )
     XCTAssertEqual(fixture.appState.menuBarActivity, .copied)
     XCTAssertTrue(NSPasteboard.general.string(forType: .string)?.contains("tasks/jumao-agent-plan.md") == true)

@@ -418,7 +418,26 @@ struct StatusPopover: View {
         }
       }
 
-      if !snapshot.status.nextSafeTask.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      if let receipt = appState.completionReceiptStage {
+        VStack(alignment: .leading, spacing: 4) {
+          sectionTitle("AI 回执")
+          Text(receipt.message)
+            .font(.caption)
+            .fixedSize(horizontal: false, vertical: true)
+          if !receipt.blockedReasons.isEmpty {
+            ForEach(receipt.blockedReasons.prefix(3), id: \.self) { reason in
+              Text("- \(reason)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            }
+          }
+        }
+      }
+
+      if let receipt = appState.completionReceiptStage {
+        detail("下一步", receipt.nextStep)
+      } else if !snapshot.status.nextSafeTask.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
         detail("下一步", snapshot.status.nextSafeTask)
       }
     }
