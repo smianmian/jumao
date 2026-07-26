@@ -82,6 +82,24 @@ function normalizeReceipt(body) {
   return { receipt, issues };
 }
 
+export function parseCompletionReceiptFile(text) {
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return extractCompletionReceipt(String(text || ''));
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { receipt: null, issues: [], error: 'receipt file must contain a JSON object' };
+  }
+  const body = parsed[receiptKey] && typeof parsed[receiptKey] === 'object' ? parsed[receiptKey] : parsed;
+  const { receipt, issues } = normalizeReceipt(body);
+  if (issues.length > 0) {
+    return { receipt: null, issues, error: `illegal receipt: ${issues.join('; ')}` };
+  }
+  return { receipt, issues: [], error: null };
+}
+
 export function extractCompletionReceipt(text) {
   if (typeof text !== 'string' || !text.includes(receiptKey)) {
     return { receipt: null, issues: [], error: 'final message contains no completion receipt' };
@@ -129,15 +147,17 @@ export function crossValidateReceipt({
   measuredCompletedGoalIds = [],
   measuredChecks = [],
   sideEffects = [],
-  unjustifiedOmissionGoalIds = []
+  unjustifiedOmissionGoalIds = [],
+  measurableGoalIds = null
 }) {
   const violations = [];
   const known = new Set(knownGoalIds);
   const measured = new Set(measuredCompletedGoalIds);
+  const measurable = new Set(measurableGoalIds === null ? knownGoalIds : measurableGoalIds);
   for (const goalId of receipt.goalsCompleted) {
     if (!known.has(goalId)) {
       violations.push({ rule: 'unknown_goal', detail: `receipt claims unknown goal ${goalId}` });
-    } else if (!measured.has(goalId)) {
+    } else if (measurable.has(goalId) && !measured.has(goalId)) {
       violations.push({ rule: 'false_goal_claim', detail: `no measured evidence that ${goalId} is complete` });
     }
   }

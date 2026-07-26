@@ -10,6 +10,7 @@ import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { planWorkspace } from './core/planning-runtime.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
 import { isJumaoWorkspace, readJumaoStatus, renderStatus } from './core/status.js';
+import { renderVerifyReport, verifyWorkspaceReceipt } from './core/verify.js';
 
 const rootDir = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -44,6 +45,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'pack') return packCommand(args, io);
   if (command === 'plan') return planCommand(args, io);
   if (command === 'status') return statusCommand(args, io);
+  if (command === 'verify') return verifyCommand(args, io);
 
   io.stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
   return 1;
@@ -65,6 +67,7 @@ function helpText() {
     '  jumao pack [dir] [--target codex|claude|cursor]',
     '  jumao plan <workspace> [--json|--events-jsonl] [--force]',
     '  jumao status [dir]',
+    '  jumao verify [dir] [--json]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
   ].join('\n') + '\n';
@@ -204,6 +207,19 @@ async function doctorCommand(args, io) {
     for (const file of result.writtenFiles) io.stdout.write(`- ${file}\n`);
   }
   return 0;
+}
+
+function verifyCommand(args, io) {
+  const json = args.includes('--json');
+  const targetDir = path.resolve(args.find((arg) => !arg.startsWith('--')) || '.');
+  const result = verifyWorkspaceReceipt(targetDir);
+  if (json) {
+    io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } else {
+    io.stdout.write(renderVerifyReport(result));
+  }
+  if (result.state === 'trusted' || result.state === 'trusted_with_limits') return 0;
+  return 1;
 }
 
 function inspectCommand(args, io) {
