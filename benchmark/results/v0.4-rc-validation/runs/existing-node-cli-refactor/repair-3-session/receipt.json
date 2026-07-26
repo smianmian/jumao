@@ -1,0 +1,32 @@
+{
+  "status": "completed",
+  "goalsCompleted": [
+    "goal:cli-json",
+    "goal:cli-text-compatibility"
+  ],
+  "goalsBlocked": [],
+  "validation": [
+    {
+      "command": "node bin/report.js\noutput=$(node bin/report.js --json) && node -e 'JSON.parse(process.argv[1])' \"$output\"\nnpm test",
+      "exitCode": 0
+    },
+    {
+      "command": "node bin/report.js",
+      "exitCode": 0
+    },
+    {
+      "command": "output=$(node bin/report.js --json) && node -e 'JSON.parse(process.argv[1])' \"$output\"",
+      "exitCode": 0
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check && git diff -- bin/report.js test/report.test.js && git status --short",
+      "exitCode": 0
+    }
+  ],
+  "productionEffects": false,
+  "remainingWork": []
+}

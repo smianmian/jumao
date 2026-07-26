@@ -1,0 +1,58 @@
+[
+  {
+    "id": "assessed-no-change",
+    "expected": "若所有现有计划正确，相关角色应能记录 assessed_no_change，不新增 priorityTask，也不伪造 decision impact。",
+    "passed": true,
+    "priorityTaskCount": 0,
+    "blocked": 0
+  },
+  {
+    "id": "triggered-insufficient-evidence",
+    "expected": "“以后可能登录”不是当前需求；没有项目或明确范围证据时，不应生成账号、数据库或隐私任务。",
+    "passed": true,
+    "priorityTaskCount": 0,
+    "blocked": 1
+  },
+  {
+    "id": "applicable-no-risk",
+    "expected": "安全角色可完成“已检查、无风险”的评估，不应为了 completed 契约额外创建安全任务或提升优先级。",
+    "passed": true,
+    "priorityTaskCount": 0,
+    "blocked": 0
+  },
+  {
+    "id": "bilingual-negation-ambiguity",
+    "expected": "“Do not release unless approved / 不要发布，除非负责人确认”与“keep beta release option”冲突；应提出阻塞澄清，而不是猜测 release 是否被禁止。",
+    "passed": true,
+    "priorityTaskCount": 0,
+    "blocked": 1
+  },
+  {
+    "id": "conflicting-evidence",
+    "expected": "产品资料要求匿名浏览，变更请求又要求所有访问必须登录；应标记冲突并阻塞，不能同时当作可执行约束。",
+    "passed": true,
+    "priorityTaskCount": 0,
+    "blocked": 1
+  },
+  {
+    "id": "overlapping-role-tasks",
+    "expected": "多个角色可保留来源，但对同一“本地假账号数据边界”应合并为一个可执行任务，不能拆成重复的字段、数据字典和隐私任务。",
+    "passed": true,
+    "priorityTaskCount": 8,
+    "blocked": 0
+  },
+  {
+    "id": "monorepo-scoped-constraint",
+    "expected": "packages/mobile 的“不得云同步”只约束 mobile；packages/admin 的本地报表变更不应继承该约束。计划必须标出 package 范围。",
+    "passed": true,
+    "priorityTaskCount": 2,
+    "blocked": 0
+  },
+  {
+    "id": "irreversible-auth-migration",
+    "expected": "认证切换、权限提升和数据迁移必须要求备份、回滚、授权迁移验证与人工确认；不能只输出通用登录或隐私任务。",
+    "passed": true,
+    "priorityTaskCount": 10,
+    "blocked": 0
+  }
+]
