@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { agentGroups, responsibilityAgents } from './agent-registry.js';
+import { executionHandoffForPlan, validationBootstrapFor } from './execution-handoff.js';
 import { inspectWorkspace } from './inspect.js';
 import { writePlanningStatus } from './status.js';
 
@@ -492,6 +493,12 @@ function buildContext(workspacePath, intake, inspection, inventory) {
   const evidenceGate = evidenceGateFor(answerText, documentedProtections, detected, scope);
   const executionBoundary = executionBoundaryFor(answerText, detected, scope);
   const explicitGoals = explicitGoalsFor(answerText, detected);
+  const validationBootstrap = validationBootstrapFor({
+    platforms: detected.platforms,
+    files: inventory.files,
+    goalIds: explicitGoals.map((goal) => goal.goalId),
+    executionContext: { allowPrepare: true, allowValidate: true }
+  });
   const blockingQuestions = unique([...blockingQuestionsFor(intake), ...evidenceGate.questions]);
   const platformPending = intake.state === 'valid'
     && intake.mode === 'new_project'
@@ -511,6 +518,7 @@ function buildContext(workspacePath, intake, inspection, inventory) {
     evidenceGate,
     executionBoundary,
     explicitGoals,
+    validationBootstrap,
     blockingQuestions,
     platformPending,
     pendingDecision: platformPending ? platformPendingDecision : null
@@ -1425,9 +1433,14 @@ function analyzeAgent(agent, context, reasons) {
     tasks.push('列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。');
   } else if (agent.id === 'website_frontend') {
     findings.push('当前需求和项目证据指向 Web 使用方式，网页任务不得混入 Apple 平台实现。');
-    tasks.push(requestsMembership
-      ? '实现或验证网页入口、匿名浏览入口以及登录后状态和会员权益的最小界面变化。'
-      : '实现或验证网页入口、匿名浏览入口以及登录后状态的最小界面变化。');
+    const entry = webEntryFor(context.inventory);
+    tasks.push(entry
+      ? (requestsMembership
+          ? `在现有网页入口 ${entry} 连接匿名、本地假登录和本地假会员状态及会员权益；完成条件：本地入口可访问，三种状态可见且会员显示至少一个权益行为。`
+          : `在现有网页入口 ${entry} 连接匿名和本地假登录状态；完成条件：本地入口可访问并能显示两种状态。`)
+      : (requestsMembership
+          ? '使用项目已有技术栈创建最小本地网页入口；没有框架时创建 index.html，连接匿名、本地假登录和本地假会员状态及会员权益；完成条件：本地入口可定位，三种状态可见且会员显示至少一个权益行为。'
+          : '使用项目已有技术栈创建最小本地网页入口；没有框架时创建 index.html，连接匿名和本地假登录状态；完成条件：本地入口可定位并显示两种状态。'));
   } else if (agent.id === 'backend_engineer') {
     findings.push(requestsMembership
       ? '登录与会员状态需要明确区分匿名、已登录和会员三种状态，但第一阶段不自动扩大成生产后端。'
@@ -1483,6 +1496,10 @@ function analyzeAgent(agent, context, reasons) {
     tasks.push(requestsCLIJSON
       ? '验证 --json 输出与原有人类可读文本输出都保持兼容，并运行现有 CLI 测试。'
       : '为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。');
+    if (context.validationBootstrap) {
+      const bootstrap = context.validationBootstrap;
+      tasks.unshift(`${bootstrap.action} 目标：${bootstrap.target}。完成条件：${bootstrap.doneWhen}`);
+    }
   } else if (agent.id === 'project_tech_lead') {
     findings.push(technicalFinding(context));
     decisions.push('按顺序执行最小任务，每一步完成后报告真实验证证据。');
@@ -1613,6 +1630,12 @@ function synthesizeTaskPlan(context, execution) {
   const laterStages = laterStageTasks(context, contributions);
   const priorityTasks = priorityTaskRecords(contributions, ['firstStage', 'laterStages'], context.explicitGoals);
   const goalCoverageResult = validateGoalCoverage(context.explicitGoals, priorityTasks, context.blockingQuestions);
+  const executionHandoff = executionHandoffForPlan({
+    goals: context.explicitGoals,
+    priorityTasks,
+    workspace: context.workspacePath,
+    executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false }
+  });
   const goalCoverageQuestions = goalCoverageResult.valid
     ? []
     : goalCoverageResult.goals
@@ -1637,7 +1660,7 @@ function synthesizeTaskPlan(context, execution) {
     contributions,
     blockingQuestions: handoffBlockingQuestions,
     goalCoverage: goalCoverageResult.goals,
-    handoffReady: goalCoverageResult.valid && context.blockingQuestions.length === 0,
+    handoffReady: goalCoverageResult.valid && executionHandoff.ready && context.blockingQuestions.length === 0,
     executionBoundaries: context.executionBoundary.phases,
     platformPending: context.platformPending,
     pendingDecision: context.pendingDecision,
@@ -1891,6 +1914,11 @@ function goalIdsForTask(task, goals = []) {
     .map((goal) => goal.goalId);
 }
 
+function webEntryFor(inventory) {
+  const candidates = ['index.html', 'src/App.jsx', 'src/App.tsx', 'src/routes/catalog.js', 'src/routes/index.js'];
+  return candidates.find((candidate) => inventory.files.some((file) => file.path === candidate)) || null;
+}
+
 function contractTextKey(value) {
   return typeof value === 'string'
     ? value.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, '')
@@ -1905,6 +1933,9 @@ function testChecksFor(context) {
     checks.push(`运行现有测试：${tests.join('、')}。`);
   } else {
     checks.push('为第一阶段最小操作、失败状态和输入边界补充可重复验证。');
+  }
+  if (context.validationBootstrap) {
+    checks.push(`验证 ${context.validationBootstrap.target}：${context.validationBootstrap.doneWhen}`);
   }
   checks.push('验证没有修改与本次计划无关的用户文件。');
   checks.push('记录真实执行的构建和测试命令，不把未验证内容写成已通过。');
