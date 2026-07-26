@@ -14,6 +14,13 @@ test('a negative payment constraint document is not a payment side effect', () =
   assert.deepEqual(detectRealSideEffects([{ path: 'product/boundaries.md', content: '不要连接真实支付。' }]), []);
 });
 
+test('a HealthKit usage description that forbids uploads is not a side effect', () => {
+  assert.deepEqual(detectRealSideEffects([{
+    path: 'HealthTrend/Info.plist',
+    content: '<key>NSHealthShareUsageDescription</key><string>HealthKit data stays local and is never uploaded.</string>'
+  }]), []);
+});
+
 test('a real payment endpoint remains detected', () => {
   const violations = detectRealSideEffects([{ path: 'src/pay.js', content: 'fetch("https://api.stripe.com/v1/payment_intents")' }]);
   assert.ok(violations.some((item) => item.kind === 'real_payment'));

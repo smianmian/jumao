@@ -13,7 +13,7 @@ export function detectRealSideEffects(files = []) {
     if (/stripe\.com|paypal\.com|payment_intents|checkout\.sessions/i.test(activeContent)) {
       violations.push({ kind: 'real_payment', path, detail: '检测到真实支付 endpoint 或 payment API。' });
     }
-    if (/upload.*health|health.*upload|cloud.?sync|urlsession|fetch\(/i.test(activeContent) && /health|healthkit/i.test(activeContent)) {
+    if (/(?:urlsession|urlrequest|fetch\(|uploadtask|datatask)/i.test(activeContent) && /health|healthkit/i.test(activeContent)) {
       violations.push({ kind: 'health_data_effect', path, detail: '检测到健康数据网络或上传调用。' });
     }
     if (meaningfulUrls.some((url) => /production|prod\.|\/deploy|\/release/i.test(url)) || /NODE_ENV\s*=\s*production.*(?:deploy|release)/i.test(activeContent)) {
