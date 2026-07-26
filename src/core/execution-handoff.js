@@ -76,7 +76,14 @@ export function validationBootstrapFor({ platforms = [], files = [], goalIds = [
 
 export function executionHandoffForPlan({ goals = [], priorityTasks = [], workspace = '', executionContext = {} } = {}) {
   const tasks = (Array.isArray(priorityTasks) ? priorityTasks : []).map((task) => actionableTaskFor(task, workspace));
-  return buildExecutionHandoff({ goals, tasks, executionContext });
+  return {
+    ...buildExecutionHandoff({ goals, tasks, executionContext }),
+    completionReceipt: {
+      file: 'completion-receipt.json',
+      requiredFields: ['status', 'goalsCompleted', 'goalsBlocked', 'validation', 'productionEffects', 'remainingWork'],
+      template: { status: 'completed', goalsCompleted: [], goalsBlocked: [], validation: [{ command: 'npm test', exitCode: 0 }], productionEffects: false, remainingWork: [] }
+    }
+  };
 }
 
 function actionableTaskFor(task, workspace) {

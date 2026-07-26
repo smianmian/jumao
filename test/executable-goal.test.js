@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import {
   buildExecutionHandoff,
+  executionHandoffForPlan,
   validationBootstrapFor
 } from '../src/core/execution-handoff.js';
 import { planWorkspace } from '../src/core/planning-runtime.js';
@@ -83,6 +84,19 @@ test('a complete prepare task covers a handoff goal', () => {
   });
   assert.equal(handoff.ready, true);
   assert.equal(handoff.goalCoverage[0].status, 'covered');
+});
+
+test('temporary handoff requires one session-only completion receipt', () => {
+  const handoff = executionHandoffForPlan({
+    goals: [webGoal],
+    priorityTasks: [{ taskId: 'web', goalIds: ['goal:web-entry'], task: 'create local entry' }],
+    executionContext: sandbox
+  });
+  assert.deepEqual(handoff.completionReceipt, {
+    file: 'completion-receipt.json',
+    requiredFields: ['status', 'goalsCompleted', 'goalsBlocked', 'validation', 'productionEffects', 'remainingWork'],
+    template: { status: 'completed', goalsCompleted: [], goalsBlocked: [], validation: [{ command: 'npm test', exitCode: 0 }], productionEffects: false, remainingWork: [] }
+  });
 });
 
 test('a Web membership request without an entry generates a minimal local entry task', () => {
