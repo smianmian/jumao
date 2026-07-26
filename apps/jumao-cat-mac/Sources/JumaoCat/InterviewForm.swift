@@ -712,6 +712,13 @@ struct InterviewForm: View {
         .font(.caption.weight(.semibold))
         .foregroundStyle(.secondary)
       platformButtons
+      Text("这一版先不做（可以留空）")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      nativeTextEditor(
+        placeholder: "例如：登录、收费、聊天",
+        answerPath: "newProject.mustNotInclude"
+      )
       Button("改好了") {
         isEditingUnderstanding = false
       }
@@ -728,6 +735,12 @@ struct InterviewForm: View {
         .fixedSize(horizontal: false, vertical: true)
       Text(platformUsageDescription(appState.interviewAnswers["newProject.platform"]))
         .font(.subheadline)
+      if let mustNotInclude = appState.interviewAnswers["newProject.mustNotInclude"]?
+        .trimmingCharacters(in: .whitespacesAndNewlines), !mustNotInclude.isEmpty {
+        Text("这一版先不做：\(mustNotInclude)。AI 不会自作主张加上。")
+          .font(.subheadline)
+          .fixedSize(horizontal: false, vertical: true)
+      }
       HStack {
         Button("对，就是这个意思") {
           appState.confirmFocusedInterviewUnderstanding()
@@ -764,6 +777,13 @@ struct InterviewForm: View {
         placeholder: "描述这次想增加、调整或修复的地方",
         answerPath: "existingProject.requestedChange"
       )
+      Text("怎么算改好了（可以留空）")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      nativeTextEditor(
+        placeholder: "例如：点导出后能生成文件、不再报错",
+        answerPath: "existingProject.completionCheck"
+      )
       Button("改好了") {
         isEditingUnderstanding = false
       }
@@ -775,7 +795,13 @@ struct InterviewForm: View {
       Text("这次你想让它：\(appState.interviewAnswers["existingProject.requestedChange"] ?? "待确认")")
         .font(.subheadline)
         .fixedSize(horizontal: false, vertical: true)
-      Text("Jumao 会结合当前扫描结果整理影响区域、保护项、测试和发布检查，不再把这些专业判断变成问卷。")
+      if let completionCheck = appState.interviewAnswers["existingProject.completionCheck"]?
+        .trimmingCharacters(in: .whitespacesAndNewlines), !completionCheck.isEmpty {
+        Text("改好的标准：\(completionCheck)")
+          .font(.subheadline)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      Text("剩下的专业检查交给橘猫：它会自己弄清这次改动会碰到哪些地方、哪些现有功能不能弄坏，不会再拿这些问题来烦你。")
         .font(.caption)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)

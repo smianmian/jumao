@@ -66,6 +66,15 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
           inputType: "choice",
           options: ["iPhone", "Mac", "网页", "还没想好"],
           order: 3
+        ),
+        focusedQuestion(
+          id: "mustNotInclude",
+          answerPath: "newProject.mustNotInclude",
+          title: "有哪些事这一版先不做？",
+          description: "写下来，AI 就不会自作主张加上。想不到可以留空，直接下一步。",
+          placeholder: "例如：登录、收费、聊天",
+          required: false,
+          order: 4
         )
       ]
     case .existingProject:
@@ -74,9 +83,18 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
           id: "requestedChange",
           answerPath: "existingProject.requestedChange",
           title: "这次你想让它变成什么样？",
-          description: "可以直接描述想增加、调整或修复的地方，也可以粘贴截图对应的问题。",
+          description: "想加什么、想改什么、或者哪里不对劲，用自己的话说就行。看着截图发现的毛病，把截图里的情况描述出来也可以。",
           placeholder: "例如：修复导入项目后入口按钮无反应",
           order: 1
+        ),
+        focusedQuestion(
+          id: "completionCheck",
+          answerPath: "existingProject.completionCheck",
+          title: "这次改完，你怎么知道改好了？",
+          description: "比如：点那个按钮有反应了、导入不再报错了。想不到可以留空，直接下一步。",
+          placeholder: "例如：点导出后能生成文件、不再报错",
+          required: false,
+          order: 2
         )
       ]
     }
@@ -92,6 +110,7 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
     placeholder: String,
     inputType: String = "text",
     options: [String]? = nil,
+    required: Bool = true,
     order: Int
   ) -> JumaoInterviewQuestion {
     JumaoInterviewQuestion(
@@ -103,7 +122,7 @@ struct JumaoInterviewSchema: Codable, Equatable, Sendable {
       stage: "intake",
       inputType: inputType,
       options: options,
-      required: true,
+      required: required,
       order: order
     )
   }

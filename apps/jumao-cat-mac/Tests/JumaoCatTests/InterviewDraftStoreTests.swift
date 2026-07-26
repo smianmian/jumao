@@ -407,6 +407,7 @@ final class InterviewDraftStoreTests: XCTestCase {
     XCTAssertTrue(appState.advanceInterviewQuestion())
     appState.updateInterviewAnswer("iPhone", for: "newProject.platform")
     XCTAssertTrue(appState.advanceInterviewQuestion())
+    XCTAssertTrue(appState.advanceInterviewQuestion())
     appState.confirmFocusedInterviewUnderstanding()
     await Task.yield()
 

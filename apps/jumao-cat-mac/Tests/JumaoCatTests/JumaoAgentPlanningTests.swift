@@ -37,6 +37,7 @@ final class JumaoAgentPlanningTests: XCTestCase {
     fixture.appState.beginInterview(with: schema)
     fixture.appState.updateInterviewAnswer("让保存按钮有明确反馈", for: "existingProject.requestedChange")
     XCTAssertTrue(fixture.appState.advanceInterviewQuestion())
+    XCTAssertTrue(fixture.appState.advanceInterviewQuestion())
     fixture.appState.confirmFocusedInterviewUnderstanding()
     await Task.yield()
 
@@ -299,6 +300,7 @@ final class JumaoAgentPlanningTests: XCTestCase {
       appState.updateInterviewAnswer(answer, for: path)
       XCTAssertTrue(appState.advanceInterviewQuestion())
     }
+    XCTAssertTrue(appState.advanceInterviewQuestion())
     appState.confirmFocusedInterviewUnderstanding()
     await Task.yield()
   }
