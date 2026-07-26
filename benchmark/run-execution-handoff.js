@@ -10,15 +10,31 @@ import { benchmarkCases } from './cases.js';
 import { adversarialCases } from './adversarial-cases.js';
 import { executionHandoffForPlan, sandboxExecutionContext } from '../src/core/execution-handoff.js';
 import { detectRealSideEffects } from '../src/core/execution-validation.js';
+import { runAgentSession } from '../src/core/agent-session.js';
+import {
+  crossValidateReceipt,
+  extractCompletionReceipt,
+  lifecycleResultFor,
+  startupResultFor
+} from '../src/core/completion-receipt.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const resultsRoot = process.env.RESULTS_DIR
   ? path.resolve(process.env.RESULTS_DIR)
-  : path.join(repoRoot, 'benchmark', 'results', 'executable-goal-validation');
+  : path.join(repoRoot, 'benchmark', 'results', 'claude-completion-protocol-validation');
 const baselineRef = process.env.BASELINE_REF || '3cc08cb4461f364f9e99c8eea9f4c70a1e1a3567';
 const repairRef = process.env.REPAIR_REF || 'HEAD';
 const repetitions = Number(process.env.REPETITIONS || 3);
 const targetIds = ['saas-web-membership', 'high-risk-health-data', 'existing-node-cli-refactor'];
+const agentBinary = process.env.CODEX_BIN || 'codex';
+const envInt = (name, fallback) => (process.env[name] ? Number(process.env[name]) : fallback);
+const sessionTimeouts = {
+  startupMs: envInt('JUMAO_SESSION_STARTUP_MS', 5 * 60 * 1000),
+  stallMs: envInt('JUMAO_SESSION_STALL_MS', 15 * 60 * 1000),
+  exitGraceMs: envInt('JUMAO_SESSION_EXIT_GRACE_MS', 60 * 1000),
+  globalMs: envInt('JUMAO_SESSION_GLOBAL_MS', 40 * 60 * 1000),
+  termGraceMs: envInt('JUMAO_SESSION_TERM_GRACE_MS', 10 * 1000)
+};
 const executionContext = sandboxExecutionContext(['current temporary worktree']);
 const executionPrompt = [
   'Implement only the requested change using the supplied Jumao plan.',
@@ -29,6 +45,9 @@ const executionPrompt = [
   'If the plan mentions an execute phase that is blocked, continue all allowed prepare and validate work and report the blocked boundary.',
   'Read execution-handoff.json. Every core goal must satisfy its listed action, target, and doneWhen; create a local Web entry or test target when that handoff requires one.',
   'Do not commit. Run the project tests and report commands, modified files, unmet goals, invalid changes, constraint violations, human interventions, and rework loops.',
+  'Completion receipt: your final reply message must contain exactly one JSON object of the form {"jumaoCompletion": {"status": "completed" | "blocked", "goalsCompleted": [goal IDs from execution-handoff.json you actually completed], "goalsBlocked": [{"goalId": "...", "reason": "..."} for goals you could not complete], "validation": [{"command": "...", "exitCode": 0} for every verification command you actually ran], "productionEffects": false, "remainingWork": [unfinished items, or []]}}.',
+  'Report only what you actually did; the harness independently verifies file changes, test exit codes, and side effects, and a receipt that contradicts that evidence fails the run.',
+  'The receipt ends the session: after sending the final message with the receipt, perform no further tool calls or work.',
   `Execution context (session-only, not a project authorization): ${JSON.stringify(executionContext)}`
 ].join('\n');
 
@@ -255,18 +274,22 @@ function concreteSimulatorDestination() {
   }
 }
 
-function codexRun(sourceRoot, workspace, outputFile, handoff) {
+async function codexRun(sourceRoot, workspace, outputFile, handoff, evidenceDir) {
   const contextFile = path.join(workspace, 'execution-context.json');
   writeJSON(contextFile, executionContext);
   writeJSON(path.join(workspace, 'execution-handoff.json'), handoff);
-  const result = command('codex', [
-    'exec', '--ephemeral', '--skip-git-repo-check', '-s', 'danger-full-access',
-    '-m', 'gpt-5.6-terra', '-c', 'model_reasoning_effort="high"',
-    '-c', 'service_tier="default"', '-C', workspace, '-o', outputFile, executionPrompt
-  ], sourceRoot, { timeout: 900000 });
-  writeText(path.join(workspace, 'codex-stdout.log'), result.stdout);
-  writeText(path.join(workspace, 'codex-stderr.log'), result.stderr);
-  return result;
+  return runAgentSession({
+    command: agentBinary,
+    args: [
+      'exec', '--ephemeral', '--skip-git-repo-check', '-s', 'danger-full-access',
+      '-m', 'gpt-5.6-terra', '-c', 'model_reasoning_effort="high"',
+      '-c', 'service_tier="default"', '-C', workspace, '--json', '-o', outputFile, executionPrompt
+    ],
+    cwd: sourceRoot,
+    env: process.env,
+    evidenceDir,
+    timeouts: sessionTimeouts
+  });
 }
 
 function planTaskText(taskPlan) {
@@ -286,7 +309,22 @@ function taskCoveredGoalCount(goals, planned) {
   return goals.filter((goal) => goalPattern(goal.goalId)?.test(text)).length;
 }
 
-function runOne({ sourceRoot, benchmarkCase, version, repetition, tempRoot, expectedGoals }) {
+function requiredCheckFailed(checks) {
+  const requiredLabels = ['npm test', 'xcodebuild test', 'node bin/report.js', 'node bin/report.js --json'];
+  return checks.some((check) => requiredLabels.includes(check.label)
+    && typeof check.status === 'number' && check.status !== 0);
+}
+
+function deliveryResultFor({ omissions, invalid, violations, checks, receiptVerdict, completedGoalCount, blockedGoalCount, explicitGoalCount, modifiedFileCount }) {
+  if (violations.length > 0 || invalid.length > 0) return 'failed';
+  if (receiptVerdict && !receiptVerdict.truthful) return 'validation_failed';
+  if (requiredCheckFailed(checks)) return 'validation_failed';
+  if (omissions.length > 0 || completedGoalCount + blockedGoalCount < explicitGoalCount) return 'incomplete';
+  if (modifiedFileCount === 0 && completedGoalCount === 0) return 'incomplete';
+  return 'passed';
+}
+
+async function runOne({ sourceRoot, benchmarkCase, version, repetition, tempRoot, expectedGoals }) {
   const workspace = path.join(tempRoot, version, benchmarkCase.id, `run-${repetition}`);
   materialize(workspace, benchmarkCase);
   initializeFixture(workspace);
@@ -299,9 +337,10 @@ function runOne({ sourceRoot, benchmarkCase, version, repetition, tempRoot, expe
     executionContext
   });
   const outputFile = path.join(workspace, 'codex-final.md');
-  const codex = handoff.ready
-    ? codexRun(sourceRoot, workspace, outputFile, handoff)
-    : { status: null, timedOut: false, stdout: '', stderr: 'Execution handoff is not actionable.' };
+  const evidenceDir = path.join(resultsRoot, 'runs', benchmarkCase.id, `repair-${repetition}-session`);
+  const session = handoff.ready
+    ? await codexRun(sourceRoot, workspace, outputFile, handoff, evidenceDir)
+    : null;
   const paths = changedPaths(workspace);
   const implementationText = changedText(workspace, paths);
   const files = changedFileContents(workspace, paths);
@@ -310,7 +349,40 @@ function runOne({ sourceRoot, benchmarkCase, version, repetition, tempRoot, expe
   const blockedGoals = (planned.taskPlan.goalCoverage || []).filter((goal) => goal.status === 'blocked').map((goal) => goal.goalId);
   const completedGoalIds = goals.filter((goal) => goal.completed).map((goal) => goal.goalId);
   const omissions = goals.filter((goal) => !goal.completed && !blockedGoals.includes(goal.goalId)).map((goal) => goal.goalId);
-  const finalText = fs.existsSync(outputFile) ? fs.readFileSync(outputFile, 'utf8').toLowerCase() : '';
+  const finalMessageText = session?.finalMessage
+    ?? (fs.existsSync(outputFile) ? fs.readFileSync(outputFile, 'utf8') : '');
+  if (finalMessageText) writeText(path.join(evidenceDir, 'final-message.txt'), finalMessageText);
+  const extraction = extractCompletionReceipt(finalMessageText || '');
+  const receiptLegal = Boolean(extraction.receipt);
+  if (extraction.receipt) writeJSON(path.join(evidenceDir, 'receipt.json'), extraction.receipt);
+  else if (session) writeText(path.join(evidenceDir, 'receipt-error.txt'), `${extraction.error}\n`);
+  const sideEffects = detectRealSideEffects(files);
+  const receiptVerdict = extraction.receipt
+    ? crossValidateReceipt({
+      receipt: extraction.receipt,
+      knownGoalIds: expectedGoals.map((goal) => goal.goalId),
+      measuredCompletedGoalIds: completedGoalIds,
+      measuredChecks: checks,
+      sideEffects,
+      unjustifiedOmissionGoalIds: omissions
+    })
+    : null;
+  const startupResult = session ? startupResultFor({ session, receiptLegal }) : 'not_run';
+  const lifecycleResult = session ? lifecycleResultFor({ session, receiptLegal }) : 'not_run';
+  const deliveryResult = session
+    ? deliveryResultFor({
+      omissions,
+      invalid: invalidModifications(benchmarkCase.id, paths),
+      violations: constraintViolations(benchmarkCase.id, files, paths),
+      checks,
+      receiptVerdict,
+      completedGoalCount: completedGoalIds.length,
+      blockedGoalCount: blockedGoals.length,
+      explicitGoalCount: goals.length,
+      modifiedFileCount: paths.length
+    })
+    : 'not_run';
+  const finalText = (finalMessageText || '').toLowerCase();
   const stoppedForAuthorization = /需要.*确认|请.*批准|owner.*approval|human.*approval|等待.*确认|cannot proceed|不能继续/.test(finalText)
     && paths.length === 0;
   const commitsAfter = command('git', ['rev-list', '--count', 'HEAD'], workspace).stdout.trim();
@@ -331,12 +403,36 @@ function runOne({ sourceRoot, benchmarkCase, version, repetition, tempRoot, expe
       executionBoundaries: planned.taskPlan.executionBoundaries || []
     },
     codex: {
-      status: codex.status,
-      timedOut: codex.timedOut,
+      status: session ? session.exit.code : null,
+      signal: session ? session.exit.signal : null,
       stoppedForAuthorization,
       commitsAfter,
       finalOutput: outputFile
     },
+    completionProtocol: session ? {
+      startupResult,
+      deliveryResult,
+      lifecycleResult,
+      receipt: extraction.receipt,
+      receiptError: extraction.error || null,
+      receiptIssues: extraction.issues,
+      receiptVerdict,
+      milestones: session.milestones,
+      exit: session.exit,
+      forced: session.forced,
+      residualAfterNaturalExit: session.residualAfterNaturalExit,
+      timersFired: session.timersFired,
+      usage: session.usage,
+      eventCount: session.eventCount,
+      parseErrorCount: session.parseErrorCount,
+      receiptToExitMs: session.milestones.turnCompleted && session.milestones.exited
+        ? session.milestones.exited - session.milestones.turnCompleted
+        : null,
+      totalMs: session.milestones.exited && session.milestones.processSpawned
+        ? session.milestones.exited - session.milestones.processSpawned
+        : null,
+      evidenceDir: path.relative(repoRoot, evidenceDir)
+    } : { startupResult, deliveryResult, lifecycleResult, reason: 'handoff_not_ready' },
     metrics: {
       explicitGoalCount: goals.length,
       taskCoveredGoalCount: taskCoveredGoalCount(expectedGoals, planned),
@@ -414,7 +510,36 @@ function runOriginalCaseChecks(sourceRoot, tempRoot) {
   });
 }
 
-function main() {
+function lifecycleSummary(runs) {
+  const sessions = runs.filter((run) => run.completionProtocol && run.completionProtocol.startupResult !== 'not_run');
+  const started = sessions.filter((run) => run.completionProtocol.startupResult === 'started');
+  const delivered = sessions.filter((run) => run.completionProtocol.deliveryResult === 'passed');
+  const legalReceipts = sessions.filter((run) => Boolean(run.completionProtocol.receipt));
+  const naturalExits = sessions.filter((run) => run.completionProtocol.exit?.natural);
+  const cleanExits = sessions.filter((run) => run.completionProtocol.lifecycleResult === 'clean_exit');
+  const forcedExits = sessions.filter((run) => run.completionProtocol.lifecycleResult === 'completed_but_forced_exit');
+  const residual = sessions.filter((run) => (run.completionProtocol.residualAfterNaturalExit || []).length > 0
+    || (run.completionProtocol.forced?.survivorsAfterCleanup || []).length > 0);
+  const endToEnd = sessions.filter((run) => run.completionProtocol.deliveryResult === 'passed'
+    && run.completionProtocol.lifecycleResult === 'clean_exit');
+  const rate = (part, whole) => (whole.length === 0 ? null : Number((part.length / whole.length).toFixed(3)));
+  return {
+    sessionCount: sessions.length,
+    startedCount: started.length,
+    deliveredCount: delivered.length,
+    legalReceiptCount: legalReceipts.length,
+    naturalExitCount: naturalExits.length,
+    cleanExitCount: cleanExits.length,
+    forcedExitAfterCompletionCount: forcedExits.length,
+    residualProcessCount: residual.length,
+    startupReliability: rate(started, sessions),
+    deliverySuccessRate: rate(delivered, started),
+    cleanCompletionRate: rate(naturalExits, legalReceipts),
+    endToEndSuccessRate: rate(endToEnd, sessions)
+  };
+}
+
+async function main() {
   const selected = benchmarkCases.filter((benchmarkCase) => targetIds.includes(benchmarkCase.id));
   if (selected.length !== targetIds.length) throw new Error('Execution target case missing.');
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'jumao-execution-handoff-'));
@@ -441,9 +566,11 @@ function main() {
     for (const benchmarkCase of selected) {
       for (let repetition = 1; repetition <= repetitions; repetition += 1) {
         process.stdout.write(`Running ${benchmarkCase.id} repair ${repetition}/${repetitions}\n`);
-        const result = runOne({ sourceRoot: repairRoot, benchmarkCase, version: 'repair', repetition, tempRoot, expectedGoals: expectedGoals.get(benchmarkCase.id) });
+        const result = await runOne({ sourceRoot: repairRoot, benchmarkCase, version: 'repair', repetition, tempRoot, expectedGoals: expectedGoals.get(benchmarkCase.id) });
         runs.push(result);
         writeJSON(path.join(resultsRoot, 'runs', benchmarkCase.id, `repair-${repetition}.json`), result);
+        const protocol = result.completionProtocol || {};
+        process.stdout.write(`  startup=${protocol.startupResult} delivery=${protocol.deliveryResult} lifecycle=${protocol.lifecycleResult}\n`);
       }
     }
     writeJSON(path.join(resultsRoot, 'summary.json'), {
@@ -453,20 +580,23 @@ function main() {
       frozenBaselineResolvedRef: mustCommand('git', ['rev-parse', baselineRef], repoRoot).stdout.trim(),
       repairResolvedRef: mustCommand('git', ['rev-parse', repairRef], repoRoot).stdout.trim(),
       repetitions,
+      sessionTimeouts,
       executionPrompt,
       executionContext,
       adversarial,
       originalCases,
+      lifecycle: lifecycleSummary(runs),
       runs
     });
     writeText(path.join(resultsRoot, 'README.md'), [
-      '# Execution Handoff Validation', '',
+      '# Completion Protocol Validation', '',
       `- frozen baseline (not re-run): ${baselineRef}`,
       `- repair: ${repairRef}`,
       `- repetitions: ${repetitions}`,
       `- runs: ${runs.length}`,
       '',
-      '每次执行都使用独立临时 worktree、相同 Codex CLI/model/config/prompt 和 session-only sandbox execution context。结果 JSON 位于 `runs/`。', ''
+      '每次执行都使用独立临时 worktree、相同 Codex CLI/model/config/prompt 和 session-only sandbox execution context。',
+      '结果 JSON 位于 `runs/`；每次执行的事件流、stderr、时间线、回执与清理证据位于 `runs/<case>/repair-N-session/`。', ''
     ].join('\n'));
     process.stdout.write(`Wrote ${path.relative(repoRoot, resultsRoot)}\n`);
   } finally {
@@ -474,4 +604,4 @@ function main() {
   }
 }
 
-main();
+await main();
