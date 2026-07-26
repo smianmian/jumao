@@ -1649,7 +1649,8 @@ function synthesizeTaskPlan(context, execution) {
     goals: context.explicitGoals,
     priorityTasks,
     workspace: context.workspacePath,
-    executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false }
+    executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false },
+    defaultDoneWhen: textValue(context.intake.answers?.completionCheck) || null
   });
   const coverageGaps = goalCoverageResult.valid
     ? []

@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import {
   buildExecutionHandoff,
+  executionHandoffForPlan,
   validationBootstrapFor
 } from '../src/core/execution-handoff.js';
 import { planWorkspace } from '../src/core/planning-runtime.js';
@@ -34,6 +35,51 @@ function taskPlan(root) {
 
 const sandbox = { allowPrepare: true, allowValidate: true, allowProductionEffects: false };
 const webGoal = { goalId: 'goal:web-entry', label: '网页登录入口' };
+
+test('generic tasks become actionable from embedded done-when text without hardcoded goal families', () => {
+  const handoff = executionHandoffForPlan({
+    goals: [{ goalId: 'goal:custom-export', label: '导出按钮' }],
+    priorityTasks: [{
+      taskId: 'task-1',
+      goalIds: ['goal:custom-export'],
+      task: '在 src/toolbar.js 增加导出按钮。完成条件：点击导出后生成文件且 npm test 通过。',
+      scope: { paths: ['src/**'] }
+    }],
+    workspace: '',
+    executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false }
+  });
+  assert.equal(handoff.ready, true);
+  const task = handoff.tasks[0];
+  assert.equal(task.doneWhen, '点击导出后生成文件且 npm test 通过。');
+  assert.equal(task.target, 'src/**');
+});
+
+test('generic tasks fall back to the user completion check for done-when', () => {
+  const handoff = executionHandoffForPlan({
+    goals: [{ goalId: 'goal:custom-export', label: '导出按钮' }],
+    priorityTasks: [{
+      taskId: 'task-1',
+      goalIds: ['goal:custom-export'],
+      task: '修复 src/toolbar.js 里导出按钮无反应的问题。'
+    }],
+    workspace: '',
+    executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false },
+    defaultDoneWhen: '点导出后能生成文件、不再报错'
+  });
+  assert.equal(handoff.ready, true);
+  assert.equal(handoff.tasks[0].doneWhen, '点导出后能生成文件、不再报错');
+  assert.equal(handoff.tasks[0].target, 'src/toolbar.js');
+});
+
+test('generic tasks without any acceptance evidence still block the handoff honestly', () => {
+  const handoff = executionHandoffForPlan({
+    goals: [{ goalId: 'goal:custom-export', label: '导出按钮' }],
+    priorityTasks: [{ taskId: 'task-1', goalIds: ['goal:custom-export'], task: '优化导出体验。' }],
+    workspace: '',
+    executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false }
+  });
+  assert.equal(handoff.ready, false);
+});
 
 test('goalId without an action cannot cover a handoff goal', () => {
   const handoff = buildExecutionHandoff({

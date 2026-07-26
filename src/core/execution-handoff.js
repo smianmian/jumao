@@ -74,12 +74,12 @@ export function validationBootstrapFor({ platforms = [], files = [], goalIds = [
   };
 }
 
-export function executionHandoffForPlan({ goals = [], priorityTasks = [], workspace = '', executionContext = {} } = {}) {
-  const tasks = (Array.isArray(priorityTasks) ? priorityTasks : []).map((task) => actionableTaskFor(task, workspace));
+export function executionHandoffForPlan({ goals = [], priorityTasks = [], workspace = '', executionContext = {}, defaultDoneWhen = null } = {}) {
+  const tasks = (Array.isArray(priorityTasks) ? priorityTasks : []).map((task) => actionableTaskFor(task, workspace, defaultDoneWhen));
   return buildExecutionHandoff({ goals, tasks, executionContext });
 }
 
-function actionableTaskFor(task, workspace) {
+function actionableTaskFor(task, workspace, defaultDoneWhen = null) {
   const goalIds = Array.isArray(task.goalIds) ? task.goalIds : [];
   const source = String(task.task || '');
   if (goalIds.includes('goal:web-entry')) {
@@ -121,7 +121,17 @@ function actionableTaskFor(task, workspace) {
       doneWhen: 'node bin/report.js 保持文本输出，node bin/report.js --json 输出可解析 JSON，且 npm test 通过。'
     };
   }
-  return { taskId: task.taskId, goalIds, phase: 'prepare', action: source, target: task.scope?.paths?.join(', ') || null, doneWhen: null, surface: null };
+  const embeddedDoneWhen = source.match(/完成条件[：:]\s*([^\n]+)/);
+  const embeddedFile = source.match(/[\w@./-]+\.(?:js|mjs|ts|tsx|jsx|swift|html|css|json|md|py|vue|svelte)\b/);
+  return {
+    taskId: task.taskId,
+    goalIds,
+    phase: /验证|测试|verify|test/i.test(source) ? 'validate' : 'prepare',
+    action: source || null,
+    target: task.scope?.paths?.join(', ') || embeddedFile?.[0] || null,
+    doneWhen: embeddedDoneWhen?.[1]?.trim() || defaultDoneWhen || null,
+    surface: null
+  };
 }
 
 function existingWebEntry(workspace) {
