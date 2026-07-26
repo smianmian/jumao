@@ -661,7 +661,8 @@ test('focused new-project intake migrates legacy project features goal and platf
     idea: '一个记录心情的软件',
     features: '记录一次心情',
     firstVersion: '记录一次心情',
-    platform: 'Mac'
+    platform: 'Mac',
+    mustNotInclude: ''
   });
 });
 
@@ -865,7 +866,7 @@ test('interactive interview on an empty directory asks the three focused questio
   const workspace = tempDir();
   const result = spawnSync(process.execPath, [cli, 'interview', workspace], {
     encoding: 'utf8',
-    input: '一个帮我记录每天喝水的小工具\n记录喝水、看今天喝了多少\n1\n'
+    input: '一个帮我记录每天喝水的小工具\n记录喝水、看今天喝了多少\n1\n登录、收费\n'
   });
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
@@ -873,10 +874,15 @@ test('interactive interview on an empty directory asks the three focused questio
   assert.match(result.stdout, /你希望它能做哪些事？/);
   assert.match(result.stdout, /你想先在哪儿用它？/);
   assert.doesNotMatch(result.stdout, /最先会来用的人是谁？/);
+  assert.match(result.stdout, /有哪些事这一版先不做？/);
   const intake = JSON.parse(fs.readFileSync(path.join(workspace, '.jumao', 'intake-answers.json'), 'utf8'));
   assert.equal(intake.mode, 'new_project');
   assert.equal(intake.answers.idea, '一个帮我记录每天喝水的小工具');
   assert.equal(intake.answers.platform, 'iPhone');
+  assert.equal(intake.answers.mustNotInclude, '登录、收费');
+  const scopeGate = fs.readFileSync(path.join(workspace, 'product', 'scope-gate.md'), 'utf8');
+  assert.match(scopeGate, /这一版明确不做/);
+  assert.match(scopeGate, /不要自行加上登录/);
 });
 
 test('interactive interview on an existing project asks only the change question', () => {
@@ -887,15 +893,17 @@ test('interactive interview on an existing project asks only the change question
 
   const result = spawnSync(process.execPath, [cli, 'interview', workspace], {
     encoding: 'utf8',
-    input: '加一个导出按钮\n'
+    input: '加一个导出按钮\n\n'
   });
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /这次你想让它变成什么样？/);
   assert.doesNotMatch(result.stdout, /你想先在哪儿用它？/);
+  assert.match(result.stdout, /这次改完，你怎么知道改好了？/);
   const intake = JSON.parse(fs.readFileSync(path.join(workspace, '.jumao', 'intake-answers.json'), 'utf8'));
   assert.equal(intake.mode, 'existing_project');
   assert.equal(intake.answers.requestedChange, '加一个导出按钮');
+  assert.equal(intake.answers.completionCheck, '');
 });
 
 test('interactive interview re-asks required questions and aborts in plain language', () => {

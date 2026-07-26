@@ -40,6 +40,13 @@ export const focusedInterviewQuestions = {
       title: '你想先在哪儿用它？',
       hint: '先选一个，之后还可以再增加其他版本。',
       options: ['iPhone', 'Mac', '网页', '还没想好']
+    },
+    {
+      key: 'mustNotInclude',
+      title: '有哪些事这一版先不做？',
+      hint: '写下来，AI 就不会自作主张加上。想不到可以直接回车跳过。',
+      example: '例如：登录、收费、聊天',
+      optional: true
     }
   ],
   existingProject: [
@@ -48,6 +55,12 @@ export const focusedInterviewQuestions = {
       title: '这次你想让它变成什么样？',
       hint: '想加什么、想改什么、哪里不对劲，用自己的话说就行。',
       example: '例如：加一个导出按钮；打开大文件时别卡住'
+    },
+    {
+      key: 'completionCheck',
+      title: '这次改完，你怎么知道改好了？',
+      hint: '比如：点那个按钮有反应了、导入不再报错了。想不到可以直接回车跳过。',
+      optional: true
     }
   ]
 };
@@ -142,6 +155,7 @@ async function askFocusedQuestion(reader, output, question) {
       continue;
     }
     if (raw) return { ok: true, value: raw };
+    if (question.optional) return { ok: true, value: '' };
     if (attempt === 0) output.write('这道题需要先回答一下，橘猫才能继续。\n');
   }
   return { ok: false, message: `「${question.title}」还没有回答，先想好再重新运行。` };
@@ -319,11 +333,13 @@ function renderFocusedProductBrief(answers) {
     platformUsageDescription(answers.platform),
     '',
     '## 先不要自动加',
+    ...declaredNonGoalItems(answers.mustNotInclude).map((item) => `- 用户明确说这一版不做${item}，不要自行加上。`),
     '- 登录、支付、订阅、后台或云服务，除非项目主人后续明确提出。'
   ].join('\n') + '\n';
 }
 
 function renderFocusedScopeGate(answers) {
+  const nonGoals = declaredNonGoalItems(answers.mustNotInclude);
   return [
     '# First-Version Scope',
     '',
@@ -332,6 +348,9 @@ function renderFocusedScopeGate(answers) {
     '## 这次先做',
     valueOrPending(answers.features),
     '',
+    ...(nonGoals.length > 0
+      ? ['## 这一版明确不做', ...nonGoals.map((item) => `- 不要自行加上${item}，用户明确说了这一版不做。`), '']
+      : []),
     '## 先别自己加',
     '- 没有被说到的登录、支付、订阅、后台、云同步或第三方服务。'
   ].join('\n') + '\n';
@@ -427,6 +446,9 @@ function renderExistingChangeBrief(answers, context) {
     '## Jumao 对需求的理解',
     valueOrPending(answers.requestedChange),
     '',
+    ...(hasValue(answers.completionCheck)
+      ? ['## 用户定义的完成标准', `- ${String(answers.completionCheck).trim()}`, '']
+      : []),
     '## 受影响的页面和代码区域',
     ...context.affectedAreas.map((item) => `- ${item}`),
     '',
@@ -596,7 +618,20 @@ function normalizeNewProjectAnswers(answers) {
   const platform = ['iPhone', 'Mac', '网页', '还没想好'].includes(restoredPlatform)
     ? restoredPlatform
     : '';
-  return { idea, features, firstVersion: features, platform };
+  return {
+    idea,
+    features,
+    firstVersion: features,
+    platform,
+    mustNotInclude: stringValue(answers.mustNotInclude)
+  };
+}
+
+function declaredNonGoalItems(mustNotInclude) {
+  return String(mustNotInclude || '')
+    .split(/[、，,;；\n]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function stringValue(value) {

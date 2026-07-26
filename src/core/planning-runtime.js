@@ -375,7 +375,7 @@ function normalizeNewAnswers(answers) {
     || textValue(answers.primaryGoal);
   const rawPlatform = textValue(answers.platform) || textValue(answers.targetPlatform);
   const platform = normalizePlatform(rawPlatform);
-  return { idea, features, platform };
+  return { idea, features, platform, mustNotInclude: textValue(answers.mustNotInclude) };
 }
 
 function normalizeExistingAnswers(answers) {
@@ -383,7 +383,8 @@ function normalizeExistingAnswers(answers) {
     requestedChange: textValue(answers.requestedChange)
       || textValue(answers.change)
       || textValue(answers.changeGoal)
-      || textValue(answers.idea)
+      || textValue(answers.idea),
+    completionCheck: textValue(answers.completionCheck)
   };
 }
 
@@ -538,6 +539,17 @@ function detectSignals(answerText, intake, inspection) {
     signals[name] = mentions.positive;
     signalEvidence[name] = mentions;
     if (mentions.negative) negativeSignals.push(name);
+  }
+
+  const declaredNonGoals = String(intake.answers?.mustNotInclude || '').toLowerCase();
+  if (declaredNonGoals) {
+    for (const [name, pattern] of Object.entries(signalPatterns)) {
+      if (new RegExp(pattern.source, 'i').test(declaredNonGoals)) {
+        negativeSignals.push(name);
+        signals[name] = false;
+        signalEvidence[name] = { ...signalEvidence[name], positive: false, negative: true };
+      }
+    }
   }
 
   signals.iphone ||= platform === 'iPhone' || (project.platforms || []).includes('iOS');
@@ -1674,6 +1686,9 @@ function synthesizeTaskPlan(context, execution) {
       '当前执行请求已授权本次明确范围内的 prepare 和 validate；不需要为了普通本地代码修改再次索要主人确认。',
       'execute 阶段涉及真实账号、真实数据、生产环境或外部付费服务时仍然 blocked；不要因 execute 未授权而停止 prepare 或 validate。',
       '不要实现用户没有明确提出的能力。',
+      ...(textValue(context.intake.answers?.mustNotInclude)
+        ? [`用户明确说这一版不做：${textValue(context.intake.answers.mustNotInclude)}。不要实现这些能力。`]
+        : []),
       '完成全部允许的实现和验证后，把完成回执写入 .jumao/completion-receipt.json（模板见计划第 11 节）：goalsCompleted 只填真正完成的 goalId，未完成的移入 goalsBlocked 并写明真实原因，validation 填实际运行过的每条验证命令和真实退出码。',
       '只报告真实发生的事：文件改动、测试退出码和副作用会被独立核验，回执与事实矛盾按失败处理。',
       '写完回执后停止调用工具，直接结束本次会话。'
@@ -1713,6 +1728,8 @@ function taskProtections(context, execution) {
   }
   if (context.negativeSignals.includes('release')) protections.push('用户明确要求本阶段不发布、不提审、不部署生产环境。');
   if (context.negativeSignals.includes('payment')) protections.push('用户明确要求本阶段不连接真实支付或打开真实收费。');
+  const declaredNonGoals = textValue(context.intake.answers?.mustNotInclude);
+  if (declaredNonGoals) protections.push(`用户明确说这一版不做：${declaredNonGoals}。不要自行加上这些能力。`);
   if (context.signals.localOnly) protections.push('第一阶段仅使用本地假数据，不保存真实账号或支付信息。');
   for (const item of context.documentedProtections.filter((item) => scopesOverlap(item.scope, context.scope))) {
     protections.push(`已有资料 ${item.source}：${item.statement}`);
@@ -1945,6 +1962,8 @@ function testChecksFor(context) {
   if (context.validationBootstrap) {
     checks.push(`验证 ${context.validationBootstrap.target}：${context.validationBootstrap.doneWhen}`);
   }
+  const completionCheck = textValue(context.intake.answers?.completionCheck);
+  if (completionCheck) checks.push(`按用户自己定的完成标准验证：${completionCheck}`);
   checks.push('验证没有修改与本次计划无关的用户文件。');
   checks.push('记录真实执行的构建和测试命令，不把未验证内容写成已通过。');
   return checks;

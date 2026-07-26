@@ -78,6 +78,36 @@ function manifest(root) {
   return readJSON(root, path.posix.join(run.runPath, 'manifest.json'));
 }
 
+test('declared non-goals become protections and suppress matching signals', () => {
+  const root = workspace();
+  writeIntake(root, 'new_project', {
+    idea: '一个记录心情的小工具',
+    features: '记录一次心情并查看今天的记录',
+    platform: 'iPhone',
+    mustNotInclude: '登录、收费'
+  });
+  const planned = planWorkspace(root);
+  assert.equal(planned.ok, true);
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  assert.ok(taskPlan.protections.some((item) => item.includes('这一版不做：登录、收费')));
+  assert.ok(taskPlan.codexInstructions.some((item) => item.includes('不要实现这些能力')));
+  assert.ok(taskPlan.priorityTasks.every((task) => !/登录|收费/.test(task.task)));
+});
+
+test('existing-project completion check flows into test checks', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'demo', type: 'module', scripts: { test: 'node --test' } }));
+  write(root, 'src/index.js', 'export const f = () => 1;\n');
+  writeIntake(root, 'existing_project', {
+    requestedChange: '加一个导出按钮',
+    completionCheck: '点导出后能生成文件、不再报错'
+  });
+  const planned = planWorkspace(root);
+  assert.equal(planned.ok, true);
+  const taskPlan = readJSON(root, path.posix.join(latest(root).runPath, 'task-plan.json'));
+  assert.ok(taskPlan.testChecks.some((item) => item.includes('按用户自己定的完成标准验证：点导出后能生成文件、不再报错')));
+});
+
 function agentOutput(root, agentId) {
   const run = latest(root);
   return readJSON(root, path.posix.join(run.runPath, 'agents', `${agentId}.json`));
