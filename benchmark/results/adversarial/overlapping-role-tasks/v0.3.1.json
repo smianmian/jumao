@@ -1,0 +1,222 @@
+{
+  "priorityTaskCount": 28,
+  "blockingQuestions": [],
+  "completedAgents": [
+    "founder_decision",
+    "product_manager",
+    "ui_ux",
+    "documentation_delivery",
+    "backend_engineer",
+    "admin_dashboard_product",
+    "cicd_build",
+    "database_engineer",
+    "security_privacy",
+    "data_governance_dictionary",
+    "privacy_request_ops",
+    "legal_compliance",
+    "finance_tax",
+    "support_operations",
+    "iap_revenue_ops",
+    "project_tech_lead",
+    "qa_testing",
+    "release_manager"
+  ],
+  "tasks": [
+    {
+      "task": "核对第一阶段任务是否都能追溯到用户描述，删除没有证据的新能力。",
+      "roles": [
+        "founder_decision"
+      ],
+      "impact": []
+    },
+    {
+      "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+      "roles": [
+        "product_manager"
+      ],
+      "impact": []
+    },
+    {
+      "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+      "roles": [
+        "ui_ux"
+      ],
+      "impact": []
+    },
+    {
+      "task": "读取 tasks/jumao-agent-plan.md 并先向项目主人复述目标、边界和第一阶段任务。",
+      "roles": [
+        "documentation_delivery"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：账号能力。",
+      "roles": [
+        "backend_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：接口约定。",
+      "roles": [
+        "backend_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：客服处理范围。",
+      "roles": [
+        "admin_dashboard_product"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：操作记录。",
+      "roles": [
+        "admin_dashboard_product"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：构建记录。",
+      "roles": [
+        "cicd_build"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：证书记录。",
+      "roles": [
+        "cicd_build"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：数据字段清单。",
+      "roles": [
+        "database_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：保存周期。",
+      "roles": [
+        "database_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+      "roles": [
+        "security_privacy"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：个人信息清单。",
+      "roles": [
+        "data_governance_dictionary"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：数据字典。",
+      "roles": [
+        "data_governance_dictionary"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：注销流程。",
+      "roles": [
+        "privacy_request_ops"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：删除记录。",
+      "roles": [
+        "privacy_request_ops"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：隐私政策。",
+      "roles": [
+        "legal_compliance"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：用户协议。",
+      "roles": [
+        "legal_compliance"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：收入对账。",
+      "roles": [
+        "finance_tax"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：退款记录。",
+      "roles": [
+        "finance_tax"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：退款指引。",
+      "roles": [
+        "support_operations"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：注销流程。",
+      "roles": [
+        "support_operations"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：IAP 商品。",
+      "roles": [
+        "iap_revenue_ops"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：会员权益规则。",
+      "roles": [
+        "iap_revenue_ops"
+      ],
+      "impact": []
+    },
+    {
+      "task": "按第一阶段任务顺序逐项执行，每完成一步就记录实际文件和验证命令。",
+      "roles": [
+        "project_tech_lead"
+      ],
+      "impact": []
+    },
+    {
+      "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+      "roles": [
+        "qa_testing"
+      ],
+      "impact": []
+    },
+    {
+      "task": "保留发布前检查清单；只有真实构建和测试完成后才更新结论。",
+      "roles": [
+        "release_manager"
+      ],
+      "impact": []
+    }
+  ]
+}

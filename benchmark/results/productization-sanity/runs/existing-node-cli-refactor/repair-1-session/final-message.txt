@@ -1,0 +1,1 @@
+{"jumaoCompletion":{"status":"completed","goalsCompleted":["goal:cli-json","goal:cli-text-compatibility"],"goalsBlocked":[],"validation":[{"command":"npm test","exitCode":0},{"command":"node bin/report.js","exitCode":0},{"command":"node bin/report.js --json","exitCode":0},{"command":"git diff --check","exitCode":0}],"productionEffects":false,"remainingWork":[]}}

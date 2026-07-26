@@ -1,0 +1,17 @@
+{
+  "priorityTaskCount": 0,
+  "blockingQuestions": [
+    "匿名访问约束与强制登录请求冲突；请由项目负责人确认哪条规则优先。"
+  ],
+  "completedAgents": [
+    "founder_decision",
+    "product_manager",
+    "ui_ux",
+    "documentation_delivery",
+    "cicd_build",
+    "project_tech_lead",
+    "qa_testing",
+    "release_manager"
+  ],
+  "tasks": []
+}

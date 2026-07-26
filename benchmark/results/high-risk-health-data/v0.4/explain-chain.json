@@ -1,0 +1,546 @@
+[
+  {
+    "taskId": "task-be9b05fba92c",
+    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+    "contributingRoles": [
+      "security_privacy"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
+    ],
+    "protectedConstraint": "不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。",
+    "decisionImpact": [
+      {
+        "roleId": "security_privacy",
+        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-be9b05fba92c"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-d383a521dd5d",
+    "task": "实现并验证本地健康趋势数据删除，不保留删除后的副本。",
+    "contributingRoles": [
+      "privacy_request_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "用户明确要求删除本地健康数据，删除范围和结果必须可验证。"
+    ],
+    "protectedConstraint": "没有 SUPPORT_REFUND_DELETION_PLAYBOOK.md，不得上线带登录和订阅的版本。",
+    "decisionImpact": [
+      {
+        "roleId": "privacy_request_ops",
+        "changedPlanDecision": "将 隐私请求运营负责人 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-d383a521dd5d"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-2a25ac10da10",
+    "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+    "contributingRoles": [
+      "product_manager"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "第一版先把“读取用户授权的健康数据并展示趋势，不预测疾病；用户可以删除本地数据。”整理成一次能完成的使用过程。"
+    ],
+    "protectedConstraint": "没有产品范围和页面状态，Codex 不得自行补功能。",
+    "decisionImpact": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-2a25ac10da10"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-198a71f92d34",
+    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+    "contributingRoles": [
+      "ui_ux"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
+    ],
+    "protectedConstraint": "没有页面状态矩阵，Codex 不得只实现顺利路径。",
+    "decisionImpact": [
+      {
+        "roleId": "ui_ux",
+        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-198a71f92d34"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-fff3a84762dd",
+    "task": "请求最小 HealthKit 授权，展示授权拒绝状态，并提供删除本地健康趋势数据的操作。",
+    "contributingRoles": [
+      "health_content"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "健康趋势需要最小 HealthKit 授权、授权拒绝状态和本地数据删除边界。"
+    ],
+    "protectedConstraint": "没有 HEALTH_CLAIMS_APPROVAL_LOG.md，不得新增健康结论、推送文案、报告文案。",
+    "decisionImpact": [
+      {
+        "roleId": "health_content",
+        "changedPlanDecision": "将 健康内容顾问 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-fff3a84762dd"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-95efff490aaa",
+    "task": "在健康趋势界面和验证中明确非诊断边界。",
+    "contributingRoles": [
+      "medical_claims_review"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "用户明确要求非诊断边界，趋势展示不能表述为诊断、治疗或疾病预测。"
+    ],
+    "protectedConstraint": "健康趋势不得声称诊断、治疗或预测疾病。",
+    "decisionImpact": [
+      {
+        "roleId": "medical_claims_review",
+        "changedPlanDecision": "将 医疗监管 / 健康声明审查负责人 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-95efff490aaa"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-b2093efef0e6",
+    "task": "在进入相关实现前整理并验证：iOS 权限说明。",
+    "contributingRoles": [
+      "ios_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:iphone",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "帮你判断 iPhone App 这边要准备哪些能力；用户明确选择 iPhone。"
+    ],
+    "protectedConstraint": "没有 RELEASE_MANAGER_CHECKLIST.md，不得提交 TestFlight 或 App Store 审核包。",
+    "decisionImpact": [
+      {
+        "roleId": "ios_engineer",
+        "changedPlanDecision": "将 iOS 工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-b2093efef0e6"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-421e6c9e43d6",
+    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "未检测到现有测试文件，需要为第一阶段补充最小可重复验证。"
+    ],
+    "protectedConstraint": "没有测试结果和发布清单，Codex 不得声称可提审或可上线。",
+    "decisionImpact": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-421e6c9e43d6"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-2b2aa9e6ec38",
+    "task": "在进入相关实现前整理并验证：SDK 清单。",
+    "contributingRoles": [
+      "sdk_vendor_governance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "帮你判断第三方工具会拿到哪些数据；用户明确提到健康或医疗内容。"
+    ],
+    "protectedConstraint": "没有 SDK_VENDOR_REGISTER.md，不得引入第三方 SDK。",
+    "decisionImpact": [
+      {
+        "roleId": "sdk_vendor_governance",
+        "changedPlanDecision": "将 SDK / 供应商治理负责人 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-2b2aa9e6ec38"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-b5cdfe1a1c6e",
+    "task": "在进入相关实现前整理并验证：算法说明。",
+    "contributingRoles": [
+      "algorithm_data"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "derived:algorithm",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "帮你判断评分、报告和推荐有没有依据；用户明确提到健康或医疗内容、用户明确提到算法、预测或评分。"
+    ],
+    "protectedConstraint": "没有 ALGORITHM_VALIDATION_SPEC.md，不得新增高风险评分或结论文案。",
+    "decisionImpact": [
+      {
+        "roleId": "algorithm_data",
+        "changedPlanDecision": "将 算法 / 数据工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-b5cdfe1a1c6e"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-ecf509ad7ffa",
+    "task": "在进入相关实现前整理并验证：验证样例。",
+    "contributingRoles": [
+      "algorithm_validation_evidence"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "derived:algorithm",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "帮你判断算法结果有没有证据边界；用户明确提到健康或医疗内容、用户明确提到算法、预测或评分。"
+    ],
+    "protectedConstraint": "没有 ALGORITHM_VALIDATION_SPEC.md，不得新增高风险评分或建议。",
+    "decisionImpact": [
+      {
+        "roleId": "algorithm_validation_evidence",
+        "changedPlanDecision": "将 算法验证 / 科学证据负责人 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-ecf509ad7ffa"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  },
+  {
+    "taskId": "task-1313aaef6959",
+    "task": "在进入相关实现前整理并验证：真机清单。",
+    "contributingRoles": [
+      "device_lab_test_data"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.idea",
+        "detail": "用户提供了项目描述。"
+      },
+      {
+        "source": "intake.answers.features",
+        "detail": "用户提供了希望实现的能力。"
+      },
+      {
+        "source": "intake.answers.platform",
+        "detail": "用户选择：iPhone"
+      },
+      {
+        "source": "derived:health",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "iOS"
+      }
+    ],
+    "findings": [
+      "帮你准备真实设备和测试数据；用户明确提到健康或医疗内容。"
+    ],
+    "protectedConstraint": "Codex 必须报告真实验证证据，不能把未测内容写成已通过。",
+    "decisionImpact": [
+      {
+        "roleId": "device_lab_test_data",
+        "changedPlanDecision": "将 设备实验室 / 测试数据负责人 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-1313aaef6959"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "traceable": true,
+    "note": "原生 v0.4 priorityTask explain chain。"
+  }
+]

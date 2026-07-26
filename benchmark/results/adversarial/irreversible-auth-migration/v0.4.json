@@ -1,0 +1,8 @@
+{
+  "priorityTaskCount": 0,
+  "blockingQuestions": [
+    "不可逆操作缺少备份、回滚、验证和人工确认；先补齐这些前置条件，不能生成直接执行任务。"
+  ],
+  "completedAgents": [],
+  "tasks": []
+}

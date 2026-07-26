@@ -50,7 +50,7 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     XCTAssertEqual(newProject?["features"] as? String, "记录一次心情，并查看今天的记录。")
     XCTAssertEqual(newProject?["platform"] as? String, "iPhone")
     XCTAssertEqual(newProject?["firstVersion"] as? String, "记录一次心情，并查看今天的记录。")
-    XCTAssertEqual(schema.questions.count, 3)
+    XCTAssertEqual(schema.questions.count, 4)
   }
 
   func testForceAddsForceArgumentToInterviewProcess() {
@@ -164,6 +164,7 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     XCTAssertTrue(appState.advanceInterviewQuestion())
     appState.updateInterviewAnswer("iPhone", for: "newProject.platform")
     XCTAssertTrue(appState.advanceInterviewQuestion())
+    XCTAssertTrue(appState.advanceInterviewQuestion())
 
     appState.confirmFocusedInterviewUnderstanding()
 
@@ -171,7 +172,8 @@ final class JumaoInterviewAnswerWriterTests: XCTestCase {
     XCTAssertEqual(writer.calls[0].questions.map(\.answerPath), [
       "newProject.idea",
       "newProject.features",
-      "newProject.platform"
+      "newProject.platform",
+      "newProject.mustNotInclude"
     ])
     XCTAssertEqual(writer.calls[0].answers["newProject.idea"], "记录心情的软件")
     XCTAssertEqual(writer.calls[0].answers["newProject.features"], "记录一次心情，并查看今天的记录。")

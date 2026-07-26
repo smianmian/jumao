@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private let popover = NSPopover()
   private var statusItem: NSStatusItem?
   private var menuBarInteraction: MenuBarInteractionController?
+  private var mainWindow: MainWindowController?
   private var interviewWindow: InterviewWindowController?
   private var catAnimator: MenuBarCatAnimator?
   private var hoverTracker: MenuBarHoverTracker?
@@ -40,6 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     hostingController.sizingOptions = [.preferredContentSize]
     popover.contentViewController = hostingController
 
+    let mainWindow = MainWindowController(appState: appState)
+    self.mainWindow = mainWindow
+
     let interviewWindow = InterviewWindowController(appState: appState)
     self.interviewWindow = interviewWindow
     appState.$isInterviewPresented
@@ -59,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       menuBarInteraction = MenuBarInteractionController(
         appState: appState,
         popover: popoverController,
+        mainWindow: mainWindow,
         contextMenu: contextMenu
       )
     }

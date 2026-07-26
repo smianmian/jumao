@@ -2,9 +2,16 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { agentGroups } from './agent-registry.js';
+import { completionReceiptFile, extractCompletionReceipt } from './completion-receipt.js';
 
 const schemaVersion = '0.2.3';
-const jumaoVersion = '0.2.3';
+const jumaoVersion = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 const artifactPaths = {
   agentReport: 'governance/agent-review-report.md',
@@ -32,7 +39,7 @@ const catStates = {
   blocked: {
     label: '需要处理',
     face: '( x.x)!',
-    message: '当前动作被硬门禁拦住。不是项目失败。'
+    message: '有件要紧的事必须先处理，橘猫帮你停下来了。不是项目失败。'
   },
   packed: {
     label: '任务包已生成',
@@ -72,20 +79,70 @@ export function statusPath(targetDir) {
   return path.join(targetDir, '.jumao', 'status.json');
 }
 
+export function completionReceiptStage(targetDir) {
+  const file = path.join(targetDir, completionReceiptFile);
+  if (!fs.existsSync(file)) return null;
+  let raw;
+  try {
+    raw = fs.readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+  let extraction = extractCompletionReceipt(raw);
+  if (!extraction.receipt) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !parsed.jumaoCompletion && 'status' in parsed && 'goalsCompleted' in parsed) {
+        extraction = extractCompletionReceipt(JSON.stringify({ jumaoCompletion: parsed }));
+      }
+    } catch {
+      // 保持原始提取结果。
+    }
+  }
+  if (!extraction.receipt) {
+    return {
+      stage: 'receipt_invalid',
+      message: 'AI 交了一份回执，但内容不完整或格式不对。不是项目失败。',
+      nextSafeTask: '让 AI 重新交一份完整回执，或重新跑一次这项工作。',
+      receipt: null
+    };
+  }
+  if (extraction.receipt.status === 'blocked' || extraction.receipt.goalsBlocked.length > 0) {
+    return {
+      stage: 'receipt_blocked',
+      message: 'AI 交回执说有些目标没做完，原因写在回执里。不是失败。',
+      nextSafeTask: '看看回执里被卡住的原因，补上信息后再让 AI 继续。',
+      receipt: extraction.receipt
+    };
+  }
+  return {
+    stage: 'receipt_completed',
+    message: 'AI 交回执说这次的活做完了。不是橘猫核验过的结论。',
+    nextSafeTask: '对照回执里列的目标，自己点一点功能，确认真的做完了。',
+    receipt: extraction.receipt
+  };
+}
+
+function withCompletionReceipt(targetDir, status) {
+  const receiptStage = completionReceiptStage(targetDir);
+  if (receiptStage) status.completionReceipt = receiptStage;
+  return status;
+}
+
 export function readJumaoStatus(targetDir) {
   const file = statusPath(targetDir);
-  if (!fs.existsSync(file)) return sleepingStatus(targetDir);
+  if (!fs.existsSync(file)) return withCompletionReceipt(targetDir, sleepingStatus(targetDir));
 
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    return withCompletionReceipt(targetDir, JSON.parse(fs.readFileSync(file, 'utf8')));
   } catch {
     return makeStatus(targetDir, 'blocked', {
       blockers: [{
         title: '状态文件',
-        message: '.jumao/status.json 不是有效 JSON',
+        message: '橘猫的状态记录坏了。重新做一次检查就能恢复，不影响你的项目内容。',
         source: '.jumao/status.json'
       }],
-      nextSafeTask: '先重新运行 jumao doctor --write 或 jumao pack --target。',
+      nextSafeTask: '在橘猫里重新做一次检查，状态会自动恢复。',
       lastRun: { command: 'status', target: null, ok: false }
     });
   }
@@ -126,7 +183,7 @@ export function writeCommandBlockedStatus(targetDir, run, message) {
       message,
       source: run.command
     }],
-    nextSafeTask: '先处理命令提示里的硬门禁，再重新运行。',
+    nextSafeTask: '先把上面提示的问题处理掉，再重新试一次。',
     lastRun: {
       command: run.command,
       target: run.target ?? null,
@@ -172,10 +229,10 @@ export function writePlanningStatus(targetDir, state, run) {
     ? planningBlockers(run)
     : [];
   const nextSafeTask = state === 'checking'
-    ? '等待 Agent 规划流水线完成，不要把检查中状态当成最终结论。'
+    ? '橘猫还在检查，请稍等。现在看到的还不是最终结果。'
     : state === 'ready'
-      ? '先让 Codex 读取 tasks/jumao-agent-plan.md 并总结，确认后再修改代码。'
-      : blockers[0]?.message || '先处理真实阻塞，再重新运行 jumao plan。';
+      ? '计划已经写好。先让 AI 读一遍计划、用自己的话总结给你听，再开始动手。它可以写代码、做本地测试；但凡碰真实用户、真实数据或要花钱的事，它必须先回来问你。'
+      : blockers[0]?.message || '先解决上面列出的问题，再重新做一次规划。';
 
   return writeStatus(targetDir, makeStatus(targetDir, state, {
     agentBoard: planningAgentBoard(run.groups || []),
@@ -218,7 +275,11 @@ export function renderStatus(status) {
     }
   }
 
-  lines.push(`下一步：${status.nextSafeTask || cat.message}`);
+  if (status.completionReceipt) {
+    lines.push(`回执：${status.completionReceipt.message}`);
+  }
+
+  lines.push(`下一步：${status.completionReceipt?.nextSafeTask || status.nextSafeTask || cat.message}`);
   lines.push(`详情：${status.artifacts?.agentFindings || '.jumao/status.json'}`);
 
   return lines.slice(0, 12).join('\n') + '\n';
@@ -297,11 +358,11 @@ function planningAgentBoard(groups) {
           : 'idle',
       triggeredAgentCount: participatingAgentCount,
       message: counts.failed > 0
-        ? `${counts.failed} 个 Agent 执行失败`
+        ? `${counts.failed} 项检查没能完成`
         : counts.blocked > 0
-          ? `${counts.blocked} 个 Agent 被真实缺口阻塞`
+          ? `${counts.blocked} 项检查因为缺信息先停下了`
           : participatingAgentCount > 0
-            ? `${counts.completed} 个 Agent 完成分析`
+            ? `${counts.completed} 项检查已完成`
             : ''
     };
   });
@@ -333,7 +394,7 @@ function planningBlockers(run) {
   if (blockers.length === 0 && ((run.blockedAgents || 0) > 0 || (run.failedAgents || 0) > 0)) {
     blockers.push({
       title: 'Agent 规划运行',
-      message: '查看本次 manifest 和 Agent 输出中的真实阻塞。',
+      message: '检查时发现了问题。打开橘猫的详情，看看具体卡在哪一条。',
       source: run.runPath ? `${run.runPath}/manifest.json` : '.jumao/status.json'
     });
   }
@@ -342,7 +403,7 @@ function planningBlockers(run) {
 
 function sleepingStatus(targetDir) {
   return makeStatus(targetDir, 'sleeping', {
-    nextSafeTask: '先运行 jumao doctor --write 或 jumao pack --target 生成状态摘要。',
+    nextSafeTask: '还没检查过。先在橘猫里做一次检查，看看项目现在的情况。',
     artifacts: {
       agentReport: null,
       agentFindings: '.jumao/status.json',
@@ -454,7 +515,7 @@ function doctorBlockers(diagnosis) {
     blockers.set(agent.groupId, {
       groupId: agent.groupId,
       title: displayGroupName(group?.name || agent.groupId),
-      message: groupMessages[agent.groupId] || agent.blockingRules?.[0] || '先处理这个 Agent 组的硬门禁',
+      message: groupMessages[agent.groupId] || agent.blockingRules?.[0] || '这一组发现了必须先处理的事，具体看下面的说明。',
       source: 'governance/codex-agent-gates.md'
     });
   }
@@ -515,8 +576,8 @@ function nextStrictTask(strictResult) {
 
 function agentBoardLine(agentBoard = emptyAgentBoard()) {
   if (!agentBoard.activeGroupCount && !agentBoard.blockedGroupCount) {
-    return 'Agent 组：还没有状态摘要';
+    return '检查小组：还没开始';
   }
 
-  return `Agent 组：${agentBoard.activeGroupCount} 个活跃，${agentBoard.blockedGroupCount} 个被硬门禁拦住`;
+  return `检查小组：${agentBoard.activeGroupCount} 组在工作，${agentBoard.blockedGroupCount} 组遇到要紧事停下了`;
 }

@@ -1,0 +1,297 @@
+{
+  "priorityTaskCount": 38,
+  "blockingQuestions": [],
+  "completedAgents": [
+    "founder_decision",
+    "ip_trademark",
+    "product_manager",
+    "ui_ux",
+    "brand_copywriting",
+    "user_research_positioning",
+    "design_system_qa",
+    "accessibility",
+    "documentation_delivery",
+    "backend_engineer",
+    "admin_dashboard_product",
+    "cicd_build",
+    "database_engineer",
+    "security_privacy",
+    "data_governance_dictionary",
+    "privacy_request_ops",
+    "legal_compliance",
+    "support_operations",
+    "project_tech_lead",
+    "qa_testing",
+    "release_manager",
+    "sre_stability",
+    "remote_config_gray_release"
+  ],
+  "tasks": [
+    {
+      "task": "核对第一阶段任务是否都能追溯到用户描述，删除没有证据的新能力。",
+      "roles": [
+        "founder_decision"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：名称检查。",
+      "roles": [
+        "ip_trademark"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：素材来源记录。",
+      "roles": [
+        "ip_trademark"
+      ],
+      "impact": []
+    },
+    {
+      "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+      "roles": [
+        "product_manager"
+      ],
+      "impact": []
+    },
+    {
+      "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+      "roles": [
+        "ui_ux"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：品牌语气。",
+      "roles": [
+        "brand_copywriting"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：商店文案。",
+      "roles": [
+        "brand_copywriting"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：目标用户。",
+      "roles": [
+        "user_research_positioning"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：关键场景。",
+      "roles": [
+        "user_research_positioning"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：基础组件。",
+      "roles": [
+        "design_system_qa"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：设计规则。",
+      "roles": [
+        "design_system_qa"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：字体适配。",
+      "roles": [
+        "accessibility"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：读屏文案。",
+      "roles": [
+        "accessibility"
+      ],
+      "impact": []
+    },
+    {
+      "task": "读取 tasks/jumao-agent-plan.md 并先向项目主人复述目标、边界和第一阶段任务。",
+      "roles": [
+        "documentation_delivery"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：账号能力。",
+      "roles": [
+        "backend_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：接口约定。",
+      "roles": [
+        "backend_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：客服处理范围。",
+      "roles": [
+        "admin_dashboard_product"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：操作记录。",
+      "roles": [
+        "admin_dashboard_product"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：构建记录。",
+      "roles": [
+        "cicd_build"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：证书记录。",
+      "roles": [
+        "cicd_build"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：数据字段清单。",
+      "roles": [
+        "database_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：保存周期。",
+      "roles": [
+        "database_engineer"
+      ],
+      "impact": []
+    },
+    {
+      "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+      "roles": [
+        "security_privacy"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：个人信息清单。",
+      "roles": [
+        "data_governance_dictionary"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：数据字典。",
+      "roles": [
+        "data_governance_dictionary"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：注销流程。",
+      "roles": [
+        "privacy_request_ops"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：删除记录。",
+      "roles": [
+        "privacy_request_ops"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：隐私政策。",
+      "roles": [
+        "legal_compliance"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：用户协议。",
+      "roles": [
+        "legal_compliance"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：退款指引。",
+      "roles": [
+        "support_operations"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：注销流程。",
+      "roles": [
+        "support_operations"
+      ],
+      "impact": []
+    },
+    {
+      "task": "按第一阶段任务顺序逐项执行，每完成一步就记录实际文件和验证命令。",
+      "roles": [
+        "project_tech_lead"
+      ],
+      "impact": []
+    },
+    {
+      "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+      "roles": [
+        "qa_testing"
+      ],
+      "impact": []
+    },
+    {
+      "task": "保留发布前检查清单；只有真实构建和测试完成后才更新结论。",
+      "roles": [
+        "release_manager"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：监控指标。",
+      "roles": [
+        "sre_stability"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：告警方式。",
+      "roles": [
+        "sre_stability"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：灰度计划。",
+      "roles": [
+        "remote_config_gray_release"
+      ],
+      "impact": []
+    },
+    {
+      "task": "在进入相关实现前整理并验证：功能开关。",
+      "roles": [
+        "remote_config_gray_release"
+      ],
+      "impact": []
+    }
+  ]
+}

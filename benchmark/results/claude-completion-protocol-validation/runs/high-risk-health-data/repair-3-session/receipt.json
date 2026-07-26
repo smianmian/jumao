@@ -1,0 +1,22 @@
+{
+  "status": "completed",
+  "goalsCompleted": [
+    "goal:health-authorization",
+    "goal:health-refusal",
+    "goal:health-local-deletion",
+    "goal:health-non-diagnostic"
+  ],
+  "goalsBlocked": [],
+  "validation": [
+    {
+      "command": "xcodebuild test -project HealthTrend.xcodeproj -scheme HealthTrend -destination 'platform=iOS Simulator,id=07D2E9B8-B283-4F62-88D7-AFF7B7E82ED4'",
+      "exitCode": 0
+    },
+    {
+      "command": "rg Swift-source HealthKit-query/network boundary check and plutil permission-description check",
+      "exitCode": 0
+    }
+  ],
+  "productionEffects": false,
+  "remainingWork": []
+}

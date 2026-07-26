@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "goalsCompleted": [
+    "goal:web-entry",
+    "goal:anonymous-browsing",
+    "goal:login-flow",
+    "goal:membership-state",
+    "goal:membership-entitlement"
+  ],
+  "goalsBlocked": [],
+  "validation": [
+    {
+      "command": "npm test",
+      "exitCode": 0
+    },
+    {
+      "command": "npm test && git diff --check && git status --short && git diff -- index.html test/web-entry.test.js",
+      "exitCode": 0
+    }
+  ],
+  "productionEffects": false,
+  "remainingWork": []
+}

@@ -1,0 +1,403 @@
+[
+  {
+    "taskId": "task-81989b39959f",
+    "task": "定义匿名与已登录状态，保留匿名浏览，并实现本次明确的核心操作。 使用本地假账号验证流程，不保存真实密码或支付信息。",
+    "priority": "normal",
+    "contributingRoles": [
+      "backend_engineer"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "backend_engineer",
+        "changedPlanDecision": "将 后端工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-81989b39959f"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      }
+    ],
+    "triggerReasons": [
+      "signal:login"
+    ],
+    "triggerReason": "signal:login",
+    "findings": [
+      "登录需求只要求匿名与已登录状态；没有会员、订阅或生产后端证据。"
+    ],
+    "independentFinding": "登录需求只要求匿名与已登录状态；没有会员、订阅或生产后端证据。",
+    "protectedConstraint": "没有 DATA_GOVERNANCE_REGISTER.md，不得新增数据库字段。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "backend_engineer",
+        "changedPlanDecision": "将 后端工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-81989b39959f"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-734c48aa5c86",
+    "task": "确认现有网页入口、匿名浏览入口以及登录后状态的最小界面变化。",
+    "priority": "normal",
+    "contributingRoles": [
+      "website_frontend"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "website_frontend",
+        "changedPlanDecision": "将 官网前端 / Web 工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-734c48aa5c86"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:web",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      }
+    ],
+    "triggerReasons": [
+      "signal:web"
+    ],
+    "triggerReason": "signal:web",
+    "findings": [
+      "当前需求和项目证据指向 Web 使用方式，网页任务不得混入 Apple 平台实现。"
+    ],
+    "independentFinding": "当前需求和项目证据指向 Web 使用方式，网页任务不得混入 Apple 平台实现。",
+    "protectedConstraint": "没有隐私政策和支持入口证据，Codex 不得声称可正式提审。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "website_frontend",
+        "changedPlanDecision": "将 官网前端 / Web 工程师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-734c48aa5c86"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-be9b05fba92c",
+    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+    "priority": "high",
+    "contributingRoles": [
+      "security_privacy"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "security_privacy",
+        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-be9b05fba92c"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "由用户描述中的明确正向表达触发。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:product/boundaries.md",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline",
+      "signal:login"
+    ],
+    "triggerReason": "runtime-baseline、signal:login",
+    "findings": [
+      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
+    ],
+    "independentFinding": "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。",
+    "protectedConstraint": "不得把密钥、验证码、私钥、凭证或敏感样例写入仓库。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "security_privacy",
+        "changedPlanDecision": "将 安全 / 隐私工程师 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-be9b05fba92c"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-9c4951e5b241",
+    "task": "实现登录后的活动报名草稿，保留访客查看活动，并明确草稿的可见结果。",
+    "priority": "normal",
+    "contributingRoles": [
+      "product_manager"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-9c4951e5b241"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "本次计划只处理用户描述的变化，不自动扩大到相邻功能。"
+    ],
+    "independentFinding": "本次计划只处理用户描述的变化，不自动扩大到相邻功能。",
+    "protectedConstraint": "没有产品范围和页面状态，Codex 不得自行补功能。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-9c4951e5b241"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-198a71f92d34",
+    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+    "priority": "normal",
+    "contributingRoles": [
+      "ui_ux"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "ui_ux",
+        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-198a71f92d34"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
+    ],
+    "independentFinding": "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。",
+    "protectedConstraint": "没有页面状态矩阵，Codex 不得只实现顺利路径。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "ui_ux",
+        "changedPlanDecision": "将 UI / UX 设计师 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-198a71f92d34"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-421e6c9e43d6",
+    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "priority": "high",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-421e6c9e43d6"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Web"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "检测到与验证职责直接相关的现有测试。"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "检测到 1 个测试相关文件，改动后必须运行现有测试。"
+    ],
+    "independentFinding": "检测到 1 个测试相关文件，改动后必须运行现有测试。",
+    "protectedConstraint": "没有测试结果和发布清单，Codex 不得声称可提审或可上线。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-421e6c9e43d6"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ]
+  }
+]

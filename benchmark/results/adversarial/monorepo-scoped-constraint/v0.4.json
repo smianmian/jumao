@@ -1,0 +1,51 @@
+{
+  "priorityTaskCount": 2,
+  "blockingQuestions": [],
+  "completedAgents": [
+    "founder_decision",
+    "product_manager",
+    "ui_ux",
+    "documentation_delivery",
+    "cicd_build",
+    "security_privacy",
+    "project_tech_lead",
+    "qa_testing",
+    "release_manager"
+  ],
+  "tasks": [
+    {
+      "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+      "roles": [
+        "product_manager"
+      ],
+      "impact": [
+        {
+          "roleId": "product_manager",
+          "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+          "affectedTaskIds": [
+            "task-2a25ac10da10"
+          ],
+          "impactType": "created_task",
+          "lowContribution": false
+        }
+      ]
+    },
+    {
+      "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+      "roles": [
+        "qa_testing"
+      ],
+      "impact": [
+        {
+          "roleId": "qa_testing",
+          "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+          "affectedTaskIds": [
+            "task-421e6c9e43d6"
+          ],
+          "impactType": "changed_priority",
+          "lowContribution": false
+        }
+      ]
+    }
+  ]
+}

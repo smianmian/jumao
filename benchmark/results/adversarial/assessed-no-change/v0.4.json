@@ -1,0 +1,15 @@
+{
+  "priorityTaskCount": 0,
+  "blockingQuestions": [],
+  "completedAgents": [
+    "founder_decision",
+    "product_manager",
+    "documentation_delivery",
+    "cicd_build",
+    "security_privacy",
+    "project_tech_lead",
+    "qa_testing",
+    "release_manager"
+  ],
+  "tasks": []
+}

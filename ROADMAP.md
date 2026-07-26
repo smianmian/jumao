@@ -42,17 +42,38 @@ The next product step is a safer first-run experience.
 - Make the next safe task clear before any coding tool starts.
 - Keep all external actions behind human confirmation.
 
-## v0.4.0 - Skill export
+## v0.4.0 - Agent evidence and planning quality
 
-After the start flow is stable, Jumao can help users export clearer handoff
-material for AI tools.
+The next product step is to make every completed Agent result explainable,
+platform-compatible, and useful to the final development plan.
 
-- Explore exporting reusable tool instructions.
+- Normalize common Chinese and English intent wording.
+- Distinguish positive requests from explicit negative boundaries.
+- Prevent platform-incompatible Agents from completing.
+- Separate intent, project, and role-specific evidence.
+- Require completed Agents to contribute findings, protections, or tasks.
+- Merge relevant Agent work into the final Codex-ready plan.
+- Add golden planning cases for iPhone, macOS, Web, health, and Node CLI projects.
+- Keep the runtime deterministic, local, read-only, and free of model API calls.
+- Ship the Completion Receipt protocol and execution lifecycle management,
+  validated by frozen real executions.
+- Verify receipts independently with `jumao verify` instead of trusting
+  agent self-reports.
+- Hand off to Codex or Claude Code and surface the receipt stage in
+  Jumao Cat.
+- Ask only focused plain-language questions on every channel: 3+1 for new
+  projects, 1+1 for existing projects, 9 in the full questionnaire, and an
+  interactive doctor checkup.
+
+## v0.5.0 - Skill export
+
+After v0.4 planning quality is stable, Jumao can explore exporting reusable
+tool instructions.
+
 - Keep Codex, Claude, and Cursor task packs compatible.
 - Avoid locking users into one AI vendor.
 - Keep generated files plain Markdown and JSON where possible.
-- Do not require model API keys.
-- Do not require a hosted Jumao account.
+- Do not require model API keys or a hosted Jumao account.
 
 ## Stability Track
 

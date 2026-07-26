@@ -1,0 +1,15 @@
+{
+  "priorityTaskCount": 0,
+  "blockingQuestions": [
+    "中英文发布否定语句的作用范围相互矛盾；请明确本阶段是否允许 beta 发布。"
+  ],
+  "completedAgents": [
+    "founder_decision",
+    "product_manager",
+    "ui_ux",
+    "documentation_delivery",
+    "security_privacy",
+    "project_tech_lead"
+  ],
+  "tasks": []
+}

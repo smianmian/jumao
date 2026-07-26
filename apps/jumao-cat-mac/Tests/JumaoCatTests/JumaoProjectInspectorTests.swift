@@ -195,12 +195,13 @@ final class JumaoProjectInspectorTests: XCTestCase {
     XCTAssertEqual(appState.interviewQuestions.map(\.title), [
       "你想做个什么？",
       "你希望它能做哪些事？",
-      "你想先在哪儿用它？"
+      "你想先在哪儿用它？",
+      "有哪些事这一版先不做？"
     ])
     XCTAssertFalse(appState.interviewQuestions.map(\.title).contains("最核心的功能有哪些？"))
     XCTAssertFalse(appState.interviewQuestions.map(\.title).contains("当前最重要的目标是什么？"))
-    XCTAssertEqual(appState.interviewQuestions.last?.description, "先选一个，之后还可以再增加其他版本。")
-    XCTAssertEqual(appState.interviewQuestions.last?.options, ["iPhone", "Mac", "网页", "还没想好"])
+    XCTAssertEqual(appState.interviewQuestions[2].description, "先选一个，之后还可以再增加其他版本。")
+    XCTAssertEqual(appState.interviewQuestions[2].options, ["iPhone", "Mac", "网页", "还没想好"])
     XCTAssertNil(appState.interviewAnswers["newProject.platform"])
     XCTAssertNil(appState.interviewInspectionContext)
   }
@@ -219,7 +220,8 @@ final class JumaoProjectInspectorTests: XCTestCase {
 
     XCTAssertEqual(appState.interviewMode, .existingProject)
     XCTAssertEqual(appState.interviewQuestions.map(\.title), [
-      "这次你想让它变成什么样？"
+      "这次你想让它变成什么样？",
+      "这次改完，你怎么知道改好了？"
     ])
     XCTAssertEqual(appState.interviewInspectionContext, existingInspection)
     XCTAssertEqual(appState.interviewInspectionSummary, "已携带扫描结果：Sample · iOS · Swift")

@@ -15,6 +15,7 @@ struct FocusedPlanningResult: Equatable {
 final class AppState: ObservableObject {
   @Published private(set) var workspaceURL: URL?
   @Published private(set) var status: WorkspaceStatus = .unselected
+  @Published private(set) var completionReceiptStage: CompletionReceiptStage?
   @Published private(set) var menuBarActivity: MenuBarActivityState = .idle
   @Published private(set) var workspaceOpenError: String?
   @Published private(set) var agentReportOpenError: String?
@@ -499,10 +500,12 @@ final class AppState: ObservableObject {
   private func refreshStatus(observedStatusFileChange: Bool) {
     guard let workspaceURL else {
       status = .unselected
+      completionReceiptStage = nil
       return
     }
 
     status = statusReader.read(workspaceURL: workspaceURL)
+    completionReceiptStage = CompletionReceiptStage.load(workspaceURL: workspaceURL)
     syncStatusFileActivity(observedStatusFileChange: observedStatusFileChange)
     if shouldShowProjectInspection {
       startProjectInspectionIfNeeded(in: workspaceURL)
@@ -753,7 +756,9 @@ final class AppState: ObservableObject {
     pasteboard.clearContents()
     let instruction = Self.focusedPlanningCodexInstruction(for: mode)
     let copied = pasteboard.setString(instruction, forType: .string)
-    focusedPlanningCopyFeedback = copied ? "已复制给 Codex 的启动指令" : "无法复制启动指令"
+    focusedPlanningCopyFeedback = copied
+      ? "已复制。打开 Codex，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。"
+      : "无法复制启动指令"
 
     let token = UUID()
     focusedPlanningCopyFeedbackToken = token
@@ -798,7 +803,23 @@ final class AppState: ObservableObject {
     }
   }
 
+  enum HandoffTool {
+    case codex
+    case claudeCode
+
+    var displayName: String {
+      switch self {
+      case .codex: return "Codex"
+      case .claudeCode: return "Claude Code"
+      }
+    }
+  }
+
   func copyAgentPlanningCodexInstruction() {
+    copyAgentPlanningInstruction(for: .codex)
+  }
+
+  func copyAgentPlanningInstruction(for tool: HandoffTool) {
     guard let session = agentPlanningSession,
           let runPath = session.runPath,
           !runPath.isEmpty else {
@@ -815,7 +836,7 @@ final class AppState: ObservableObject {
     menuBarActivityCoordinator.showCopied()
     let token = UUID()
     agentPlanningCopyFeedbackToken = token
-    agentPlanningCopyFeedback = "已复制。请在 Codex 中打开这个项目文件夹，然后粘贴发送。"
+    agentPlanningCopyFeedback = "已复制。接下来：打开 \(tool.displayName)，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
     Task { @MainActor [weak self] in
       try? await Task.sleep(nanoseconds: 2_500_000_000)
       guard !Task.isCancelled, self?.agentPlanningCopyFeedbackToken == token else { return }
@@ -851,6 +872,9 @@ final class AppState: ObservableObject {
     5. 真正需要我确认的问题
 
     在我确认前，不要修改代码。
+
+    我确认后开始实施；做完后按计划第 11 节的模板，把完成回执写入
+    .jumao/completion-receipt.json，只报告真实发生的事，然后结束会话。
     """
   }
 

@@ -21,24 +21,12 @@ const answerPaths = [
   'primaryUser',
   'firstVersionGoal',
   'userCanDo',
-  'successEvidence',
-  'cannotCollect',
-  'humanConfirmActions',
   'mustDo',
   'wontDo',
-  'aiMustNotAdd',
-  'mainScreen.name',
-  'mainScreen.userGoal',
-  'mainScreen.loading',
-  'mainScreen.empty',
-  'mainScreen.error',
-  'mainScreen.success',
-  'mainScreen.permissionDenied',
+  'humanConfirmActions',
   'dataSafety.collects',
-  'dataSafety.doesNotCollect',
   'dataSafety.thirdParties',
-  'dataSafety.deletion',
-  'dataSafety.retention'
+  'dataSafety.deletion'
 ];
 
 function route(overrides = {}) {
@@ -139,7 +127,7 @@ test('release phase returns questions only for explicitly active groups', () => 
 
   assert.deepEqual(
     result.questionQueue.map((question) => question.answerPath),
-    ['humanConfirmActions', 'mainScreen.permissionDenied']
+    ['humanConfirmActions']
   );
   assert.ok(result.questionQueue.every((question) => result.activeGroups.includes(question.ownerGroupId)));
 });
@@ -168,8 +156,8 @@ test('all interview questions belong to registered agent groups', () => {
   }
 });
 
-test('schema version 2 preserves all 21 answer paths', () => {
+test('schema version 2 preserves all 9 answer paths', () => {
   assert.equal(interviewSchema.schemaVersion, 2);
-  assert.equal(interviewSchema.questions.length, 21);
+  assert.equal(interviewSchema.questions.length, 9);
   assert.deepEqual(interviewSchema.questions.map((question) => question.answerPath), answerPaths);
 });

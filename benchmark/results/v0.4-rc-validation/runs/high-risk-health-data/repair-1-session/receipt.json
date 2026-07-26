@@ -1,0 +1,22 @@
+{
+  "status": "completed",
+  "goalsCompleted": [
+    "goal:health-authorization",
+    "goal:health-refusal",
+    "goal:health-local-deletion",
+    "goal:health-non-diagnostic"
+  ],
+  "goalsBlocked": [],
+  "validation": [
+    {
+      "command": "xcodebuild -list -project HealthTrend.xcodeproj && xcodebuild test -project HealthTrend.xcodeproj -scheme HealthTrend -destination 'platform=iOS Simulator,name=iPhone 17'",
+      "exitCode": 0
+    },
+    {
+      "command": "xcodebuild test -project HealthTrend.xcodeproj -scheme HealthTrend -destination 'platform=iOS Simulator,name=iPhone 17'",
+      "exitCode": 0
+    }
+  ],
+  "productionEffects": false,
+  "remainingWork": []
+}

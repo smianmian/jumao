@@ -2,14 +2,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { auditWorkspace } from './core/audit.js';
-import { runDoctor } from './core/doctor.js';
+import { collectDoctorAnswers, runDoctor } from './core/doctor.js';
 import { responsibilityAgents } from './core/agent-registry.js';
 import { inspectWorkspace } from './core/inspect.js';
-import { collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
+import { collectFocusedInterviewAnswers, collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { planWorkspace } from './core/planning-runtime.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
 import { isJumaoWorkspace, readJumaoStatus, renderStatus } from './core/status.js';
+import { renderVerifyReport, verifyWorkspaceReceipt } from './core/verify.js';
 
 const rootDir = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -44,6 +45,7 @@ export async function main(argv = process.argv.slice(2), io = process) {
   if (command === 'pack') return packCommand(args, io);
   if (command === 'plan') return planCommand(args, io);
   if (command === 'status') return statusCommand(args, io);
+  if (command === 'verify') return verifyCommand(args, io);
 
   io.stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
   return 1;
@@ -58,13 +60,14 @@ function helpText() {
     '  jumao new <product-name> --dir [dir]',
     '  jumao check [dir] [--strict]',
     '  jumao audit [dir] [--write]',
-    '  jumao doctor [dir] --answers file [--write]',
+    '  jumao doctor [dir] [--answers file] [--write]',
     '  jumao inspect <workspace> --json',
-    '  jumao interview [dir] [--answers file] [--force]',
+    '  jumao interview [dir] [--answers file] [--full] [--force]',
     '  jumao interview --schema',
     '  jumao pack [dir] [--target codex|claude|cursor]',
     '  jumao plan <workspace> [--json|--events-jsonl] [--force]',
     '  jumao status [dir]',
+    '  jumao verify [dir] [--json]',
     '',
     'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
   ].join('\n') + '\n';
@@ -180,9 +183,18 @@ function auditCommand(args, io) {
   return 0;
 }
 
-function doctorCommand(args, io) {
+async function doctorCommand(args, io) {
   const { targetDir, answersFile, write } = parseDoctorArgs(args);
-  const result = runDoctor(targetDir, { answersFile, write });
+  let interactiveAnswers;
+  if (!answersFile) {
+    const collected = await collectDoctorAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+    if (!collected.ok) {
+      io.stderr.write(`${collected.message}\n`);
+      return 1;
+    }
+    interactiveAnswers = collected.answers;
+  }
+  const result = runDoctor(targetDir, { answersFile, answers: interactiveAnswers, write });
 
   if (!result.ok) {
     io.stderr.write(`${result.message}\n`);
@@ -195,6 +207,19 @@ function doctorCommand(args, io) {
     for (const file of result.writtenFiles) io.stdout.write(`- ${file}\n`);
   }
   return 0;
+}
+
+function verifyCommand(args, io) {
+  const json = args.includes('--json');
+  const targetDir = path.resolve(args.find((arg) => !arg.startsWith('--')) || '.');
+  const result = verifyWorkspaceReceipt(targetDir);
+  if (json) {
+    io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } else {
+    io.stdout.write(renderVerifyReport(result));
+  }
+  if (result.state === 'trusted' || result.state === 'trusted_with_limits') return 0;
+  return 1;
 }
 
 function inspectCommand(args, io) {
@@ -219,15 +244,33 @@ function inspectCommand(args, io) {
 }
 
 async function interviewCommand(args, io) {
-  const { targetDir, answersFile, force, schema } = parseInterviewArgs(args);
+  const { targetDir, answersFile, force, schema, full } = parseInterviewArgs(args);
   if (schema) {
     io.stdout.write(`${JSON.stringify(interviewSchema, null, 2)}\n`);
     return 0;
   }
 
-  const answers = answersFile
-    ? readAnswersFile(answersFile)
-    : await collectInterviewAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+  let answers;
+  if (answersFile) {
+    answers = readAnswersFile(answersFile);
+  } else if (full) {
+    answers = await collectInterviewAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+    if (answers.__aborted) {
+      io.stderr.write(`${answers.message}\n`);
+      return 1;
+    }
+  } else {
+    const focused = await collectFocusedInterviewAnswers(
+      targetDir,
+      io.stdin || process.stdin,
+      io.stdout || process.stdout
+    );
+    if (!focused.ok) {
+      io.stderr.write(`${focused.message}\n`);
+      return 1;
+    }
+    answers = focused.answers;
+  }
   const result = runInterview(targetDir, answers, { force });
 
   if (!result.ok) {
@@ -403,6 +446,7 @@ function parseInterviewArgs(args) {
   let answersFile;
   let force = false;
   let schema = false;
+  let full = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -410,6 +454,8 @@ function parseInterviewArgs(args) {
       force = true;
     } else if (arg === '--schema') {
       schema = true;
+    } else if (arg === '--full') {
+      full = true;
     } else if (arg === '--answers') {
       answersFile = path.resolve(args[index + 1]);
       index += 1;
@@ -422,7 +468,8 @@ function parseInterviewArgs(args) {
     targetDir: path.resolve(target || '.'),
     answersFile,
     force,
-    schema
+    schema,
+    full
   };
 }
 

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { agentGroups, getTriggeredAgents } from './agent-registry.js';
 import { writeCheckingStatus, writeCommandBlockedStatus, writeDoctorStatus } from './status.js';
+import { createLineReader } from './interview.js';
 
 const governanceFiles = {
   report: 'governance/agent-review-report.md',
@@ -21,6 +22,134 @@ const codexGateRules = [
   '没有 ORG_ROLE_OWNER_MATRIX.md，不得开始业务代码。'
 ];
 
+export const doctorInterviewQuestions = [
+  {
+    key: 'stage',
+    title: '这个产品现在做到哪一步了？',
+    options: [
+      { label: '还在自己试', values: { projectStage: 'prototype', launchIntent: 'private' } },
+      { label: '已经给几个人用了', values: { projectStage: 'internal_test', launchIntent: 'private' } },
+      { label: '准备正式给大家用', values: { projectStage: 'ready_to_release', launchIntent: 'public_launch' } },
+      { label: '还没想好', values: { projectStage: 'prototype', launchIntent: 'private' } }
+    ]
+  },
+  {
+    key: 'store',
+    title: '打算放到应用商店让别人自己下载吗？',
+    options: [
+      { label: '只装自己的设备', values: { storePlan: 'none' } },
+      { label: '先给少数人试用', values: { storePlan: 'testflight' } },
+      { label: '要正式上架 App Store', values: { storePlan: 'app_store' } },
+      { label: '还没想好', values: { storePlan: 'none' } }
+    ]
+  },
+  {
+    key: 'login',
+    title: '要不要别人登录才能用？',
+    options: [
+      { label: '要登录', values: { loginNeeded: true } },
+      { label: '不用登录', values: { loginNeeded: false } },
+      { label: '还没想好', values: { loginNeeded: false } }
+    ]
+  },
+  {
+    key: 'charging',
+    title: '要不要收钱？',
+    options: [
+      { label: '不收费', values: { chargingPlan: 'free' } },
+      { label: '一次买断', values: { chargingPlan: 'paid' } },
+      { label: '按月或按年会员', values: { chargingPlan: 'subscription' } },
+      { label: '还没想好', values: { chargingPlan: 'free' } }
+    ]
+  },
+  {
+    key: 'crossDevice',
+    title: '用户换了手机，里面的东西要不要还在？',
+    options: [
+      { label: '要还在', values: { crossDeviceData: 'needed' } },
+      { label: '丢了不要紧', values: { crossDeviceData: 'local_only' } },
+      { label: '还没想好', values: { crossDeviceData: 'local_only' } }
+    ]
+  },
+  {
+    key: 'sensitive',
+    title: '它会碰到需要特别小心的内容吗？可多选，用逗号隔开数字。',
+    multi: true,
+    listKey: 'sensitiveData',
+    options: [
+      { label: '健康', item: 'health' },
+      { label: '孩子', item: 'children' },
+      { label: '钱或理财', item: 'payment' },
+      { label: '位置', item: 'location' },
+      { label: '都不涉及', item: null }
+    ]
+  },
+  {
+    key: 'china',
+    title: '用它的人主要在中国大陆吗？',
+    options: [
+      { label: '主要在大陆', values: { chinaUsers: true } },
+      { label: '主要在海外', values: { chinaUsers: false } },
+      { label: '大陆海外都有', values: { chinaUsers: true } },
+      { label: '还没想好', values: { chinaUsers: false } }
+    ]
+  }
+];
+
+export async function collectDoctorAnswers(input, output) {
+  const reader = createLineReader(input, output);
+  try {
+    output.write('回答下面几道普通问题，橘猫就能给项目做一次体检。\n\n');
+    const answers = {};
+    for (const question of doctorInterviewQuestions) {
+      output.write(`${question.title}\n`);
+      question.options.forEach((option, index) => output.write(`  ${index + 1}) ${option.label}\n`));
+      const picked = await pickDoctorOptions(reader, output, question);
+      if (!picked.ok) return picked;
+      if (question.multi) {
+        answers[question.listKey] = picked.items;
+      } else {
+        Object.assign(answers, picked.values);
+      }
+    }
+    answers.ownerType = 'personal';
+    answers.supportNeeds = derivedSupportNeeds(answers);
+    return { ok: true, answers };
+  } finally {
+    reader.close();
+  }
+}
+
+async function pickDoctorOptions(reader, output, question) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const line = await reader.ask('> ');
+    if (line === null) return { ok: false, message: '回答中断了，先想好再重新运行。' };
+    const numbers = line.split(/[,，、\s]+/).filter(Boolean);
+    const validSelection = numbers.length > 0
+      && numbers.every((item) => /^\d+$/.test(item) && question.options[Number(item) - 1]);
+    if (validSelection && (question.multi || numbers.length === 1)) {
+      if (question.multi) {
+        const items = [...new Set(numbers.map((item) => question.options[Number(item) - 1].item))]
+          .filter((item) => item !== null);
+        return { ok: true, items };
+      }
+      return { ok: true, values: question.options[Number(numbers[0]) - 1].values };
+    }
+    if (attempt === 0) {
+      output.write(question.multi ? '输入选项前面的数字就行，多个用逗号隔开。\n' : '输入选项前面的数字就行。\n');
+    }
+  }
+  return { ok: false, message: `「${question.title}」还没有回答，先想好再重新运行。` };
+}
+
+function derivedSupportNeeds(answers) {
+  const needs = [];
+  if (answers.loginNeeded) needs.push('account');
+  if (answers.chargingPlan === 'paid' || answers.chargingPlan === 'subscription') needs.push('refund');
+  if (answers.crossDeviceData === 'needed' || (answers.sensitiveData || []).length > 0) needs.push('deletion');
+  return needs;
+}
+
 export function runDoctor(targetDir, options = {}) {
   const answersFile = options.answersFile;
 
@@ -33,25 +162,31 @@ export function runDoctor(targetDir, options = {}) {
 
   if (options.write) writeCheckingStatus(targetDir, { command: 'doctor', target: null });
 
-  if (!answersFile || !fs.existsSync(answersFile)) {
-    if (options.write) {
-      writeCommandBlockedStatus(targetDir, { command: 'doctor', target: null }, 'answers 文件不存在');
+  let answerValues;
+  if (options.answers && typeof options.answers === 'object') {
+    answerValues = options.answers;
+  } else {
+    if (!answersFile || !fs.existsSync(answersFile)) {
+      if (options.write) {
+        writeCommandBlockedStatus(targetDir, { command: 'doctor', target: null }, 'answers 文件不存在');
+      }
+      return {
+        ok: false,
+        message: `answers 文件不存在: ${answersFile || '(missing --answers)'}`
+      };
     }
-    return {
-      ok: false,
-      message: `answers 文件不存在: ${answersFile || '(missing --answers)'}`
-    };
+
+    const answers = readJsonFile(answersFile);
+    if (!answers.ok) {
+      if (options.write) {
+        writeCommandBlockedStatus(targetDir, { command: 'doctor', target: null }, 'answers 文件不是有效 JSON');
+      }
+      return answers;
+    }
+    answerValues = answers.value;
   }
 
-  const answers = readJsonFile(answersFile);
-  if (!answers.ok) {
-    if (options.write) {
-      writeCommandBlockedStatus(targetDir, { command: 'doctor', target: null }, 'answers 文件不是有效 JSON');
-    }
-    return answers;
-  }
-
-  const diagnosis = buildDoctorDiagnosis(targetDir, answers.value);
+  const diagnosis = buildDoctorDiagnosis(targetDir, answerValues);
   if (options.write) {
     writeGovernanceFiles(targetDir, diagnosis);
     writeDoctorStatus(targetDir, diagnosis);

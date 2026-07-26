@@ -1,0 +1,138 @@
+[
+  {
+    "taskId": "task-3f3cdb6eca05",
+    "task": "为现有 CLI 增加 --json 输出，并保留原有人类可读文本输出作为兼容行为。",
+    "priority": "normal",
+    "contributingRoles": [
+      "product_manager"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-3f3cdb6eca05"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Node CLI"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "本次计划只处理用户描述的变化，不自动扩大到相邻功能。"
+    ],
+    "independentFinding": "本次计划只处理用户描述的变化，不自动扩大到相邻功能。",
+    "protectedConstraint": "没有产品范围和页面状态，Codex 不得自行补功能。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "product_manager",
+        "changedPlanDecision": "将 产品经理 Agent 的可执行任务加入计划优先任务池。",
+        "affectedTaskIds": [
+          "task-3f3cdb6eca05"
+        ],
+        "impactType": "created_task",
+        "lowContribution": false
+      }
+    ]
+  },
+  {
+    "taskId": "task-0ad0fa280122",
+    "task": "验证 --json 输出与原有人类可读文本输出都保持兼容，并运行现有 CLI 测试。",
+    "priority": "high",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "contributionImpacts": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-0ad0fa280122"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Node CLI"
+      },
+      {
+        "source": "inspect.project.buildSystems",
+        "detail": "npm"
+      },
+      {
+        "source": "file:test/report.test.js",
+        "detail": "检测到与验证职责直接相关的现有测试。"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      },
+      {
+        "source": "file:test/report.test.js",
+        "detail": "文件名或内容与该角色职责直接相关。"
+      }
+    ],
+    "triggerReasons": [
+      "runtime-baseline"
+    ],
+    "triggerReason": "runtime-baseline",
+    "findings": [
+      "检测到 1 个测试相关文件，改动后必须运行现有测试。"
+    ],
+    "independentFinding": "检测到 1 个测试相关文件，改动后必须运行现有测试。",
+    "protectedConstraint": "没有测试结果和发布清单，Codex 不得声称可提审或可上线。",
+    "scope": {
+      "paths": [
+        "**"
+      ]
+    },
+    "decisionImpact": [
+      {
+        "roleId": "qa_testing",
+        "changedPlanDecision": "将 QA 测试 Agent 发现的风险任务提升为 high 优先级。",
+        "affectedTaskIds": [
+          "task-0ad0fa280122"
+        ],
+        "impactType": "changed_priority",
+        "lowContribution": false
+      }
+    ]
+  }
+]

@@ -13,6 +13,7 @@
 		1544BA710D0EE682A5DA5AB3 /* WorkspaceFolderOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A0FDECC557CAB0B0C5A5D1 /* WorkspaceFolderOpener.swift */; };
 		1C4F0F85B5612DF018912014 /* StatusPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E60E9D3BD3A11E6A4F83188 /* StatusPopover.swift */; };
 		2155154BC37F09927C60D167 /* JumaoProjectInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B7E0E3D6E8D44C6F12C8C /* JumaoProjectInitializer.swift */; };
+		22531A52079B8793290861A6 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E92F89F26319002D056B20 /* MainWindowController.swift */; };
 		2326F4A63AE184877550C784 /* TerminalWorkspaceOpenerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490B658AB2874D55FFBA5116 /* TerminalWorkspaceOpenerTests.swift */; };
 		2578B0BDCAC83FC3782DA227 /* JumaoStrictCheckRunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E250E0E8097DF468995C652 /* JumaoStrictCheckRunnerTests.swift */; };
 		2EBA2BB8EC049018295F05AB /* StatusReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65EA6C1EE3707A9A76B06B69 /* StatusReaderTests.swift */; };
@@ -49,6 +50,7 @@
 		B9B69C6BDF63192F0B444341 /* JumaoCLIResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916753B6EE0589FC065D70F4 /* JumaoCLIResolver.swift */; };
 		BD7D859D35DD33513061160E /* CodexTaskPackRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */; };
 		C8E1BE016ADF6B0613240465 /* WorkspacePickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874FEB2DFB55FF26BD7B1EC0 /* WorkspacePickerTests.swift */; };
+		C8F9236AE6355A7DC6B904A3 /* CompletionReceiptStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6BC97C2FF138BB765397B7D /* CompletionReceiptStage.swift */; };
 		C94BE9C720C8A357C23E8AEA /* JumaoAgentPlanningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4613B273EE953A977E407062 /* JumaoAgentPlanningTests.swift */; };
 		CA30D7C985E3FFB0F84677F6 /* JumaoInterviewAnswerWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0154C9A281A098CC015ABD /* JumaoInterviewAnswerWriterTests.swift */; };
 		D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */; };
@@ -62,6 +64,7 @@
 		ECE7B95497CC92DDD208E0B5 /* CodexTaskPackCopierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D80BBBD7D204EF5C83E5279 /* CodexTaskPackCopierTests.swift */; };
 		F26FC4E1C5216981D1E864A7 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BF3E8598EEBA6E202BC750 /* AppState.swift */; };
 		F6DC62A780AE0BB416920308 /* CodexTaskPackCopier.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFC403C2398F1B7AF504B8E9 /* CodexTaskPackCopier.swift */; };
+		FD99FA7D330072A50EC3A430 /* CompletionReceiptStageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22698E57DB02A7B5ECC20A16 /* CompletionReceiptStageTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +87,7 @@
 		1BCBA848953B38CD8C263A09 /* JumaoProjectInitializerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoProjectInitializerTests.swift; sourceTree = "<group>"; };
 		1E250E0E8097DF468995C652 /* JumaoStrictCheckRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoStrictCheckRunnerTests.swift; sourceTree = "<group>"; };
 		2256032B0E164EE18FAEC2B9 /* JumaoCatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoCatApp.swift; sourceTree = "<group>"; };
+		22698E57DB02A7B5ECC20A16 /* CompletionReceiptStageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionReceiptStageTests.swift; sourceTree = "<group>"; };
 		25BF3E8598EEBA6E202BC750 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		2885CB0A071BFBCF27A9F28A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2C431DDE5A6C714DB61E83B8 /* InterviewWindowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewWindowControllerTests.swift; sourceTree = "<group>"; };
@@ -123,10 +127,12 @@
 		D2F669E627CE53A6F75DE15A /* InterviewTaskPackFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewTaskPackFlowTests.swift; sourceTree = "<group>"; };
 		D469CEAC2901F2C5120876C8 /* BundledRuntime */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BundledRuntime; path = Resources/BundledRuntime; sourceTree = SOURCE_ROOT; };
 		D4ED21FBA84A8798123FAEBC /* JumaoInterviewSchemaLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoInterviewSchemaLoader.swift; sourceTree = "<group>"; };
+		D9E92F89F26319002D056B20 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		DBC33B6273657D3D9F60C28D /* AgentReportOpenerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentReportOpenerTests.swift; sourceTree = "<group>"; };
 		DE25E2C07BA584EED96E34AF /* StatusFileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFileWatcher.swift; sourceTree = "<group>"; };
 		DE9477E4A8746D2C9C757849 /* JumaoAgentPlanRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoAgentPlanRunner.swift; sourceTree = "<group>"; };
 		E3C68701608E887DDCE742DC /* InterviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewWindowController.swift; sourceTree = "<group>"; };
+		E6BC97C2FF138BB765397B7D /* CompletionReceiptStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionReceiptStage.swift; sourceTree = "<group>"; };
 		E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTaskPackRunner.swift; sourceTree = "<group>"; };
 		E7A16ACA0AA99F1E49EBD41A /* JumaoInterviewAnswerWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumaoInterviewAnswerWriter.swift; sourceTree = "<group>"; };
 		E9B983D45F5C2A13944C86CE /* JumaoCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JumaoCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -156,6 +162,7 @@
 				B198C4CDC063D0EB47B93748 /* Assets.xcassets */,
 				CFC403C2398F1B7AF504B8E9 /* CodexTaskPackCopier.swift */,
 				E742A72242AAAA61DF08608A /* CodexTaskPackRunner.swift */,
+				E6BC97C2FF138BB765397B7D /* CompletionReceiptStage.swift */,
 				2885CB0A071BFBCF27A9F28A /* Info.plist */,
 				EA9B0E16B598C8C4C02A3329 /* InterviewDraftStore.swift */,
 				0C48A1C4BEC64C6D6C43750A /* InterviewForm.swift */,
@@ -171,6 +178,7 @@
 				64182AD9F13C9EBD39BD4C9A /* JumaoProjectInspector.swift */,
 				7F14EACE5A7D2BE04C8A794D /* JumaoStatus.swift */,
 				0CFF716C3E6049BCBA044AB9 /* JumaoStrictCheckRunner.swift */,
+				D9E92F89F26319002D056B20 /* MainWindowController.swift */,
 				8A0087ED77E9887D913CE916 /* MenuBarActivityState.swift */,
 				901006CE4E5E0A3444099EDF /* MenuBarCatAnimator.swift */,
 				196C1572DDACC5FFB9EBFDBA /* MenuBarInteractionController.swift */,
@@ -216,6 +224,7 @@
 				3DF6B67E24B139C49E436547 /* AppTerminationTests.swift */,
 				2D80BBBD7D204EF5C83E5279 /* CodexTaskPackCopierTests.swift */,
 				B7B391F96B4623C08085A7CE /* CodexTaskPackRunnerTests.swift */,
+				22698E57DB02A7B5ECC20A16 /* CompletionReceiptStageTests.swift */,
 				8D8CFCE5D2B774AA1836EBAC /* InterviewDraftStoreTests.swift */,
 				576658033E20D382AF6ADCAD /* InterviewNavigationTests.swift */,
 				D2F669E627CE53A6F75DE15A /* InterviewTaskPackFlowTests.swift */,
@@ -368,6 +377,7 @@
 				8A4DBE3978B8C06A61DE1529 /* AppTerminator.swift in Sources */,
 				F6DC62A780AE0BB416920308 /* CodexTaskPackCopier.swift in Sources */,
 				BD7D859D35DD33513061160E /* CodexTaskPackRunner.swift in Sources */,
+				C8F9236AE6355A7DC6B904A3 /* CompletionReceiptStage.swift in Sources */,
 				6B69EDD47058352B43CB8A07 /* InterviewDraftStore.swift in Sources */,
 				84AB97C53E496DCCFDA22BCF /* InterviewForm.swift in Sources */,
 				A02395A6FA2A31C0B16E5410 /* InterviewWindowController.swift in Sources */,
@@ -382,6 +392,7 @@
 				79CAAF6FFFD92B8FDFEBF49D /* JumaoProjectInspector.swift in Sources */,
 				D9C081F668CC9A9191CB4155 /* JumaoStatus.swift in Sources */,
 				B53DC836FAD51FA1BEFF5A90 /* JumaoStrictCheckRunner.swift in Sources */,
+				22531A52079B8793290861A6 /* MainWindowController.swift in Sources */,
 				341D60A9360BEEC42094FCDF /* MenuBarActivityState.swift in Sources */,
 				EA454FB98DC138E2464A99FE /* MenuBarCatAnimator.swift in Sources */,
 				9AFD3952CF35A81A215D8757 /* MenuBarInteractionController.swift in Sources */,
@@ -402,6 +413,7 @@
 				DC09AC3A6A1312AB53EFF670 /* AppTerminationTests.swift in Sources */,
 				ECE7B95497CC92DDD208E0B5 /* CodexTaskPackCopierTests.swift in Sources */,
 				DC1D4A0D5159A968ADF025A2 /* CodexTaskPackRunnerTests.swift in Sources */,
+				FD99FA7D330072A50EC3A430 /* CompletionReceiptStageTests.swift in Sources */,
 				B163385CD746E0503C548773 /* InterviewDraftStoreTests.swift in Sources */,
 				742716F922BD27143ED88DAD /* InterviewNavigationTests.swift in Sources */,
 				4CDF8A78E5FE7F887E89B23D /* InterviewTaskPackFlowTests.swift in Sources */,
@@ -449,7 +461,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = "0.4.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = com.smianmian.JumaoCat;
 				PRODUCT_MODULE_NAME = JumaoCat;
 				PRODUCT_NAME = "Jumao Cat";
@@ -530,7 +542,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = "0.4.0-rc.1";
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smianmian.JumaoCat;
 				PRODUCT_MODULE_NAME = JumaoCat;

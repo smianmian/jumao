@@ -1,0 +1,30 @@
+[
+  {
+    "id": "saas-web-membership",
+    "title": "SaaS 网页会员目录",
+    "passed": true,
+    "priorityTaskCount": 8,
+    "handoffReady": true
+  },
+  {
+    "id": "explicit-negative-constraints",
+    "title": "明确负面约束的活动报名页",
+    "passed": true,
+    "priorityTaskCount": 6,
+    "handoffReady": false
+  },
+  {
+    "id": "high-risk-health-data",
+    "title": "高风险健康趋势工具",
+    "passed": true,
+    "priorityTaskCount": 12,
+    "handoffReady": true
+  },
+  {
+    "id": "existing-node-cli-refactor",
+    "title": "已有 Node CLI 报表改造",
+    "passed": true,
+    "priorityTaskCount": 2,
+    "handoffReady": true
+  }
+]

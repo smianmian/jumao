@@ -37,6 +37,7 @@ final class JumaoAgentPlanningTests: XCTestCase {
     fixture.appState.beginInterview(with: schema)
     fixture.appState.updateInterviewAnswer("让保存按钮有明确反馈", for: "existingProject.requestedChange")
     XCTAssertTrue(fixture.appState.advanceInterviewQuestion())
+    XCTAssertTrue(fixture.appState.advanceInterviewQuestion())
     fixture.appState.confirmFocusedInterviewUnderstanding()
     await Task.yield()
 
@@ -185,7 +186,23 @@ final class JumaoAgentPlanningTests: XCTestCase {
 
     XCTAssertEqual(
       fixture.appState.agentPlanningCopyFeedback,
-      "已复制。请在 Codex 中打开这个项目文件夹，然后粘贴发送。"
+      "已复制。接下来：打开 Codex，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
+    )
+    XCTAssertEqual(fixture.appState.menuBarActivity, .copied)
+    XCTAssertTrue(NSPasteboard.general.string(forType: .string)?.contains("tasks/jumao-agent-plan.md") == true)
+  }
+
+  func testCopyForClaudeCodeSharesInstructionWithClaudeGuidance() throws {
+    let workspace = try Fixture.makeWorkspace(named: "复制交接Claude")
+    let loader = RecordingPlanLoader(result: .loaded(finalSession(workspaceURL: workspace)))
+    let fixture = try Fixture(workspaceURL: workspace, loader: loader)
+    defer { fixture.cleanUp() }
+
+    fixture.appState.copyAgentPlanningInstruction(for: .claudeCode)
+
+    XCTAssertEqual(
+      fixture.appState.agentPlanningCopyFeedback,
+      "已复制。接下来：打开 Claude Code，选中这个项目文件夹，把刚才复制的内容粘贴进去发送。橘猫已经在里面写清楚了规矩：确认之前它不会动你的代码。"
     )
     XCTAssertEqual(fixture.appState.menuBarActivity, .copied)
     XCTAssertTrue(NSPasteboard.general.string(forType: .string)?.contains("tasks/jumao-agent-plan.md") == true)
@@ -283,6 +300,7 @@ final class JumaoAgentPlanningTests: XCTestCase {
       appState.updateInterviewAnswer(answer, for: path)
       XCTAssertTrue(appState.advanceInterviewQuestion())
     }
+    XCTAssertTrue(appState.advanceInterviewQuestion())
     appState.confirmFocusedInterviewUnderstanding()
     await Task.yield()
   }

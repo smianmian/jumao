@@ -1,0 +1,1514 @@
+[
+  {
+    "taskId": "baseline-founder_decision-1",
+    "task": "核对第一阶段任务是否都能追溯到用户描述，删除没有证据的新能力。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "founder_decision"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      }
+    ],
+    "findings": [
+      "当前规划基线是：为现有网页商品目录增加邮箱登录与订阅会员，保留匿名浏览；第一阶段仅使用本地假数据，不连接真实支付，也不要发布。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-product_manager-1",
+    "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "product_manager"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      }
+    ],
+    "findings": [
+      "本次计划只处理用户描述的变化，不自动扩大到相邻功能。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-ui_ux-1",
+    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "ui_ux"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      }
+    ],
+    "findings": [
+      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-documentation_delivery-1",
+    "task": "读取 tasks/jumao-agent-plan.md 并先向项目主人复述目标、边界和第一阶段任务。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "documentation_delivery"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      }
+    ],
+    "findings": [
+      "交付给 Codex 的计划必须引用本次 run 的真实证据，并要求先总结再改代码。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-backend_engineer-1",
+    "task": "在进入相关实现前整理并验证：账号能力。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "backend_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断什么时候需要账号和服务端能力；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-backend_engineer-2",
+    "task": "在进入相关实现前整理并验证：接口约定。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "backend_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断什么时候需要账号和服务端能力；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-admin_dashboard_product-1",
+    "task": "在进入相关实现前整理并验证：客服处理范围。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "admin_dashboard_product"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断内部人员能看什么、能操作什么；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-admin_dashboard_product-2",
+    "task": "在进入相关实现前整理并验证：操作记录。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "admin_dashboard_product"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断内部人员能看什么、能操作什么；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-cicd_build-1",
+    "task": "在进入相关实现前整理并验证：构建记录。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "cicd_build"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断打包、签名和环境配置是否稳定；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-cicd_build-2",
+    "task": "在进入相关实现前整理并验证：证书记录。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "cicd_build"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断打包、签名和环境配置是否稳定；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-database_engineer-1",
+    "task": "在进入相关实现前整理并验证：数据字段清单。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "database_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些数据会被保存以及怎么删除；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-database_engineer-2",
+    "task": "在进入相关实现前整理并验证：保存周期。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "database_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些数据会被保存以及怎么删除；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-security_privacy-1",
+    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "security_privacy"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-data_governance_dictionary-1",
+    "task": "在进入相关实现前整理并验证：个人信息清单。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "data_governance_dictionary"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你把会收集和保存的数据讲清楚；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-data_governance_dictionary-2",
+    "task": "在进入相关实现前整理并验证：数据字典。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "data_governance_dictionary"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你把会收集和保存的数据讲清楚；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-privacy_request_ops-1",
+    "task": "在进入相关实现前整理并验证：注销流程。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "privacy_request_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你处理用户要查看、删除或注销自己的数据；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-privacy_request_ops-2",
+    "task": "在进入相关实现前整理并验证：删除记录。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "privacy_request_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你处理用户要查看、删除或注销自己的数据；用户明确提到账号或登录。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-legal_compliance-1",
+    "task": "在进入相关实现前整理并验证：隐私政策。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "legal_compliance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些承诺和资料不能乱写；用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-legal_compliance-2",
+    "task": "在进入相关实现前整理并验证：用户协议。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "legal_compliance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些承诺和资料不能乱写；用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-app_store_submission-1",
+    "task": "在进入相关实现前整理并验证：Apple Developer Program。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "app_store_submission"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上 App Store 要准备什么；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-app_store_submission-2",
+    "task": "在进入相关实现前整理并验证：App Store 元数据。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "app_store_submission"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上 App Store 要准备什么；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-finance_tax-1",
+    "task": "在进入相关实现前整理并验证：收入对账。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "finance_tax"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断收费后钱和账怎么对上；用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-finance_tax-2",
+    "task": "在进入相关实现前整理并验证：退款记录。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "finance_tax"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断收费后钱和账怎么对上；用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-support_operations-1",
+    "task": "在进入相关实现前整理并验证：退款指引。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "support_operations"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断用户退款、注销和反馈怎么处理；用户明确提到账号或登录、用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-support_operations-2",
+    "task": "在进入相关实现前整理并验证：注销流程。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "support_operations"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断用户退款、注销和反馈怎么处理；用户明确提到账号或登录、用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-iap_revenue_ops-1",
+    "task": "在进入相关实现前整理并验证：IAP 商品。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "iap_revenue_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断 iOS 收费要准备什么；用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-iap_revenue_ops-2",
+    "task": "在进入相关实现前整理并验证：会员权益规则。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "iap_revenue_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断 iOS 收费要准备什么；用户明确提到收费、购买或订阅。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-project_tech_lead-1",
+    "task": "按第一阶段任务顺序逐项执行，每完成一步就记录实际文件和验证命令。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "project_tech_lead"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:test/catalog.test.js",
+        "detail": "检测到现有测试。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      }
+    ],
+    "findings": [
+      "只读扫描识别到平台 Backend；语言 JavaScript；构建方式 npm。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-qa_testing-1",
+    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:test/catalog.test.js",
+        "detail": "检测到现有测试。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "检测到 1 个测试相关文件，改动后必须运行现有测试。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-release_manager-1",
+    "task": "保留发布前检查清单；只有真实构建和测试完成后才更新结论。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "release_manager"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:test/catalog.test.js",
+        "detail": "检测到现有测试。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "本次 plan 只形成开发计划，不代表构建、签名、审核或发布已经完成。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-sre_stability-1",
+    "task": "在进入相关实现前整理并验证：监控指标。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "sre_stability"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后出了问题谁能发现和处理；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-sre_stability-2",
+    "task": "在进入相关实现前整理并验证：告警方式。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "sre_stability"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后出了问题谁能发现和处理；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-remote_config_gray_release-1",
+    "task": "在进入相关实现前整理并验证：灰度计划。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "remote_config_gray_release"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后哪些东西需要逐步放开；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-remote_config_gray_release-2",
+    "task": "在进入相关实现前整理并验证：功能开关。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "remote_config_gray_release"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后哪些东西需要逐步放开；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-device_lab_test_data-1",
+    "task": "在进入相关实现前整理并验证：真机清单。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "device_lab_test_data"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你准备真实设备和测试数据；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  },
+  {
+    "taskId": "baseline-device_lab_test_data-2",
+    "task": "在进入相关实现前整理并验证：测试账号。",
+    "priority": "unranked",
+    "contributingRoles": [
+      "device_lab_test_data"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:product/release-boundaries.md",
+        "detail": "文件名或内容与用户改动描述有直接匹配。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你准备真实设备和测试数据；用户明确提到发布或上架。"
+    ],
+    "triggerReasons": [],
+    "triggerReason": null,
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "source": "derived-from-v0.3.1-agent-task"
+  }
+]

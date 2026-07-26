@@ -4,37 +4,49 @@ import XCTest
 
 @MainActor
 final class MenuBarInteractionControllerTests: XCTestCase {
-  func testLeftClickOpensPopover() {
+  func testLeftClickOpensMainWindowInsteadOfPopover() {
     let popover = RecordingPopover()
-    let controller = makeController(popover: popover)
+    let window = RecordingMainWindow()
+    let controller = makeController(popover: popover, window: window)
 
     controller.handleLeftClick()
 
-    XCTAssertTrue(popover.isShown)
-    XCTAssertEqual(popover.showCount, 1)
+    XCTAssertFalse(popover.isShown)
+    XCTAssertEqual(popover.showCount, 0)
+    XCTAssertEqual(popover.closeCount, 1)
+    XCTAssertEqual(window.showCount, 1)
   }
 
-  func testSecondLeftClickClosesPopover() {
+  func testSecondLeftClickKeepsOpeningTheMainWindow() {
     let popover = RecordingPopover()
-    let controller = makeController(popover: popover)
+    let window = RecordingMainWindow()
+    let controller = makeController(popover: popover, window: window)
 
     controller.handleLeftClick()
     controller.handleLeftClick()
 
     XCTAssertFalse(popover.isShown)
-    XCTAssertEqual(popover.closeCount, 1)
+    XCTAssertEqual(popover.closeCount, 2)
+    XCTAssertEqual(window.showCount, 2)
   }
 
   func testRightClickShowsQuitMenuWithoutOpeningPopover() {
     let popover = RecordingPopover()
     let menu = RecordingContextMenu()
-    let controller = MenuBarInteractionController(appState: AppState(), popover: popover, contextMenu: menu)
+    let window = RecordingMainWindow()
+    let controller = MenuBarInteractionController(
+      appState: AppState(),
+      popover: popover,
+      mainWindow: window,
+      contextMenu: menu
+    )
 
     controller.handleRightClick()
 
     XCTAssertEqual(menu.showCount, 1)
     XCTAssertFalse(popover.isShown)
     XCTAssertEqual(popover.showCount, 0)
+    XCTAssertEqual(window.showCount, 0)
   }
 
   func testQuitMenuUsesExistingSafeQuit() {
@@ -46,6 +58,7 @@ final class MenuBarInteractionControllerTests: XCTestCase {
     let controller = MenuBarInteractionController(
       appState: appState,
       popover: RecordingPopover(),
+      mainWindow: RecordingMainWindow(),
       contextMenu: RecordingContextMenu()
     )
 
@@ -62,10 +75,11 @@ final class MenuBarInteractionControllerTests: XCTestCase {
     )
   }
 
-  private func makeController(popover: RecordingPopover) -> MenuBarInteractionController {
+  private func makeController(popover: RecordingPopover, window: RecordingMainWindow) -> MenuBarInteractionController {
     MenuBarInteractionController(
       appState: AppState(),
       popover: popover,
+      mainWindow: window,
       contextMenu: RecordingContextMenu()
     )
   }
@@ -93,6 +107,15 @@ private final class RecordingContextMenu: MenuBarContextMenuPresenting {
   private(set) var showCount = 0
 
   func showQuitMenu() {
+    showCount += 1
+  }
+}
+
+@MainActor
+private final class RecordingMainWindow: MainWindowControlling {
+  private(set) var showCount = 0
+
+  func show() {
     showCount += 1
   }
 }

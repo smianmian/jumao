@@ -1,0 +1,26 @@
+{
+  "status": "completed",
+  "goalsCompleted": [
+    "goal:health-authorization",
+    "goal:health-refusal",
+    "goal:health-local-deletion",
+    "goal:health-non-diagnostic"
+  ],
+  "goalsBlocked": [],
+  "validation": [
+    {
+      "command": "xcodebuild -list -project HealthTrend.xcodeproj",
+      "exitCode": 0
+    },
+    {
+      "command": "xcodebuild test -quiet -project HealthTrend.xcodeproj -scheme HealthTrend -destination 'platform=iOS Simulator,id=07D2E9B8-B283-4F62-88D7-AFF7B7E82ED4'",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "productionEffects": false,
+  "remainingWork": []
+}

@@ -1,0 +1,1854 @@
+[
+  {
+    "taskId": "baseline-founder_decision-1",
+    "task": "核对第一阶段任务是否都能追溯到用户描述，删除没有证据的新能力。",
+    "contributingRoles": [
+      "founder_decision"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      }
+    ],
+    "findings": [
+      "当前规划基线是：给现有网页活动页增加邮箱登录后的报名草稿，保留访客查看活动；不要接真实支付，不发送短信或邮件，不收集定位，也不要发布。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-corporate_admin-1",
+    "task": "在进入相关实现前整理并验证：公司主体资料。",
+    "contributingRoles": [
+      "corporate_admin"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断个人项目和公司项目的主体材料；用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-corporate_admin-2",
+    "task": "在进入相关实现前整理并验证：平台账号清单。",
+    "contributingRoles": [
+      "corporate_admin"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断个人项目和公司项目的主体材料；用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-product_manager-1",
+    "task": "把用户描述整理成一次能完成的使用过程，并为每一步写明可见结果。",
+    "contributingRoles": [
+      "product_manager"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      }
+    ],
+    "findings": [
+      "本次计划只处理用户描述的变化，不自动扩大到相邻功能。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-ui_ux-1",
+    "task": "列出第一阶段入口、主要操作以及加载、空内容、失败和成功状态。",
+    "contributingRoles": [
+      "ui_ux"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      }
+    ],
+    "findings": [
+      "页面实现必须同时考虑加载、空内容、失败和成功反馈，具体页面不得凭空增加。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-documentation_delivery-1",
+    "task": "读取 tasks/jumao-agent-plan.md 并先向项目主人复述目标、边界和第一阶段任务。",
+    "contributingRoles": [
+      "documentation_delivery"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      }
+    ],
+    "findings": [
+      "交付给 Codex 的计划必须引用本次 run 的真实证据，并要求先总结再改代码。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-backend_engineer-1",
+    "task": "在进入相关实现前整理并验证：账号能力。",
+    "contributingRoles": [
+      "backend_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断什么时候需要账号和服务端能力；用户明确提到账号或登录。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-backend_engineer-2",
+    "task": "在进入相关实现前整理并验证：接口约定。",
+    "contributingRoles": [
+      "backend_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断什么时候需要账号和服务端能力；用户明确提到账号或登录。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-admin_dashboard_product-1",
+    "task": "在进入相关实现前整理并验证：客服处理范围。",
+    "contributingRoles": [
+      "admin_dashboard_product"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断内部人员能看什么、能操作什么；用户明确提到账号或登录。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-admin_dashboard_product-2",
+    "task": "在进入相关实现前整理并验证：操作记录。",
+    "contributingRoles": [
+      "admin_dashboard_product"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断内部人员能看什么、能操作什么；用户明确提到账号或登录。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-cicd_build-1",
+    "task": "在进入相关实现前整理并验证：构建记录。",
+    "contributingRoles": [
+      "cicd_build"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断打包、签名和环境配置是否稳定；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-cicd_build-2",
+    "task": "在进入相关实现前整理并验证：证书记录。",
+    "contributingRoles": [
+      "cicd_build"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断打包、签名和环境配置是否稳定；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-database_engineer-1",
+    "task": "在进入相关实现前整理并验证：数据字段清单。",
+    "contributingRoles": [
+      "database_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些数据会被保存以及怎么删除；用户明确提到账号或登录。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-database_engineer-2",
+    "task": "在进入相关实现前整理并验证：保存周期。",
+    "contributingRoles": [
+      "database_engineer"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些数据会被保存以及怎么删除；用户明确提到账号或登录。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-security_privacy-1",
+    "task": "只记录第一阶段实际涉及的数据和权限；没有用户证据的服务保持未启用。",
+    "contributingRoles": [
+      "security_privacy"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "当前未被用户明确提出的数据、权限和第三方服务都不能视为已获授权。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-data_governance_dictionary-1",
+    "task": "在进入相关实现前整理并验证：个人信息清单。",
+    "contributingRoles": [
+      "data_governance_dictionary"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你把会收集和保存的数据讲清楚；用户明确提到账号或登录、用户明确提到敏感数据或权限。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-data_governance_dictionary-2",
+    "task": "在进入相关实现前整理并验证：数据字典。",
+    "contributingRoles": [
+      "data_governance_dictionary"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你把会收集和保存的数据讲清楚；用户明确提到账号或登录、用户明确提到敏感数据或权限。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-privacy_request_ops-1",
+    "task": "在进入相关实现前整理并验证：注销流程。",
+    "contributingRoles": [
+      "privacy_request_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你处理用户要查看、删除或注销自己的数据；用户明确提到账号或登录、用户明确提到敏感数据或权限。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-privacy_request_ops-2",
+    "task": "在进入相关实现前整理并验证：删除记录。",
+    "contributingRoles": [
+      "privacy_request_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你处理用户要查看、删除或注销自己的数据；用户明确提到账号或登录、用户明确提到敏感数据或权限。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-sdk_vendor_governance-1",
+    "task": "在进入相关实现前整理并验证：SDK 清单。",
+    "contributingRoles": [
+      "sdk_vendor_governance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断第三方工具会拿到哪些数据；用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-sdk_vendor_governance-2",
+    "task": "在进入相关实现前整理并验证：供应商用途。",
+    "contributingRoles": [
+      "sdk_vendor_governance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断第三方工具会拿到哪些数据；用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-abuse_risk_control-1",
+    "task": "在进入相关实现前整理并验证：发送限制。",
+    "contributingRoles": [
+      "abuse_risk_control"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你避免验证码、账号和接口被刷；用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-abuse_risk_control-2",
+    "task": "在进入相关实现前整理并验证：异常告警。",
+    "contributingRoles": [
+      "abuse_risk_control"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你避免验证码、账号和接口被刷；用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-legal_compliance-1",
+    "task": "在进入相关实现前整理并验证：隐私政策。",
+    "contributingRoles": [
+      "legal_compliance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些承诺和资料不能乱写；用户明确提到收费、购买或订阅、用户明确提到敏感数据或权限、用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-legal_compliance-2",
+    "task": "在进入相关实现前整理并验证：用户协议。",
+    "contributingRoles": [
+      "legal_compliance"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:sensitive",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断哪些承诺和资料不能乱写；用户明确提到收费、购买或订阅、用户明确提到敏感数据或权限、用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-website_frontend-1",
+    "task": "在进入相关实现前整理并验证：官网。",
+    "contributingRoles": [
+      "website_frontend"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断官网、隐私页和支持页要不要准备；用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-website_frontend-2",
+    "task": "在进入相关实现前整理并验证：隐私政策页面。",
+    "contributingRoles": [
+      "website_frontend"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断官网、隐私页和支持页要不要准备；用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-app_store_submission-1",
+    "task": "在进入相关实现前整理并验证：Apple Developer Program。",
+    "contributingRoles": [
+      "app_store_submission"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上 App Store 要准备什么；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-app_store_submission-2",
+    "task": "在进入相关实现前整理并验证：App Store 元数据。",
+    "contributingRoles": [
+      "app_store_submission"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上 App Store 要准备什么；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-wechat_open_platform-1",
+    "task": "在进入相关实现前整理并验证：微信开放平台应用。",
+    "contributingRoles": [
+      "wechat_open_platform"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断微信登录要准备什么；用户明确提到中国大陆相关服务、用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-wechat_open_platform-2",
+    "task": "在进入相关实现前整理并验证：账号绑定规则。",
+    "contributingRoles": [
+      "wechat_open_platform"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断微信登录要准备什么；用户明确提到中国大陆相关服务、用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-sms_service-1",
+    "task": "在进入相关实现前整理并验证：短信签名。",
+    "contributingRoles": [
+      "sms_service"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断手机号验证码要准备什么；用户明确提到中国大陆相关服务、用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-sms_service-2",
+    "task": "在进入相关实现前整理并验证：验证码模板。",
+    "contributingRoles": [
+      "sms_service"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:messaging",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断手机号验证码要准备什么；用户明确提到中国大陆相关服务、用户明确提到短信或微信。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-filing_cloud_vendor_support-1",
+    "task": "在进入相关实现前整理并验证：ICP备案判断。",
+    "contributingRoles": [
+      "filing_cloud_vendor_support"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断中国大陆上线可能要准备哪些备案材料；用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-filing_cloud_vendor_support-2",
+    "task": "在进入相关实现前整理并验证：App备案判断。",
+    "contributingRoles": [
+      "filing_cloud_vendor_support"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:china",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断中国大陆上线可能要准备哪些备案材料；用户明确提到中国大陆相关服务。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-finance_tax-1",
+    "task": "在进入相关实现前整理并验证：收入对账。",
+    "contributingRoles": [
+      "finance_tax"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断收费后钱和账怎么对上；用户明确提到收费、购买或订阅。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-finance_tax-2",
+    "task": "在进入相关实现前整理并验证：退款记录。",
+    "contributingRoles": [
+      "finance_tax"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断收费后钱和账怎么对上；用户明确提到收费、购买或订阅。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-support_operations-1",
+    "task": "在进入相关实现前整理并验证：退款指引。",
+    "contributingRoles": [
+      "support_operations"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断用户退款、注销和反馈怎么处理；用户明确提到账号或登录、用户明确提到收费、购买或订阅。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-support_operations-2",
+    "task": "在进入相关实现前整理并验证：注销流程。",
+    "contributingRoles": [
+      "support_operations"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:login",
+        "detail": "仅由用户描述中的明确词语触发。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断用户退款、注销和反馈怎么处理；用户明确提到账号或登录、用户明确提到收费、购买或订阅。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-iap_revenue_ops-1",
+    "task": "在进入相关实现前整理并验证：IAP 商品。",
+    "contributingRoles": [
+      "iap_revenue_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断 iOS 收费要准备什么；用户明确提到收费、购买或订阅。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-iap_revenue_ops-2",
+    "task": "在进入相关实现前整理并验证：会员权益规则。",
+    "contributingRoles": [
+      "iap_revenue_ops"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:payment",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断 iOS 收费要准备什么；用户明确提到收费、购买或订阅。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-project_tech_lead-1",
+    "task": "按第一阶段任务顺序逐项执行，每完成一步就记录实际文件和验证命令。",
+    "contributingRoles": [
+      "project_tech_lead"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "检测到现有测试。"
+      }
+    ],
+    "findings": [
+      "只读扫描识别到平台 Backend；语言 JavaScript；构建方式 npm。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-qa_testing-1",
+    "task": "为第一阶段主流程、失败状态和不受影响的既有能力建立最小验证。",
+    "contributingRoles": [
+      "qa_testing"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "检测到现有测试。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "检测到 1 个测试相关文件，改动后必须运行现有测试。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-release_manager-1",
+    "task": "保留发布前检查清单；只有真实构建和测试完成后才更新结论。",
+    "contributingRoles": [
+      "release_manager"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "file:test/signup.test.js",
+        "detail": "检测到现有测试。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "本次 plan 只形成开发计划，不代表构建、签名、审核或发布已经完成。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-sre_stability-1",
+    "task": "在进入相关实现前整理并验证：监控指标。",
+    "contributingRoles": [
+      "sre_stability"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后出了问题谁能发现和处理；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-sre_stability-2",
+    "task": "在进入相关实现前整理并验证：告警方式。",
+    "contributingRoles": [
+      "sre_stability"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后出了问题谁能发现和处理；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-remote_config_gray_release-1",
+    "task": "在进入相关实现前整理并验证：灰度计划。",
+    "contributingRoles": [
+      "remote_config_gray_release"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后哪些东西需要逐步放开；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-remote_config_gray_release-2",
+    "task": "在进入相关实现前整理并验证：功能开关。",
+    "contributingRoles": [
+      "remote_config_gray_release"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你判断上线后哪些东西需要逐步放开；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-device_lab_test_data-1",
+    "task": "在进入相关实现前整理并验证：真机清单。",
+    "contributingRoles": [
+      "device_lab_test_data"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你准备真实设备和测试数据；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  },
+  {
+    "taskId": "baseline-device_lab_test_data-2",
+    "task": "在进入相关实现前整理并验证：测试账号。",
+    "contributingRoles": [
+      "device_lab_test_data"
+    ],
+    "evidence": [
+      {
+        "source": "intake.answers.requestedChange",
+        "detail": "用户描述了本次希望发生的变化。"
+      },
+      {
+        "source": "inspect.project.languages",
+        "detail": "JavaScript"
+      },
+      {
+        "source": "inspect.project.platforms",
+        "detail": "Backend"
+      },
+      {
+        "source": "file:package.json",
+        "detail": "检测到真实工程配置。"
+      },
+      {
+        "source": "derived:release",
+        "detail": "仅由用户描述中的明确词语触发。"
+      }
+    ],
+    "findings": [
+      "帮你准备真实设备和测试数据；用户明确提到发布或上架。"
+    ],
+    "protectedConstraint": null,
+    "decisionImpact": [],
+    "traceable": true,
+    "note": "兼容快照：v0.3.1 未提供原生 priorityTasks 或 decision impact。"
+  }
+]

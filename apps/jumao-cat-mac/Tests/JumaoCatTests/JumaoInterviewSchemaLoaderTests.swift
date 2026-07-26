@@ -44,17 +44,19 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
   func testFocusedNewProjectOnlyAsksForThreePlainLanguageQuestions() {
     let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .newProject)
 
-    XCTAssertEqual(schema.questions.map(\.title), ["你想做个什么？", "你希望它能做哪些事？", "你想先在哪儿用它？"])
-    XCTAssertEqual(schema.questions.map(\.answerPath), ["newProject.idea", "newProject.features", "newProject.platform"])
-    XCTAssertEqual(schema.questions.last?.options, ["iPhone", "Mac", "网页", "还没想好"])
+    XCTAssertEqual(schema.questions.map(\.title), ["你想做个什么？", "你希望它能做哪些事？", "你想先在哪儿用它？", "有哪些事这一版先不做？"])
+    XCTAssertEqual(schema.questions.map(\.answerPath), ["newProject.idea", "newProject.features", "newProject.platform", "newProject.mustNotInclude"])
+    XCTAssertEqual(schema.questions[2].options, ["iPhone", "Mac", "网页", "还没想好"])
+    XCTAssertEqual(schema.questions.last?.required, false)
     XCTAssertFalse(schema.questions.contains { $0.title.contains("目标") || $0.title.contains("MVP") || $0.title.contains("优先级") || $0.title.contains("验收") })
   }
 
   func testFocusedExistingProjectOnlyAsksForDesiredChange() {
     let schema = JumaoInterviewSchema(schemaVersion: 2, questions: []).focused(for: .existingProject)
 
-    XCTAssertEqual(schema.questions.map(\.title), ["这次你想让它变成什么样？"])
-    XCTAssertEqual(schema.questions.map(\.answerPath), ["existingProject.requestedChange"])
+    XCTAssertEqual(schema.questions.map(\.title), ["这次你想让它变成什么样？", "这次改完，你怎么知道改好了？"])
+    XCTAssertEqual(schema.questions.last?.required, false)
+    XCTAssertEqual(schema.questions.map(\.answerPath), ["existingProject.requestedChange", "existingProject.completionCheck"])
     XCTAssertFalse(schema.questions.contains { $0.title.contains("卡在哪") || $0.title.contains("不能弄坏") })
   }
 
@@ -103,12 +105,12 @@ final class JumaoInterviewSchemaLoaderTests: XCTestCase {
         return
       }
       XCTAssertEqual(schema.schemaVersion, 2)
-      XCTAssertEqual(schema.questions.count, 21)
+      XCTAssertEqual(schema.questions.count, 9)
       XCTAssertEqual(schema.questions.first?.title, "最先会来用的人是谁？")
       XCTAssertEqual(schema.stages.map(\.id), ["idea", "prototype", "release"])
       XCTAssertEqual(schema.stages.map { stage in
         schema.questions.filter { $0.stage == stage.id }.count
-      }, [5, 10, 6])
+      }, [5, 1, 3])
       expectation.fulfill()
     }
 

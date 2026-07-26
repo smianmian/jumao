@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260725153332162-babac1cf",
+  "state": "ready",
+  "executionMode": "sequential",
+  "startedAt": "2026-07-25T15:33:32.162Z",
+  "completedAt": "2026-07-25T15:33:32.173Z",
+  "durationMs": 11,
+  "inputFingerprint": "cee635844b03486e19f7c8d177e0d8bd1d3e4ed1a9e079ff1fb972aa484c9485",
+  "input": {
+    "intake": ".jumao/intake-answers.json",
+    "intakeState": "valid",
+    "mode": "existing_project",
+    "inspectSchemaVersion": 1,
+    "workspaceKind": "existing"
+  },
+  "counts": {
+    "completed": 22,
+    "skipped": 22,
+    "blocked": 0,
+    "failed": 0
+  },
+  "blockingQuestions": [],
+  "platformPending": false,
+  "pendingDecision": null,
+  "agents": [
+    {
+      "agentId": "founder_decision",
+      "agentName": "项目负责人 / 创始人 Agent",
+      "groupId": "direction_entity",
+      "status": "completed",
+      "output": "agents/founder_decision.json"
+    },
+    {
+      "agentId": "corporate_admin",
+      "agentName": "公司注册 / 行政负责人 Agent",
+      "groupId": "direction_entity",
+      "status": "skipped",
+      "output": "agents/corporate_admin.json"
+    },
+    {
+      "agentId": "ip_trademark",
+      "agentName": "知识产权 / 商标 Agent",
+      "groupId": "direction_entity",
+      "status": "skipped",
+      "output": "agents/ip_trademark.json"
+    },
+    {
+      "agentId": "software_copyright_qualification",
+      "agentName": "软件著作权 / 资质留存负责人 Agent",
+      "groupId": "direction_entity",
+      "status": "skipped",
+      "output": "agents/software_copyright_qualification.json"
+    },
+    {
+      "agentId": "procurement_contract_vendor",
+      "agentName": "采购 / 合同 / 供应商负责人 Agent",
+      "groupId": "direction_entity",
+      "status": "skipped",
+      "output": "agents/procurement_contract_vendor.json"
+    },
+    {
+      "agentId": "product_manager",
+      "agentName": "产品经理 Agent",
+      "groupId": "product_design",
+      "status": "completed",
+      "output": "agents/product_manager.json"
+    },
+    {
+      "agentId": "ui_ux",
+      "agentName": "UI / UX 设计师 Agent",
+      "groupId": "product_design",
+      "status": "completed",
+      "output": "agents/ui_ux.json"
+    },
+    {
+      "agentId": "brand_copywriting",
+      "agentName": "品牌 / 文案 Agent",
+      "groupId": "product_design",
+      "status": "skipped",
+      "output": "agents/brand_copywriting.json"
+    },
+    {
+      "agentId": "user_research_positioning",
+      "agentName": "用户研究 / 市场定位负责人 Agent",
+      "groupId": "product_design",
+      "status": "skipped",
+      "output": "agents/user_research_positioning.json"
+    },
+    {
+      "agentId": "design_system_qa",
+      "agentName": "设计系统 / Design QA 负责人 Agent",
+      "groupId": "product_design",
+      "status": "skipped",
+      "output": "agents/design_system_qa.json"
+    },
+    {
+      "agentId": "accessibility",
+      "agentName": "无障碍 / 可访问性负责人 Agent",
+      "groupId": "product_design",
+      "status": "skipped",
+      "output": "agents/accessibility.json"
+    },
+    {
+      "agentId": "documentation_delivery",
+      "agentName": "文档 / 交付物负责人 Agent",
+      "groupId": "product_design",
+      "status": "completed",
+      "output": "agents/documentation_delivery.json"
+    },
+    {
+      "agentId": "ios_engineer",
+      "agentName": "iOS 工程师 Agent",
+      "groupId": "tech_development",
+      "status": "skipped",
+      "output": "agents/ios_engineer.json"
+    },
+    {
+      "agentId": "watchos_engineer",
+      "agentName": "watchOS 工程师 Agent",
+      "groupId": "tech_development",
+      "status": "skipped",
+      "output": "agents/watchos_engineer.json"
+    },
+    {
+      "agentId": "backend_engineer",
+      "agentName": "后端工程师 Agent",
+      "groupId": "tech_development",
+      "status": "completed",
+      "output": "agents/backend_engineer.json"
+    },
+    {
+      "agentId": "devops_cloud",
+      "agentName": "DevOps / 云架构 Agent",
+      "groupId": "tech_development",
+      "status": "skipped",
+      "output": "agents/devops_cloud.json"
+    },
+    {
+      "agentId": "admin_dashboard_product",
+      "agentName": "后台产品 / 内部工具负责人 Agent",
+      "groupId": "tech_development",
+      "status": "completed",
+      "output": "agents/admin_dashboard_product.json"
+    },
+    {
+      "agentId": "cicd_build",
+      "agentName": "CI/CD 与构建负责人 Agent",
+      "groupId": "tech_development",
+      "status": "completed",
+      "output": "agents/cicd_build.json"
+    },
+    {
+      "agentId": "database_engineer",
+      "agentName": "数据库工程师 Agent",
+      "groupId": "data_privacy",
+      "status": "completed",
+      "output": "agents/database_engineer.json"
+    },
+    {
+      "agentId": "security_privacy",
+      "agentName": "安全 / 隐私工程师 Agent",
+      "groupId": "data_privacy",
+      "status": "completed",
+      "output": "agents/security_privacy.json"
+    },
+    {
+      "agentId": "data_governance_dictionary",
+      "agentName": "数据治理 / 数据字典负责人 Agent",
+      "groupId": "data_privacy",
+      "status": "completed",
+      "output": "agents/data_governance_dictionary.json"
+    },
+    {
+      "agentId": "privacy_request_ops",
+      "agentName": "隐私请求运营负责人 Agent",
+      "groupId": "data_privacy",
+      "status": "completed",
+      "output": "agents/privacy_request_ops.json"
+    },
+    {
+      "agentId": "sdk_vendor_governance",
+      "agentName": "SDK / 供应商治理负责人 Agent",
+      "groupId": "data_privacy",
+      "status": "skipped",
+      "output": "agents/sdk_vendor_governance.json"
+    },
+    {
+      "agentId": "abuse_risk_control",
+      "agentName": "反滥用 / 风控负责人 Agent",
+      "groupId": "data_privacy",
+      "status": "skipped",
+      "output": "agents/abuse_risk_control.json"
+    },
+    {
+      "agentId": "legal_compliance",
+      "agentName": "法务 / 合规 Agent",
+      "groupId": "compliance_health",
+      "status": "completed",
+      "output": "agents/legal_compliance.json"
+    },
+    {
+      "agentId": "algorithm_data",
+      "agentName": "算法 / 数据工程师 Agent",
+      "groupId": "compliance_health",
+      "status": "skipped",
+      "output": "agents/algorithm_data.json"
+    },
+    {
+      "agentId": "health_content",
+      "agentName": "健康内容顾问 Agent",
+      "groupId": "compliance_health",
+      "status": "skipped",
+      "output": "agents/health_content.json"
+    },
+    {
+      "agentId": "medical_claims_review",
+      "agentName": "医疗监管 / 健康声明审查负责人 Agent",
+      "groupId": "compliance_health",
+      "status": "skipped",
+      "output": "agents/medical_claims_review.json"
+    },
+    {
+      "agentId": "algorithm_validation_evidence",
+      "agentName": "算法验证 / 科学证据负责人 Agent",
+      "groupId": "compliance_health",
+      "status": "skipped",
+      "output": "agents/algorithm_validation_evidence.json"
+    },
+    {
+      "agentId": "website_frontend",
+      "agentName": "官网前端 / Web 工程师 Agent",
+      "groupId": "platform_qualification",
+      "status": "skipped",
+      "output": "agents/website_frontend.json"
+    },
+    {
+      "agentId": "app_store_submission",
+      "agentName": "App Store 上架负责人 Agent",
+      "groupId": "platform_qualification",
+      "status": "completed",
+      "output": "agents/app_store_submission.json"
+    },
+    {
+      "agentId": "wechat_open_platform",
+      "agentName": "微信开放平台对接负责人 Agent",
+      "groupId": "platform_qualification",
+      "status": "skipped",
+      "output": "agents/wechat_open_platform.json"
+    },
+    {
+      "agentId": "sms_service",
+      "agentName": "短信服务对接负责人 Agent",
+      "groupId": "platform_qualification",
+      "status": "skipped",
+      "output": "agents/sms_service.json"
+    },
+    {
+      "agentId": "filing_cloud_vendor_support",
+      "agentName": "外部备案服务 / 云厂商支持 Agent",
+      "groupId": "platform_qualification",
+      "status": "skipped",
+      "output": "agents/filing_cloud_vendor_support.json"
+    },
+    {
+      "agentId": "finance_tax",
+      "agentName": "财务 / 记账报税 Agent",
+      "groupId": "revenue_operations",
+      "status": "completed",
+      "output": "agents/finance_tax.json"
+    },
+    {
+      "agentId": "analytics_growth",
+      "agentName": "数据分析 / 增长 Agent",
+      "groupId": "revenue_operations",
+      "status": "skipped",
+      "output": "agents/analytics_growth.json"
+    },
+    {
+      "agentId": "support_operations",
+      "agentName": "客服 / 运营 Agent",
+      "groupId": "revenue_operations",
+      "status": "completed",
+      "output": "agents/support_operations.json"
+    },
+    {
+      "agentId": "iap_revenue_ops",
+      "agentName": "IAP / 订阅营收负责人 Agent",
+      "groupId": "revenue_operations",
+      "status": "completed",
+      "output": "agents/iap_revenue_ops.json"
+    },
+    {
+      "agentId": "project_tech_lead",
+      "agentName": "项目经理 / 研发负责人 Agent",
+      "groupId": "release_incident",
+      "status": "completed",
+      "output": "agents/project_tech_lead.json"
+    },
+    {
+      "agentId": "qa_testing",
+      "agentName": "QA 测试 Agent",
+      "groupId": "release_incident",
+      "status": "completed",
+      "output": "agents/qa_testing.json"
+    },
+    {
+      "agentId": "release_manager",
+      "agentName": "发布经理 / Release Manager Agent",
+      "groupId": "release_incident",
+      "status": "completed",
+      "output": "agents/release_manager.json"
+    },
+    {
+      "agentId": "sre_stability",
+      "agentName": "SRE / 线上稳定性负责人 Agent",
+      "groupId": "release_incident",
+      "status": "completed",
+      "output": "agents/sre_stability.json"
+    },
+    {
+      "agentId": "remote_config_gray_release",
+      "agentName": "配置中心 / 灰度负责人 Agent",
+      "groupId": "release_incident",
+      "status": "completed",
+      "output": "agents/remote_config_gray_release.json"
+    },
+    {
+      "agentId": "device_lab_test_data",
+      "agentName": "设备实验室 / 测试数据负责人 Agent",
+      "groupId": "release_incident",
+      "status": "completed",
+      "output": "agents/device_lab_test_data.json"
+    }
+  ],
+  "groups": [
+    {
+      "groupId": "direction_entity",
+      "sequence": 1,
+      "counts": {
+        "completed": 1,
+        "skipped": 4,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/direction_entity.json"
+    },
+    {
+      "groupId": "product_design",
+      "sequence": 2,
+      "counts": {
+        "completed": 3,
+        "skipped": 4,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/product_design.json"
+    },
+    {
+      "groupId": "tech_development",
+      "sequence": 3,
+      "counts": {
+        "completed": 3,
+        "skipped": 3,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/tech_development.json"
+    },
+    {
+      "groupId": "data_privacy",
+      "sequence": 4,
+      "counts": {
+        "completed": 4,
+        "skipped": 2,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/data_privacy.json"
+    },
+    {
+      "groupId": "compliance_health",
+      "sequence": 5,
+      "counts": {
+        "completed": 1,
+        "skipped": 4,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/compliance_health.json"
+    },
+    {
+      "groupId": "platform_qualification",
+      "sequence": 6,
+      "counts": {
+        "completed": 1,
+        "skipped": 4,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/platform_qualification.json"
+    },
+    {
+      "groupId": "revenue_operations",
+      "sequence": 7,
+      "counts": {
+        "completed": 3,
+        "skipped": 1,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/revenue_operations.json"
+    },
+    {
+      "groupId": "release_incident",
+      "sequence": 8,
+      "counts": {
+        "completed": 6,
+        "skipped": 0,
+        "blocked": 0,
+        "failed": 0
+      },
+      "output": "groups/release_incident.json"
+    }
+  ],
+  "artifacts": {
+    "planningSummary": "planning-summary.md",
+    "taskPlan": "task-plan.json",
+    "publishedTaskPlan": "tasks/jumao-agent-plan.md"
+  },
+  "error": null
+}
