@@ -12,7 +12,7 @@ const runtimeSchemaVersion = 1;
 const intakePath = '.jumao/intake-answers.json';
 const latestRunPath = '.jumao/latest-run.json';
 const publishedTaskPlanPath = 'tasks/jumao-agent-plan.md';
-const platformPendingDecision = '准备开始写平台相关代码前，需要确认先做 iPhone、Mac 还是网页';
+const platformPendingDecision = '动手之前先定一件事：第一版做 iPhone、Mac 电脑，还是网页？';
 const validAgentStatuses = new Set(['completed', 'skipped', 'blocked', 'failed']);
 const validImpactTypes = new Set([
   'created_task', 'removed_risk', 'protected_constraint', 'changed_priority', 'merged_task'
@@ -710,7 +710,7 @@ function evidenceGateFor(answerText, documentedProtections, detected, scope) {
   if (deferredLogin) {
     blockers.push({
       agents: new Set(signalAgentMap.login),
-      question: '当前只提到未来可能的登录，但没有可执行的账号范围；请确认是否要在本次实现登录。'
+      question: '你提到过「以后可能要登录」。这一版要不要做登录？要，还是先不做？'
     });
   }
 
@@ -720,7 +720,7 @@ function evidenceGateFor(answerText, documentedProtections, detected, scope) {
   if (anonymousRequired && mandatoryLogin) {
     blockers.push({
       agents: new Set(signalAgentMap.login),
-      question: '匿名访问约束与强制登录请求冲突；请由项目负责人确认哪条规则优先。'
+      question: '你之前定过「不登录也能用」，这次又要求「所有人必须登录」。这两条冲突了，你想保留哪一条？'
     });
   }
 
@@ -730,7 +730,7 @@ function evidenceGateFor(answerText, documentedProtections, detected, scope) {
   if (bilingualReleaseAmbiguity) {
     blockers.push({
       agents: new Set(signalAgentMap.release),
-      question: '中英文发布否定语句的作用范围相互矛盾；请明确本阶段是否允许 beta 发布。'
+      question: '你的要求里一处说「不要发布」，另一处又说「保留测试版发布」。这个阶段到底要不要发一个测试版给别人试？'
     });
   }
 
@@ -744,8 +744,8 @@ function evidenceGateFor(answerText, documentedProtections, detected, scope) {
 }
 
 function blockingQuestionsFor(intake) {
-  if (intake.state === 'corrupt') return ['请重新完成首轮问答，当前答案文件无法读取。'];
-  if (intake.state === 'missing') return ['请先在 Jumao Cat 或 jumao interview 中完成首轮问答。'];
+  if (intake.state === 'corrupt') return ['你之前填的答案没有保存好。重新回答一遍开头的问题，就能继续。'];
+  if (intake.state === 'missing') return ['还没回答开头的几个问题。先在橘猫里把它们答完，就能开始规划。'];
   if (intake.mode === 'new_project') {
     const questions = [];
     if (!intake.answers.idea) questions.push('你想做个什么？');
@@ -942,7 +942,7 @@ function executeAgent(agent, context) {
       return {
         ...base,
         status: 'failed',
-        summary: '首轮答案解析失败，无法建立可靠的需求基线。',
+        summary: '你之前填的答案读不出来了，橘猫暂时没法判断你想做什么。重新答一遍就能继续。',
         evidence: [{ source: intakePath, detail: '文件存在但不是可用的问答 JSON。' }],
         blockingQuestions: context.blockingQuestions,
         error: context.intake.error
@@ -952,7 +952,7 @@ function executeAgent(agent, context) {
       return {
         ...base,
         status: 'blocked',
-        summary: '缺少可读取的首轮答案，当前职责无法做出可靠判断。',
+        summary: '之前的答案读不出来，这一项检查先停下了。',
         evidence: [{ source: intakePath, detail: '问答 JSON 损坏。' }],
         blockingQuestions: context.blockingQuestions
       };
@@ -965,7 +965,7 @@ function executeAgent(agent, context) {
       return {
         ...base,
         status: 'blocked',
-        summary: '首轮需求尚未提供，无法形成可交付的开发计划。',
+        summary: '你还没告诉橘猫想做什么，这一项检查先停下了。',
         evidence: [{ source: intakePath, detail: '未找到首轮答案文件。' }],
         blockingQuestions: context.blockingQuestions
       };
@@ -987,7 +987,7 @@ function executeAgent(agent, context) {
     return {
       ...base,
       status: 'blocked',
-      summary: '证据门发现当前职责无法安全得出可执行结论。',
+      summary: '你的要求里有前后矛盾的地方，这一项检查先停下了。看看下面列出的问题。',
       triggerReasons: relevance.reasons,
       triggerReason: relevance.reasons.join('、'),
       intentEvidence,

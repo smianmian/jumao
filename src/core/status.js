@@ -33,7 +33,7 @@ const catStates = {
   blocked: {
     label: '需要处理',
     face: '( x.x)!',
-    message: '当前动作被硬门禁拦住。不是项目失败。'
+    message: '有件要紧的事必须先处理，橘猫帮你停下来了。不是项目失败。'
   },
   packed: {
     label: '任务包已生成',
@@ -133,10 +133,10 @@ export function readJumaoStatus(targetDir) {
     return makeStatus(targetDir, 'blocked', {
       blockers: [{
         title: '状态文件',
-        message: '.jumao/status.json 不是有效 JSON',
+        message: '橘猫的状态记录坏了。重新做一次检查就能恢复，不影响你的项目内容。',
         source: '.jumao/status.json'
       }],
-      nextSafeTask: '先重新运行 jumao doctor --write 或 jumao pack --target。',
+      nextSafeTask: '在橘猫里重新做一次检查，状态会自动恢复。',
       lastRun: { command: 'status', target: null, ok: false }
     });
   }
@@ -177,7 +177,7 @@ export function writeCommandBlockedStatus(targetDir, run, message) {
       message,
       source: run.command
     }],
-    nextSafeTask: '先处理命令提示里的硬门禁，再重新运行。',
+    nextSafeTask: '先把上面提示的问题处理掉，再重新试一次。',
     lastRun: {
       command: run.command,
       target: run.target ?? null,
@@ -223,10 +223,10 @@ export function writePlanningStatus(targetDir, state, run) {
     ? planningBlockers(run)
     : [];
   const nextSafeTask = state === 'checking'
-    ? '等待 Agent 规划流水线完成，不要把检查中状态当成最终结论。'
+    ? '橘猫还在检查，请稍等。现在看到的还不是最终结果。'
     : state === 'ready'
-      ? '先让 Codex 读取 tasks/jumao-agent-plan.md 并总结；当前明确的实现请求已允许本范围内的 prepare 和 validate，真实 execute 仍需单独授权。'
-      : blockers[0]?.message || '先处理真实阻塞，再重新运行 jumao plan。';
+      ? '计划已经写好。先让 AI 读一遍计划、用自己的话总结给你听，再开始动手。它可以写代码、做本地测试；但凡碰真实用户、真实数据或要花钱的事，它必须先回来问你。'
+      : blockers[0]?.message || '先解决上面列出的问题，再重新做一次规划。';
 
   return writeStatus(targetDir, makeStatus(targetDir, state, {
     agentBoard: planningAgentBoard(run.groups || []),
@@ -352,11 +352,11 @@ function planningAgentBoard(groups) {
           : 'idle',
       triggeredAgentCount: participatingAgentCount,
       message: counts.failed > 0
-        ? `${counts.failed} 个 Agent 执行失败`
+        ? `${counts.failed} 项检查没能完成`
         : counts.blocked > 0
-          ? `${counts.blocked} 个 Agent 被真实缺口阻塞`
+          ? `${counts.blocked} 项检查因为缺信息先停下了`
           : participatingAgentCount > 0
-            ? `${counts.completed} 个 Agent 完成分析`
+            ? `${counts.completed} 项检查已完成`
             : ''
     };
   });
@@ -388,7 +388,7 @@ function planningBlockers(run) {
   if (blockers.length === 0 && ((run.blockedAgents || 0) > 0 || (run.failedAgents || 0) > 0)) {
     blockers.push({
       title: 'Agent 规划运行',
-      message: '查看本次 manifest 和 Agent 输出中的真实阻塞。',
+      message: '检查时发现了问题。打开橘猫的详情，看看具体卡在哪一条。',
       source: run.runPath ? `${run.runPath}/manifest.json` : '.jumao/status.json'
     });
   }
@@ -397,7 +397,7 @@ function planningBlockers(run) {
 
 function sleepingStatus(targetDir) {
   return makeStatus(targetDir, 'sleeping', {
-    nextSafeTask: '先运行 jumao doctor --write 或 jumao pack --target 生成状态摘要。',
+    nextSafeTask: '还没检查过。先在橘猫里做一次检查，看看项目现在的情况。',
     artifacts: {
       agentReport: null,
       agentFindings: '.jumao/status.json',
@@ -509,7 +509,7 @@ function doctorBlockers(diagnosis) {
     blockers.set(agent.groupId, {
       groupId: agent.groupId,
       title: displayGroupName(group?.name || agent.groupId),
-      message: groupMessages[agent.groupId] || agent.blockingRules?.[0] || '先处理这个 Agent 组的硬门禁',
+      message: groupMessages[agent.groupId] || agent.blockingRules?.[0] || '这一组发现了必须先处理的事，具体看下面的说明。',
       source: 'governance/codex-agent-gates.md'
     });
   }
@@ -570,8 +570,8 @@ function nextStrictTask(strictResult) {
 
 function agentBoardLine(agentBoard = emptyAgentBoard()) {
   if (!agentBoard.activeGroupCount && !agentBoard.blockedGroupCount) {
-    return 'Agent 组：还没有状态摘要';
+    return '检查小组：还没开始';
   }
 
-  return `Agent 组：${agentBoard.activeGroupCount} 个活跃，${agentBoard.blockedGroupCount} 个被硬门禁拦住`;
+  return `检查小组：${agentBoard.activeGroupCount} 组在工作，${agentBoard.blockedGroupCount} 组遇到要紧事停下了`;
 }

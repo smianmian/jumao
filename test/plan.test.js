@@ -598,7 +598,7 @@ test('plan keeps planning ready and records a pending decision when platform is 
   const runManifest = manifest(root);
   const taskPlanJSON = readJSON(root, path.posix.join(run.runPath, 'task-plan.json'));
   const taskPlan = readText(root, 'tasks/jumao-agent-plan.md');
-  const expectedDecision = '准备开始写平台相关代码前，需要确认先做 iPhone、Mac 还是网页';
+  const expectedDecision = '动手之前先定一件事：第一版做 iPhone、Mac 电脑，还是网页？';
 
   assert.equal(result.ok, true, result.error);
   assert.equal(result.state, 'ready');
@@ -878,7 +878,7 @@ test('plan records a missing intake as blocked instead of creating a questionnai
   assert.equal(result.state, 'blocked');
   assert.equal(runManifest.agents.length, 44);
   assert.ok(runManifest.counts.blocked > 0);
-  assert.match(readText(root, 'tasks/jumao-agent-plan.md'), /请先在 Jumao Cat 或 jumao interview 中完成首轮问答/);
+  assert.match(readText(root, 'tasks/jumao-agent-plan.md'), /还没回答开头的几个问题。先在橘猫里把它们答完，就能开始规划。/);
 });
 
 test('plan safely records corrupt intake and exits non-zero through the CLI', () => {

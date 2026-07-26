@@ -325,7 +325,7 @@ test('status shows sleeping when no cat status exists', () => {
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /橘猫状态：还没检查（sleeping）/);
-  assert.match(result.stdout, /不是项目没问题，也不是项目失败|先运行 jumao doctor/);
+  assert.match(result.stdout, /不是项目没问题，也不是项目失败|先在橘猫里做一次检查/);
   assert.ok(outputLineCount(result.stdout) <= 12);
   assert.ok(!fs.existsSync(path.join(workspace, '.jumao', 'status.json')));
 });
@@ -875,6 +875,68 @@ test('interview output passes strict check with completion proof warning', () =>
   assert.match(checked.stdout, /completion proof is not filled yet/);
 });
 
+test('interactive interview on an empty directory asks the three focused questions', () => {
+  const workspace = tempDir();
+  const result = spawnSync(process.execPath, [cli, 'interview', workspace], {
+    encoding: 'utf8',
+    input: '一个帮我记录每天喝水的小工具\n记录喝水、看今天喝了多少\n1\n'
+  });
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /你想做个什么？/);
+  assert.match(result.stdout, /你希望它能做哪些事？/);
+  assert.match(result.stdout, /你想先在哪儿用它？/);
+  assert.doesNotMatch(result.stdout, /最先会来用的人是谁？/);
+  const intake = JSON.parse(fs.readFileSync(path.join(workspace, '.jumao', 'intake-answers.json'), 'utf8'));
+  assert.equal(intake.mode, 'new_project');
+  assert.equal(intake.answers.idea, '一个帮我记录每天喝水的小工具');
+  assert.equal(intake.answers.platform, 'iPhone');
+});
+
+test('interactive interview on an existing project asks only the change question', () => {
+  const workspace = tempDir();
+  fs.mkdirSync(path.join(workspace, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(workspace, 'package.json'), '{"name":"demo"}\n', 'utf8');
+  fs.writeFileSync(path.join(workspace, 'src', 'index.js'), 'console.log(1);\n', 'utf8');
+
+  const result = spawnSync(process.execPath, [cli, 'interview', workspace], {
+    encoding: 'utf8',
+    input: '加一个导出按钮\n'
+  });
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /这次你想让它变成什么样？/);
+  assert.doesNotMatch(result.stdout, /你想先在哪儿用它？/);
+  const intake = JSON.parse(fs.readFileSync(path.join(workspace, '.jumao', 'intake-answers.json'), 'utf8'));
+  assert.equal(intake.mode, 'existing_project');
+  assert.equal(intake.answers.requestedChange, '加一个导出按钮');
+});
+
+test('interactive interview re-asks required questions and aborts in plain language', () => {
+  const workspace = tempDir();
+  const result = spawnSync(process.execPath, [cli, 'interview', workspace], {
+    encoding: 'utf8',
+    input: '\n\n'
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /这道题需要先回答一下，橘猫才能继续。/);
+  assert.match(result.stderr, /「你想做个什么？」还没有回答/);
+  assert.equal(fs.existsSync(path.join(workspace, '.jumao', 'intake-answers.json')), false);
+});
+
+test('interview --full keeps the complete questionnaire with visible skip hints', () => {
+  const workspace = createProductWorkspace();
+  const result = spawnSync(process.execPath, [cli, 'interview', workspace, '--full'], {
+    encoding: 'utf8',
+    input: interviewInput(minimalAnswers())
+  });
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /最先会来用的人是谁？/);
+  assert.match(result.stdout, /想不到可以直接回车跳过/);
+});
+
 test('interview refuses to overwrite filled core files without force', () => {
   const workspace = createProductWorkspace();
   writeMinimalValidCore(workspace);
@@ -1224,7 +1286,7 @@ test('status summarizes agent board without full agent table', () => {
   assert.ok(outputLineCount(status.stdout) <= 12);
   assert.ok(blockerLines.length <= 3);
   assert.match(status.stdout, /橘猫状态：需要处理（blocked）/);
-  assert.match(status.stdout, /Agent 组：/);
+  assert.match(status.stdout, /检查小组：/);
   assert.match(status.stdout, /详情：governance\/agent-findings\.json/);
   assert.doesNotMatch(status.stdout, /App Store 上架负责人 Agent|后端工程师 Agent|医疗监管 \/ 健康声明审查负责人 Agent/);
 });

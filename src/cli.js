@@ -5,7 +5,7 @@ import { auditWorkspace } from './core/audit.js';
 import { runDoctor } from './core/doctor.js';
 import { responsibilityAgents } from './core/agent-registry.js';
 import { inspectWorkspace } from './core/inspect.js';
-import { collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
+import { collectFocusedInterviewAnswers, collectInterviewAnswers, interviewSchema, readAnswersFile, runInterview } from './core/interview.js';
 import { packDefaultWorkspace, packTargetWorkspace } from './core/pack.js';
 import { planWorkspace } from './core/planning-runtime.js';
 import { missingRequiredFiles, validateStrictWorkspace } from './core/strict-check.js';
@@ -60,7 +60,7 @@ function helpText() {
     '  jumao audit [dir] [--write]',
     '  jumao doctor [dir] --answers file [--write]',
     '  jumao inspect <workspace> --json',
-    '  jumao interview [dir] [--answers file] [--force]',
+    '  jumao interview [dir] [--answers file] [--full] [--force]',
     '  jumao interview --schema',
     '  jumao pack [dir] [--target codex|claude|cursor]',
     '  jumao plan <workspace> [--json|--events-jsonl] [--force]',
@@ -219,15 +219,33 @@ function inspectCommand(args, io) {
 }
 
 async function interviewCommand(args, io) {
-  const { targetDir, answersFile, force, schema } = parseInterviewArgs(args);
+  const { targetDir, answersFile, force, schema, full } = parseInterviewArgs(args);
   if (schema) {
     io.stdout.write(`${JSON.stringify(interviewSchema, null, 2)}\n`);
     return 0;
   }
 
-  const answers = answersFile
-    ? readAnswersFile(answersFile)
-    : await collectInterviewAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+  let answers;
+  if (answersFile) {
+    answers = readAnswersFile(answersFile);
+  } else if (full) {
+    answers = await collectInterviewAnswers(io.stdin || process.stdin, io.stdout || process.stdout);
+    if (answers.__aborted) {
+      io.stderr.write(`${answers.message}\n`);
+      return 1;
+    }
+  } else {
+    const focused = await collectFocusedInterviewAnswers(
+      targetDir,
+      io.stdin || process.stdin,
+      io.stdout || process.stdout
+    );
+    if (!focused.ok) {
+      io.stderr.write(`${focused.message}\n`);
+      return 1;
+    }
+    answers = focused.answers;
+  }
   const result = runInterview(targetDir, answers, { force });
 
   if (!result.ok) {
@@ -403,6 +421,7 @@ function parseInterviewArgs(args) {
   let answersFile;
   let force = false;
   let schema = false;
+  let full = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -410,6 +429,8 @@ function parseInterviewArgs(args) {
       force = true;
     } else if (arg === '--schema') {
       schema = true;
+    } else if (arg === '--full') {
+      full = true;
     } else if (arg === '--answers') {
       answersFile = path.resolve(args[index + 1]);
       index += 1;
@@ -422,7 +443,8 @@ function parseInterviewArgs(args) {
     targetDir: path.resolve(target || '.'),
     answersFile,
     force,
-    schema
+    schema,
+    full
   };
 }
 
