@@ -1639,12 +1639,12 @@ function synthesizeTaskPlan(context, execution) {
     workspace: context.workspacePath,
     executionContext: { allowPrepare: true, allowValidate: true, allowProductionEffects: false }
   });
-  const goalCoverageQuestions = goalCoverageResult.valid
+  const coverageGaps = goalCoverageResult.valid
     ? []
     : goalCoverageResult.goals
       .filter((goal) => goal.status === 'missing')
-      .map((goal) => `明确目标“${goal.label}”（${goal.goalId}）没有被 priorityTask 覆盖，不能安全交给 Codex。`);
-  const handoffBlockingQuestions = unique([...context.blockingQuestions, ...goalCoverageQuestions]);
+      .map((goal) => ({ goalId: goal.goalId, label: goal.label }));
+  const handoffBlockingQuestions = unique([...context.blockingQuestions]);
   const testChecks = testChecksFor(context);
   const releaseChecks = releaseChecksFor(context);
   const plan = {
@@ -1663,6 +1663,7 @@ function synthesizeTaskPlan(context, execution) {
     contributions,
     blockingQuestions: handoffBlockingQuestions,
     goalCoverage: goalCoverageResult.goals,
+    coverageGaps,
     handoffReady: goalCoverageResult.valid && executionHandoff.ready && context.blockingQuestions.length === 0,
     executionBoundaries: context.executionBoundary.phases,
     platformPending: context.platformPending,
@@ -1984,7 +1985,7 @@ function renderTaskPlan(plan) {
     ...section('## 6. 后续阶段', plan.laterStages),
     ...section('## 7. 测试检查', plan.testChecks),
     ...section('## 8. 发布检查', plan.releaseChecks),
-    ...section('## 9. 真正阻止开发的问题', plan.blockingQuestions.length ? plan.blockingQuestions : ['没有。']),
+    ...section('## 9. 真正阻止开发的问题', blockingItemsFor(plan)),
     ...section('## 10. 给 Codex 的开始方式', plan.codexInstructions),
     ...(plan.completionReceipt ? [
       '## 11. 完成回执要求',
@@ -1999,6 +2000,15 @@ function renderTaskPlan(plan) {
       ''
     ] : [])
   ].join('\n').trimEnd() + '\n';
+}
+
+function blockingItemsFor(plan) {
+  const items = [
+    ...plan.blockingQuestions,
+    ...(plan.coverageGaps || []).map((gap) =>
+      `「${gap.label}」还没有安排进第一批任务，橘猫先不放行。重新做一次规划就能继续，这一条不需要你回答什么。`)
+  ];
+  return items.length > 0 ? items : ['没有。'];
 }
 
 function writeRunArtifacts(runPath, context, execution, taskPlan) {
