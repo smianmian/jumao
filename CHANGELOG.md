@@ -1,5 +1,54 @@
 # Changelog
 
+## 0.4.0-rc.1 - Release Candidate
+
+### Added
+
+- Completion Receipt protocol: every plan now ships a machine-readable
+  receipt contract; the coding agent reports what it completed, blocked,
+  validated, and whether it touched the real world, then ends its session.
+- Execution lifecycle management: startup, delivery, and lifecycle results
+  are judged separately, with event-stream milestones, activity-based
+  timers, process-group cleanup, and full per-run evidence retention.
+  Frozen validation: 9/9 real executions with legal, truthful receipts and
+  natural clean exits.
+- `jumao verify`: independent receipt verification for real users -
+  re-runs the project's own checks, matches changed-file evidence, scans
+  for real side effects, and reports in plain language whether the receipt
+  matches reality.
+- Hand-to-Codex and Hand-to-Claude-Code: the handoff instruction supports
+  both coding agents, and Jumao Cat surfaces the receipt stage in its
+  status panel.
+- Focused interactive interview in the CLI: new projects answer three
+  plain questions plus an optional what-not-to-do question; existing
+  projects answer one change question plus an optional done-when question.
+- Interactive plain-Chinese `jumao doctor` questionnaire (numbered
+  choices) replacing the hand-written English-keyed answers file.
+
+### Changed
+
+- Normalize common Chinese and English planning signals such as login and Web.
+- Separate explicit negative boundaries from positive feature intent.
+- Prevent Apple-only Agents from completing for non-Apple projects.
+- Separate intent, project, and role-specific Agent evidence while retaining the existing combined evidence field.
+- Record each completed Agent's contribution to the final task plan.
+- Merge relevant Agent tasks into the Codex-ready plan and deduplicate repeated protections.
+- Add golden planning coverage for Web membership, local macOS, health, and Node CLI projects.
+- Slim the full questionnaire from 21 to 9 questions; deleted fields are
+  derived from mirrors and plain defaults instead of asked.
+- Report goal-coverage gaps as planner status instead of unanswerable
+  user questions, and rewrite user-facing status copy in plain language.
+- Generalize execution-handoff acceptance beyond the benchmark goal
+  families.
+
+### Safety
+
+- No external AI API calls.
+- No autonomous coding, deployment, publishing, payment, or production actions.
+- No changes to immutable v0.3.1 release artifacts.
+- Receipts never override measured evidence: scanner findings, re-run
+  check exit codes, and file evidence always win over agent claims.
+
 ## 0.3.1 - Release Candidate
 
 ### Added
