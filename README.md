@@ -26,7 +26,8 @@ from Applications.
 
 1. Choose a new-project folder or an existing code project.
 2. For a new project, answer three plain-language questions: what you want to
-   make, what it should do, and where you want to use it first.
+   make, what it should do, and where you want to use it first — plus one
+   skippable question about what this version should deliberately not do.
 3. For an existing project, describe only what you want this change to become.
    Jumao Cat inspects visible project evidence instead of asking you to repeat
    facts it can already see.
@@ -88,9 +89,17 @@ jumao plan /path/to/project --events-jsonl
 jumao plan /path/to/project --force
 ```
 
-The existing `new`, `interview`, `inspect`, `check`, `audit`, `doctor`, `pack`,
-and `status` commands remain available. There are no breaking CLI changes in
-v0.3.1.
+After the coding agent finishes, it leaves a completion receipt in the
+project; Jumao can independently verify it:
+
+```bash
+jumao verify /path/to/project
+```
+
+`jumao interview` now defaults to the focused plain-language questions (the
+full questionnaire lives behind `--full`), and `jumao doctor` without
+arguments runs an interactive Chinese questionnaire. The existing `new`,
+`inspect`, `check`, `audit`, `pack`, and `status` commands remain available.
 
 ## Documentation
 

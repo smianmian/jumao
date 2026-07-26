@@ -24,6 +24,7 @@ Jumao Cat 会把一个新产品想法，或已有项目的一次改动，整理�
 
 1. 选择一个新项目文件夹，或已有代码项目。
 2. 新项目只回答 3 道普通问题：想做什么、希望它能做哪些事、想先在哪里使用。
+   还有一道可以跳过的题：这一版先不做什么——写了 AI 就不会自作主张加上。
 3. 已有项目只描述“这次想改成什么样”。Jumao Cat 会读取能看到的项目证据，
    不再让你重复回答它已经知道的事实。
 4. 确认 Jumao Cat 理解正确后，App 自动运行本地 Agent Planning Runtime。
@@ -76,8 +77,15 @@ jumao plan /你的/项目路径 --events-jsonl
 jumao plan /你的/项目路径 --force
 ```
 
-原有的 `new`、`interview`、`inspect`、`check`、`audit`、`doctor`、`pack` 和
-`status` 命令继续保留。v0.3.1 没有破坏性 CLI 变更。
+AI 干完活会在项目里留下一张完成回执，可以让橘猫独立核验它有没有说谎：
+
+```bash
+jumao verify /你的/项目路径
+```
+
+`jumao interview` 现在默认只问上面那几道普通问题（完整问卷在 `--full`），
+`jumao doctor` 不带参数就是中文选择题问答。原有的 `new`、`inspect`、`check`、
+`audit`、`pack` 和 `status` 命令继续保留。
 
 ## 文档
 
