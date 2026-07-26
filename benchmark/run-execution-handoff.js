@@ -51,6 +51,7 @@ function command(binary, args, cwd, options = {}) {
     cwd,
     encoding: 'utf8',
     timeout: options.timeout || 240000,
+    killSignal: options.killSignal || 'SIGKILL',
     maxBuffer: 16 * 1024 * 1024,
     env: options.env || process.env
   });
