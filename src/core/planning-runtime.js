@@ -4,6 +4,7 @@ import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { agentGroups, responsibilityAgents } from './agent-registry.js';
 import { executionHandoffForPlan, validationBootstrapFor } from './execution-handoff.js';
+import { completionReceiptContractFor } from './completion-receipt.js';
 import { inspectWorkspace } from './inspect.js';
 import { writePlanningStatus } from './status.js';
 
@@ -1666,11 +1667,15 @@ function synthesizeTaskPlan(context, execution) {
     executionBoundaries: context.executionBoundary.phases,
     platformPending: context.platformPending,
     pendingDecision: context.pendingDecision,
+    completionReceipt: completionReceiptContractFor(context.explicitGoals.map((goal) => goal.goalId)),
     codexInstructions: [
       '先总结项目目标、第一阶段边界、保护项、阻塞问题和下一步最小任务。',
       '当前执行请求已授权本次明确范围内的 prepare 和 validate；不需要为了普通本地代码修改再次索要主人确认。',
       'execute 阶段涉及真实账号、真实数据、生产环境或外部付费服务时仍然 blocked；不要因 execute 未授权而停止 prepare 或 validate。',
-      '不要实现用户没有明确提出的能力。'
+      '不要实现用户没有明确提出的能力。',
+      '完成全部允许的实现和验证后，把完成回执写入 .jumao/completion-receipt.json（模板见计划第 11 节）：goalsCompleted 只填真正完成的 goalId，未完成的移入 goalsBlocked 并写明真实原因，validation 填实际运行过的每条验证命令和真实退出码。',
+      '只报告真实发生的事：文件改动、测试退出码和副作用会被独立核验，回执与事实矛盾按失败处理。',
+      '写完回执后停止调用工具，直接结束本次会话。'
     ]
   };
   return { json: plan, markdown: renderTaskPlan(plan) };
@@ -1980,7 +1985,19 @@ function renderTaskPlan(plan) {
     ...section('## 7. 测试检查', plan.testChecks),
     ...section('## 8. 发布检查', plan.releaseChecks),
     ...section('## 9. 真正阻止开发的问题', plan.blockingQuestions.length ? plan.blockingQuestions : ['没有。']),
-    ...section('## 10. 给 Codex 的开始方式', plan.codexInstructions)
+    ...section('## 10. 给 Codex 的开始方式', plan.codexInstructions),
+    ...(plan.completionReceipt ? [
+      '## 11. 完成回执要求',
+      '',
+      `- 做完后把回执写入 \`${plan.completionReceipt.file}\`，然后停止工具调用并结束会话。`,
+      '- 回执必须如实填写：文件改动、测试退出码和副作用会被独立核验，与事实矛盾按失败处理。',
+      '- 模板（goalsCompleted 只保留真正完成的目标，未完成的移入 goalsBlocked 并写明原因）：',
+      '',
+      '```json',
+      JSON.stringify(plan.completionReceipt.template, null, 2),
+      '```',
+      ''
+    ] : [])
   ].join('\n').trimEnd() + '\n';
 }
 

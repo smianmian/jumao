@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { agentGroups } from './agent-registry.js';
+import { completionReceiptFile, extractCompletionReceipt } from './completion-receipt.js';
 
 const schemaVersion = '0.2.3';
 const jumaoVersion = '0.2.3';
@@ -72,12 +73,62 @@ export function statusPath(targetDir) {
   return path.join(targetDir, '.jumao', 'status.json');
 }
 
+export function completionReceiptStage(targetDir) {
+  const file = path.join(targetDir, completionReceiptFile);
+  if (!fs.existsSync(file)) return null;
+  let raw;
+  try {
+    raw = fs.readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+  let extraction = extractCompletionReceipt(raw);
+  if (!extraction.receipt) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !parsed.jumaoCompletion && 'status' in parsed && 'goalsCompleted' in parsed) {
+        extraction = extractCompletionReceipt(JSON.stringify({ jumaoCompletion: parsed }));
+      }
+    } catch {
+      // 保持原始提取结果。
+    }
+  }
+  if (!extraction.receipt) {
+    return {
+      stage: 'receipt_invalid',
+      message: 'AI 交了一份回执，但内容不完整或格式不对。不是项目失败。',
+      nextSafeTask: '让 AI 重新交一份完整回执，或重新跑一次这项工作。',
+      receipt: null
+    };
+  }
+  if (extraction.receipt.status === 'blocked' || extraction.receipt.goalsBlocked.length > 0) {
+    return {
+      stage: 'receipt_blocked',
+      message: 'AI 交回执说有些目标没做完，原因写在回执里。不是失败。',
+      nextSafeTask: '看看回执里被卡住的原因，补上信息后再让 AI 继续。',
+      receipt: extraction.receipt
+    };
+  }
+  return {
+    stage: 'receipt_completed',
+    message: 'AI 交回执说这次的活做完了。不是橘猫核验过的结论。',
+    nextSafeTask: '对照回执里列的目标，自己点一点功能，确认真的做完了。',
+    receipt: extraction.receipt
+  };
+}
+
+function withCompletionReceipt(targetDir, status) {
+  const receiptStage = completionReceiptStage(targetDir);
+  if (receiptStage) status.completionReceipt = receiptStage;
+  return status;
+}
+
 export function readJumaoStatus(targetDir) {
   const file = statusPath(targetDir);
-  if (!fs.existsSync(file)) return sleepingStatus(targetDir);
+  if (!fs.existsSync(file)) return withCompletionReceipt(targetDir, sleepingStatus(targetDir));
 
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    return withCompletionReceipt(targetDir, JSON.parse(fs.readFileSync(file, 'utf8')));
   } catch {
     return makeStatus(targetDir, 'blocked', {
       blockers: [{
@@ -218,7 +269,11 @@ export function renderStatus(status) {
     }
   }
 
-  lines.push(`下一步：${status.nextSafeTask || cat.message}`);
+  if (status.completionReceipt) {
+    lines.push(`回执：${status.completionReceipt.message}`);
+  }
+
+  lines.push(`下一步：${status.completionReceipt?.nextSafeTask || status.nextSafeTask || cat.message}`);
   lines.push(`详情：${status.artifacts?.agentFindings || '.jumao/status.json'}`);
 
   return lines.slice(0, 12).join('\n') + '\n';

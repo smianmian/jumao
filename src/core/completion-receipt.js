@@ -1,5 +1,27 @@
 const receiptKey = 'jumaoCompletion';
 
+export const completionReceiptFile = '.jumao/completion-receipt.json';
+
+export function completionReceiptContractFor(goalIds = []) {
+  const goals = (Array.isArray(goalIds) ? goalIds : []).filter((goalId) => typeof goalId === 'string');
+  return {
+    file: completionReceiptFile,
+    requiredFields: ['status', 'goalsCompleted', 'goalsBlocked', 'validation', 'productionEffects', 'remainingWork'],
+    statusValues: ['completed', 'blocked'],
+    goalIds: goals,
+    template: {
+      [receiptKey]: {
+        status: 'completed',
+        goalsCompleted: goals,
+        goalsBlocked: [],
+        validation: [{ command: 'npm test', exitCode: 0 }],
+        productionEffects: false,
+        remainingWork: []
+      }
+    }
+  };
+}
+
 function balancedSlice(text, start) {
   let depth = 0;
   let inString = false;
