@@ -5,7 +5,13 @@ import { agentGroups } from './agent-registry.js';
 import { completionReceiptFile, extractCompletionReceipt } from './completion-receipt.js';
 
 const schemaVersion = '0.2.3';
-const jumaoVersion = '0.2.3';
+const jumaoVersion = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 const artifactPaths = {
   agentReport: 'governance/agent-review-report.md',
