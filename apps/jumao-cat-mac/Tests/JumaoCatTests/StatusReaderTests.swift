@@ -42,9 +42,9 @@ final class StatusReaderTests: XCTestCase {
 
   func testProjectReadinessMapsEveryCatState() {
     let expected = [
-      "sleeping": ProjectReadiness(percentage: 20, stage: "待命", rawState: nil),
+      "sleeping": ProjectReadiness(percentage: 20, stage: "还没开始检查", rawState: nil),
       "checking": ProjectReadiness(percentage: 40, stage: "正在检查", rawState: nil),
-      "blocked": ProjectReadiness(percentage: 60, stage: "处理关键阻塞", rawState: nil),
+      "blocked": ProjectReadiness(percentage: 60, stage: "先处理要紧的事", rawState: nil),
       "ready": ProjectReadiness(percentage: 90, stage: "可以生成任务包", rawState: nil),
       "packed": ProjectReadiness(percentage: 100, stage: "准备完成", rawState: nil)
     ]
@@ -64,7 +64,7 @@ final class StatusReaderTests: XCTestCase {
   func testPackedProjectReadinessDropsWhenGroupsAreBlocked() {
     XCTAssertEqual(
       ProjectReadiness.forState("packed", blockedGroupCount: 6),
-      ProjectReadiness(percentage: 80, stage: "任务包已生成，仍需处理阻塞", rawState: nil)
+      ProjectReadiness(percentage: 80, stage: "任务包已生成，还有要紧事没处理", rawState: nil)
     )
   }
 
@@ -195,9 +195,9 @@ final class StatusReaderTests: XCTestCase {
   }
 
   func testAgentGroupUsesChineseStateLabels() {
-    XCTAssertEqual(AgentGroupStatePresentation.label(for: "idle"), "未召集")
-    XCTAssertEqual(AgentGroupStatePresentation.label(for: "triggered"), "已召集")
-    XCTAssertEqual(AgentGroupStatePresentation.label(for: "blocked"), "存在阻塞")
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "idle"), "这次不涉及")
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "triggered"), "参与了")
+    XCTAssertEqual(AgentGroupStatePresentation.label(for: "blocked"), "有要紧事停下了")
     XCTAssertEqual(AgentGroupStatePresentation.label(for: "future_state"), "未知状态")
   }
 
@@ -209,7 +209,7 @@ final class StatusReaderTests: XCTestCase {
     let dataPrivacy = groups?.first { $0.id == "data_privacy" }
 
     XCTAssertEqual(dataPrivacy?.state, "blocked")
-    XCTAssertEqual(dataPrivacy?.stateLabel, "存在阻塞")
+    XCTAssertEqual(dataPrivacy?.stateLabel, "有要紧事停下了")
     XCTAssertEqual(dataPrivacy?.message, "先补数据保存、删除和第三方工具边界")
   }
 

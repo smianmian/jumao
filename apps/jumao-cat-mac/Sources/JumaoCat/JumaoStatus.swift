@@ -320,16 +320,16 @@ struct ProjectReadiness: Equatable {
   static func forState(_ state: String, blockedGroupCount: Int = 0) -> ProjectReadiness {
     switch state {
     case "sleeping":
-      return ProjectReadiness(percentage: 20, stage: "待命", rawState: nil)
+      return ProjectReadiness(percentage: 20, stage: "还没开始检查", rawState: nil)
     case "checking":
       return ProjectReadiness(percentage: 40, stage: "正在检查", rawState: nil)
     case "blocked":
-      return ProjectReadiness(percentage: 60, stage: "处理关键阻塞", rawState: nil)
+      return ProjectReadiness(percentage: 60, stage: "先处理要紧的事", rawState: nil)
     case "ready":
       return ProjectReadiness(percentage: 90, stage: "可以生成任务包", rawState: nil)
     case "packed":
       if blockedGroupCount > 0 {
-        return ProjectReadiness(percentage: 80, stage: "任务包已生成，仍需处理阻塞", rawState: nil)
+        return ProjectReadiness(percentage: 80, stage: "任务包已生成，还有要紧事没处理", rawState: nil)
       }
 
       return ProjectReadiness(percentage: 100, stage: "准备完成", rawState: nil)
@@ -363,11 +363,11 @@ enum AgentGroupStatePresentation {
   static func label(for state: String) -> String {
     switch state {
     case "idle":
-      return "未召集"
+      return "这次不涉及"
     case "triggered":
-      return "已召集"
+      return "参与了"
     case "blocked":
-      return "存在阻塞"
+      return "有要紧事停下了"
     default:
       return "未知状态"
     }

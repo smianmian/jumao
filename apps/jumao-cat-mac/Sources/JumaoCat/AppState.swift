@@ -558,15 +558,15 @@ final class AppState: ObservableObject {
     case .opened:
       agentReportOpenError = nil
     case .emptyPath:
-      agentReportOpenError = "治理报告路径为空。"
+      agentReportOpenError = "检查报告路径为空。"
     case .outsideWorkspace:
-      agentReportOpenError = "治理报告必须位于当前项目目录内。"
+      agentReportOpenError = "检查报告必须位于当前项目目录内。"
     case .missingFile:
-      agentReportOpenError = "治理报告文件不存在。"
+      agentReportOpenError = "检查报告还没有生成。先做一次检查。"
     case .directory:
-      agentReportOpenError = "治理报告路径指向的是目录，无法打开。"
+      agentReportOpenError = "检查报告路径指向的是目录，无法打开。"
     case .failed:
-      agentReportOpenError = "无法打开治理报告。"
+      agentReportOpenError = "无法打开检查报告。"
     }
   }
 

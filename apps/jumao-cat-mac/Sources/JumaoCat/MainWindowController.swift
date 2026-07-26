@@ -21,12 +21,19 @@ final class MainWindowController: NSObject, MainWindowControlling {
 
     window.title = "Jumao Cat"
     window.isReleasedWhenClosed = false
+    window.minSize = NSSize(width: 380, height: 430)
+    window.setFrameAutosaveName("JumaoCatMainWindow")
     window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
     window.contentViewController = NSHostingController(rootView: StatusPopover(appState: appState))
   }
 
+  private var hasShownOnce = false
+
   func show() {
-    window.center()
+    if !hasShownOnce, !window.setFrameUsingName("JumaoCatMainWindow") {
+      window.center()
+    }
+    hasShownOnce = true
     NSApp.activate(ignoringOtherApps: true)
     window.makeKeyAndOrderFront(nil)
   }

@@ -8,19 +8,21 @@ struct StatusPopover: View {
   ]
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      header
-      Divider()
+    ScrollView {
+      VStack(alignment: .leading, spacing: 14) {
+        header
+        Divider()
 
-      if appState.workspaceURL == nil {
-        unselectedWorkspace
-      } else {
-        selectedWorkspace
+        if appState.workspaceURL == nil {
+          unselectedWorkspace
+        } else {
+          selectedWorkspace
+        }
       }
+      .padding(16)
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(16)
-    .frame(width: 380, alignment: .leading)
-    .fixedSize(horizontal: false, vertical: true)
+    .frame(minWidth: 380, idealWidth: 430, maxWidth: .infinity, minHeight: 430, idealHeight: 640, maxHeight: .infinity)
   }
 
   private var header: some View {
@@ -92,21 +94,21 @@ struct StatusPopover: View {
           projectReadiness(readiness)
         }
 
+        if let snapshot = appState.status.snapshot {
+          statusDetails(snapshot)
+        }
+
         if let team = appState.status.agentTeamOverview {
-          agentTeam(team)
-          agentGroups(team.groups)
+          checkTeamDetails(team)
         }
 
         VStack(alignment: .leading, spacing: 3) {
           sectionTitle("项目目录")
           Text(appState.workspacePath)
             .font(.caption)
+            .foregroundStyle(.secondary)
             .textSelection(.enabled)
             .lineLimit(2)
-        }
-
-        if let snapshot = appState.status.snapshot {
-          statusDetails(snapshot)
         }
 
         feedback
@@ -218,7 +220,7 @@ struct StatusPopover: View {
         .tint(.orange)
 
       HStack(spacing: 4) {
-        Text("当前阶段：")
+        Text("现在做到：")
           .font(.caption)
           .foregroundStyle(.secondary)
         Text(readiness.stage)
@@ -233,42 +235,39 @@ struct StatusPopover: View {
     }
   }
 
-  private func agentTeam(_ team: AgentTeamOverview) -> some View {
-    VStack(alignment: .leading, spacing: 6) {
-      sectionTitle("Agent 团队")
-      HStack(spacing: 18) {
-        agentMetric("已召集", team.triggeredAgentCount)
-        agentMetric("活跃分组", team.activeGroupCount, showsActivity: team.showsCheckingActivity)
-        agentMetric("阻塞分组", team.blockedGroupCount)
-      }
-    }
-  }
+  private func checkTeamDetails(_ team: AgentTeamOverview) -> some View {
+    DisclosureGroup {
+      VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 18) {
+          agentMetric("参与检查", team.triggeredAgentCount)
+          agentMetric("在工作", team.activeGroupCount, showsActivity: team.showsCheckingActivity)
+          agentMetric("停下来了", team.blockedGroupCount)
+        }
+        .padding(.top, 6)
 
-  private func agentGroups(_ groups: [JumaoCatStatus.AgentGroup]) -> some View {
-    VStack(alignment: .leading, spacing: 6) {
-      sectionTitle("Agent 分组")
-
-      if groups.isEmpty {
-        Text("暂无分组详情")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      } else {
-        ScrollView {
+        if team.groups.isEmpty {
+          Text("还没有小组信息")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else {
           LazyVStack(alignment: .leading, spacing: 8) {
-            ForEach(groups.prefix(8)) { group in
+            ForEach(team.groups.prefix(8)) { group in
               agentGroupRow(group)
             }
           }
         }
-        .frame(maxHeight: 176)
       }
+    } label: {
+      Text("检查详情（\(team.groups.count) 个小组）")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
     }
   }
 
   private func agentGroupRow(_ group: JumaoCatStatus.AgentGroup) -> some View {
     VStack(alignment: .leading, spacing: 3) {
       HStack(alignment: .firstTextBaseline, spacing: 8) {
-        Text(group.name)
+        Text(group.name.replacingOccurrences(of: " Agent 组", with: ""))
           .font(.caption.weight(.semibold))
           .lineLimit(1)
         Spacer(minLength: 8)
@@ -277,7 +276,7 @@ struct StatusPopover: View {
           .foregroundStyle(group.state == "blocked" ? .red : .secondary)
       }
 
-      Text("已触发 \(group.triggeredAgentCount) 个 Agent")
+      Text("\(group.triggeredAgentCount) 项检查参与")
         .font(.caption2)
         .foregroundStyle(.secondary)
 
@@ -339,7 +338,7 @@ struct StatusPopover: View {
         action: appState.copyLatestTaskPack
       )
       actionButton(
-        "打开治理报告",
+        "打开检查报告",
         systemImage: "doc.text",
         enabled: appState.canOpenAgentReport,
         action: appState.openAgentReport
@@ -388,17 +387,11 @@ struct StatusPopover: View {
 
   private func statusDetails(_ snapshot: StatusSnapshot) -> some View {
     VStack(alignment: .leading, spacing: 12) {
-      if let date = appState.statusFileModificationDate {
-        detail("最后更新", date.formatted(date: .abbreviated, time: .shortened))
-      }
+      nextStepCard(snapshot)
 
-      VStack(alignment: .leading, spacing: 6) {
-        sectionTitle("关键阻塞")
-        if snapshot.status.blockers.isEmpty {
-          Text("当前没有关键阻塞")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        } else {
+      if !snapshot.status.blockers.isEmpty {
+        VStack(alignment: .leading, spacing: 6) {
+          sectionTitle("要先处理的事")
           ForEach(snapshot.status.blockers.prefix(3)) { blocker in
             VStack(alignment: .leading, spacing: 2) {
               Text(blocker.title)
@@ -411,7 +404,7 @@ struct StatusPopover: View {
           }
 
           if snapshot.status.blockers.count > 3 {
-            Text("还有 \(snapshot.status.blockers.count - 3) 条关键阻塞")
+            Text("还有 \(snapshot.status.blockers.count - 3) 件，打开检查报告能看全部")
               .font(.caption)
               .foregroundStyle(.secondary)
           }
@@ -435,11 +428,30 @@ struct StatusPopover: View {
         }
       }
 
-      if let receipt = appState.completionReceiptStage {
-        detail("下一步", receipt.nextStep)
-      } else if !snapshot.status.nextSafeTask.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        detail("下一步", snapshot.status.nextSafeTask)
+      if let date = appState.statusFileModificationDate {
+        Text("最后更新：\(date.formatted(date: .abbreviated, time: .shortened))")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
       }
+    }
+  }
+
+  @ViewBuilder
+  private func nextStepCard(_ snapshot: StatusSnapshot) -> some View {
+    let nextStep = appState.completionReceiptStage?.nextStep
+      ?? (snapshot.status.nextSafeTask.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        ? nil
+        : snapshot.status.nextSafeTask)
+    if let nextStep {
+      VStack(alignment: .leading, spacing: 4) {
+        sectionTitle("下一步做什么")
+        Text(nextStep)
+          .font(.subheadline)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .padding(10)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
     }
   }
 
