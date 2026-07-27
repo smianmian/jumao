@@ -129,6 +129,14 @@ final class MenuBarActivityStateTests: XCTestCase {
       .blocked
     )
     XCTAssertEqual(
+      MenuBarCatAnimator.visualState(activity: .idle, persistentState: "blocked", isHovered: false),
+      .blocked
+    )
+    XCTAssertEqual(
+      MenuBarCatAnimator.visualState(activity: .idle, persistentState: "blocked", isHovered: true),
+      .idleAwake
+    )
+    XCTAssertEqual(
       MenuBarCatAnimator.visualState(activity: .failure, persistentState: "ready", isHovered: true),
       .blocked
     )

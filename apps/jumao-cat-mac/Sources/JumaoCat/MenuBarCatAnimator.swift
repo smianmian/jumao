@@ -144,7 +144,7 @@ final class MenuBarCatAnimator {
     isHovered: Bool
   ) -> MenuBarCatVisualState {
     if activity == .failure || persistentState == "blocked" {
-      return .blocked
+      return isHovered && activity == .idle ? .idleAwake : .blocked
     }
     switch activity {
     case .working: return .working

@@ -57,14 +57,14 @@ const baseAgentIds = new Set([
 ]);
 
 const groupMessages = {
-  direction_entity: '先补主体、品牌和材料边界',
-  product_design: '先补产品范围、页面状态和文案边界',
-  tech_development: '先补账号、服务端、密钥或构建边界',
-  data_privacy: '先补数据保存、删除和第三方工具边界',
-  compliance_health: '先补合规、健康声明或证据边界',
-  platform_qualification: '先补发布、审核或平台材料',
-  revenue_operations: '先补收费、退款和对账规则',
-  release_incident: '先补测试、发布清单和回滚计划'
+  direction_entity: '先说清楚：项目用个人还是公司名义做？名字和素材是哪来的？',
+  product_design: '先说清楚第一版做什么、用户在页面上要做成什么。',
+  tech_development: '先说清楚要不要登录、数据放在哪里。',
+  data_privacy: '先说清楚会保存哪些内容、怎么清掉、会不会用到别人家的工具。',
+  compliance_health: '先说清楚哪些话能承诺、哪些健康相关的话不能说。',
+  platform_qualification: '先准备上架和审核要用的材料。',
+  revenue_operations: '先说清楚怎么收钱、怎么退钱。',
+  release_incident: '先说清楚怎么测试、出了问题怎么退回上一版。'
 };
 
 export function isJumaoWorkspace(targetDir) {
@@ -559,10 +559,10 @@ function strictTitle(source) {
 }
 
 function strictMessage(source, reason) {
-  if (source.includes('product-brief')) return '先补清楚用户、目标和成功证据';
-  if (source.includes('scope-gate')) return '先补首版必须做和明确不做';
-  if (source.includes('screen-states')) return '先补加载、空状态、错误和成功状态';
-  if (source.includes('data-safety')) return '先补数据保存、删除和第三方工具边界';
+  if (source.includes('product-brief')) return '先说清楚给谁用、最希望看到什么、用户能做成什么事。回答橘猫的问题就能生成。';
+  if (source.includes('scope-gate')) return '先写清楚第一版必须做什么、明确不做什么。回答橘猫的问题就能生成。';
+  if (source.includes('screen-states')) return '先说清楚主要页面和用户要在上面做成什么。加载、出错这些提示语橘猫会先起草，做出来后你再改。';
+  if (source.includes('data-safety')) return '先说清楚会留下哪些内容、怎么清掉、会不会用到别人家的工具。';
   return reason;
 }
 
