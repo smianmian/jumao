@@ -83,6 +83,14 @@ AI 干完活会在项目里留下一张完成回执，可以让橘猫独立核�
 jumao verify /你的/项目路径
 ```
 
+默认情况下，`jumao verify` 会在该项目目录里重跑项目自己的测试（`npm test`
+和/或 `xcodebuild test`），用来抓「回执说测试过了、其实没过」的谎报。
+**只对你信任的项目做完整核验。** 如果只想对照本地文件证据、不执行项目测试：
+
+```bash
+jumao verify /你的/项目路径 --no-run-checks
+```
+
 `jumao interview` 现在默认只问上面那几道普通问题（完整问卷在 `--full`），
 `jumao doctor` 不带参数就是中文选择题问答。原有的 `new`、`inspect`、`check`、
 `audit`、`pack` 和 `status` 命令继续保留。

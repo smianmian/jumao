@@ -28,6 +28,20 @@ Security-sensitive issues include:
 - Generated guidance that tells an AI coding tool to touch production data, payments, launches, reviews, or external accounts without confirmation.
 - Package contents that accidentally include secrets or private project files.
 
+## Local verify and project tests
+
+`jumao verify` is local-only, but by default it re-runs checks that live in the
+selected workspace (`npm test` when `package.json` defines a test script, and
+`xcodebuild test` when an `.xcodeproj` is present). Treat that as executing code
+from the target project: only use full verify on projects you trust.
+
+To skip executing project tests and only compare the completion receipt against
+local file and git evidence:
+
+```bash
+jumao verify /path/to/project --no-run-checks
+```
+
 ## Out of scope
 
 - Requests to add direct AI API calls to Jumao.

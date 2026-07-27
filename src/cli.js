@@ -67,9 +67,12 @@ function helpText() {
     '  jumao pack [dir] [--target codex|claude|cursor]',
     '  jumao plan <workspace> [--json|--events-jsonl] [--force]',
     '  jumao status [dir]',
-    '  jumao verify [dir] [--json]',
+    '  jumao verify [dir] [--json] [--no-run-checks]',
     '',
-    'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.'
+    'Jumao does not call AI APIs. It creates local files for the AI coding tool you use.',
+    'By default, jumao verify re-runs the project test script (npm test / xcodebuild test)',
+    'in that workspace. Only use full verify on projects you trust; use --no-run-checks',
+    'to skip executing project tests and only compare the receipt against local evidence.'
   ].join('\n') + '\n';
 }
 
@@ -211,8 +214,9 @@ async function doctorCommand(args, io) {
 
 function verifyCommand(args, io) {
   const json = args.includes('--json');
+  const runChecks = !args.includes('--no-run-checks');
   const targetDir = path.resolve(args.find((arg) => !arg.startsWith('--')) || '.');
-  const result = verifyWorkspaceReceipt(targetDir);
+  const result = verifyWorkspaceReceipt(targetDir, { runChecks });
   if (json) {
     io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {

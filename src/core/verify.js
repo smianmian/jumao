@@ -126,13 +126,15 @@ function latestGoalCoverage(workspacePath) {
   }
 }
 
-export function verifyWorkspaceReceipt(workspacePath) {
+export function verifyWorkspaceReceipt(workspacePath, options = {}) {
+  const runChecks = options.runChecks !== false;
   const root = path.resolve(workspacePath);
   const receiptPath = path.join(root, completionReceiptFile);
   if (!fs.existsSync(receiptPath)) {
     return {
       ok: false,
       state: 'no_receipt',
+      runChecks,
       message: '这个项目里还没有 AI 交回的完成回执。先让 AI 干完活，它会把回执写到项目里。'
     };
   }
@@ -142,6 +144,7 @@ export function verifyWorkspaceReceipt(workspacePath) {
     return {
       ok: true,
       state: 'illegal',
+      runChecks,
       issues: parsed.issues,
       error: parsed.error,
       message: 'AI 交了回执，但内容不完整或格式不对。让它重新交一份完整回执。'
@@ -178,8 +181,12 @@ export function verifyWorkspaceReceipt(workspacePath) {
   const measuredCompletedGoalIds = measurableGoalIds
     .filter((goalId) => goalEvidencePatterns[goalId].test(text));
 
-  const measuredChecks = runProjectChecks(root);
-  if (measuredChecks.length === 0) limits.push('项目里没有可重跑的标准测试，验证声明只能以回执自述为准。');
+  const measuredChecks = runChecks ? runProjectChecks(root) : [];
+  if (!runChecks) {
+    limits.push('已跳过项目测试（不会执行 npm test / xcodebuild test），验证声明只能以回执自述为准。只在你信任的项目上做完整核验。');
+  } else if (measuredChecks.length === 0) {
+    limits.push('项目里没有可重跑的标准测试，验证声明只能以回执自述为准。');
+  }
 
   const sideEffects = files.length > 0 ? detectRealSideEffects(files) : [];
 
@@ -203,6 +210,7 @@ export function verifyWorkspaceReceipt(workspacePath) {
   return {
     ok: true,
     state,
+    runChecks,
     receipt,
     violations: verdict.violations,
     limits,

@@ -96,6 +96,15 @@ project; Jumao can independently verify it:
 jumao verify /path/to/project
 ```
 
+By default, `jumao verify` re-runs the project's own tests (`npm test` and/or
+`xcodebuild test`) in that folder so it can catch false "tests passed" claims.
+Only use full verify on projects you trust. To compare the receipt against local
+file evidence without executing project tests:
+
+```bash
+jumao verify /path/to/project --no-run-checks
+```
+
 `jumao interview` now defaults to the focused plain-language questions (the
 full questionnaire lives behind `--full`), and `jumao doctor` without
 arguments runs an interactive Chinese questionnaire. The existing `new`,

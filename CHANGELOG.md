@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `jumao verify --no-run-checks`: skip re-running project tests
+  (`npm test` / `xcodebuild test`) and only compare the receipt against local
+  evidence. Full verify still re-runs tests by default; use this on untrusted
+  workspaces or when you only need a static check.
+
+### Security
+
+- Document that default `jumao verify` executes the target project's test
+  scripts, and point users to `--no-run-checks` when they do not trust the
+  workspace.
+
 ## 0.4.0-rc.1 - Release Candidate
 
 ### Added

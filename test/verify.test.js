@@ -120,7 +120,36 @@ test('verify catches a false validation claim by re-running the project checks',
 
   const result = verifyWorkspaceReceipt(root);
   assert.equal(result.state, 'untrusted');
+  assert.equal(result.runChecks, true);
   assert.ok(result.violations.some((violation) => violation.rule === 'false_validation_claim'));
+});
+
+test('verify --no-run-checks skips project tests and records a limit instead of false validation', () => {
+  const root = workspace();
+  write(root, 'package.json', JSON.stringify({ name: 'demo', type: 'module', scripts: { test: 'node -e "process.exit(1)"' } }));
+  initGit(root);
+  writeRun(root, []);
+  writeReceipt(root, {
+    status: 'completed',
+    goalsCompleted: [],
+    goalsBlocked: [],
+    validation: [{ command: 'npm test', exitCode: 0 }],
+    productionEffects: false,
+    remainingWork: []
+  });
+
+  const result = verifyWorkspaceReceipt(root, { runChecks: false });
+  assert.equal(result.runChecks, false);
+  assert.deepEqual(result.measuredChecks, []);
+  assert.ok(result.limits.some((limit) => /跳过项目测试|不会执行 npm test/.test(limit)));
+  assert.equal(result.violations.some((violation) => violation.rule === 'false_validation_claim'), false);
+  assert.ok(['trusted', 'trusted_with_limits'].includes(result.state));
+
+  const skipped = spawnSync(process.execPath, [cli, 'verify', root, '--no-run-checks', '--json'], { encoding: 'utf8' });
+  assert.equal(skipped.status, 0, skipped.stdout + skipped.stderr);
+  const parsed = JSON.parse(skipped.stdout);
+  assert.equal(parsed.runChecks, false);
+  assert.deepEqual(parsed.measuredChecks, []);
 });
 
 test('verify catches a false no-side-effect claim with the scanner', () => {
