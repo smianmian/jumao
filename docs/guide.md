@@ -1,41 +1,65 @@
 # Jumao Guide
 
-Jumao helps you sort out the product before you ask AI to code.
+**Current public Preview: [v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
 
-You do not need to understand the technical parts first. Start by writing down the audience, first-version scope, screen states, data notes, and proof you expect. That gives your AI coding tool a clearer place to start.
+Jumao helps you sort out the product **before** you ask an AI coding agent to
+write code.
 
-## What you need
+## Recommended path: Jumao Cat (macOS)
 
-- An idea, even one sentence is enough.
-- A rough audience.
-- The smallest useful first version.
-- An AI tool such as Codex, Claude Code, Cursor, or a chat model.
+For most people, start with the app:
 
-## What you do not need
+1. Install Preview from the
+   [v0.4.0-rc.2 release](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
+   (or install the CLI with `npm install -g jumao@rc`).
+2. Pick a new folder or an existing project.
+3. Answer the short plain-language questions.
+4. Confirm understanding and let local planning run.
+5. Hand the plan to Codex / Claude Code / Cursor and paste the instruction in
+   the **same** project folder.
 
-- You do not need to know how to code first.
-- You do not need to understand databases, cloud servers, or APIs first.
-- You do not need to buy any model API first.
+See the main [README](../README.md) for install links and the full app flow.
 
-## What Jumao creates
+## Why this exists
 
-- Product brief: tells AI what you are building.
-- Scope gate: prevents the first version from getting too large.
-- Screen states: prevents happy-path-only UI.
-- Data safety checklist: prevents careless data collection.
-- Release proof checklist: prevents fake completion.
-- AI task packet: can be handed to an AI coding tool.
+AI coding tools move fast. Without a clear first-version goal, boundaries, and
+proof, they expand scope, invent features, or claim “done” without evidence.
+Jumao is a **local** planning step so the handoff into the agent is smaller and
+checkable.
 
-## Copyable prompts
+## CLI path (same runtime)
 
-Common handoff, implementation, drift-check, and completion-proof prompts live in [AI Prompts](prompts.md).
+```bash
+npm install -g jumao@rc
+jumao interview /path/to/project   # focused questions by default
+jumao plan /path/to/project
+# after the coding agent finishes:
+jumao verify /path/to/project      # only on projects you trust
+```
 
-## How to know AI is drifting
+The main handoff file is usually `tasks/jumao-agent-plan.md`.
 
-After each change, ask three questions:
+## Optional product files (advanced / templates)
 
-1. Which user goal does this change serve?
+Some workflows still use filled product docs under `product/` and `proof/`
+(brief, scope gate, screen states, data safety, release proof). Those remain
+useful as **human-readable product records** and for `jumao pack` task packets.
+They are **not** required for the focused Jumao Cat / `jumao plan` Preview path.
+
+Copyable prompts for handoff and drift checks live in [AI Prompts](prompts.md).
+
+## How to know the agent is drifting
+
+After each change, ask:
+
+1. Which user goal does this serve?
 2. What proof shows it is done?
-3. Does this action affect users, money, review, launch, or production data?
+3. Does it affect real users, money, review, launch, or production data?
 
 If the answer is unclear, stop and clarify.
+
+## Older versions
+
+**v0.3.1** and earlier releases are historical. New users should start on
+**v0.4.0-rc.2 Preview** (`jumao@rc` or the macOS Preview build), not the old
+stable line.

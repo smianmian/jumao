@@ -3,6 +3,16 @@
 Jumao grows by making the existing workflow clearer and safer before adding
 new surfaces.
 
+## Current public Preview
+
+**v0.4.0-rc.2** is the current public Preview line for new users:
+
+- macOS Jumao Cat: [release v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
+- Node CLI: `npm install -g jumao@rc` (dist-tag `rc` → `0.4.0-rc.2`)
+
+Older tags such as **v0.3.1** remain published for history. They are not the
+recommended install path while the v0.4 Preview is the product front door.
+
 ## Done in v0.2.0
 
 v0.2.0 completed the first Agent Review Board release.
@@ -44,8 +54,10 @@ The next product step is a safer first-run experience.
 
 ## v0.4.0 - Agent evidence and planning quality
 
-The next product step is to make every completed Agent result explainable,
-platform-compatible, and useful to the final development plan.
+**Status:** in Preview as **v0.4.0-rc.2** (App prerelease + `jumao@rc`).
+
+This line makes every completed Agent result explainable, platform-compatible,
+and useful to the final development plan.
 
 - Normalize common Chinese and English intent wording.
 - Distinguish positive requests from explicit negative boundaries.

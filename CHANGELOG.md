@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0-rc.2 - Release Candidate
+## 0.4.0-rc.2 - Release Candidate (public Preview)
 
 ### Added
 
@@ -21,6 +21,9 @@
 - Ship Jumao Cat marketing version `0.4.0-rc.2` (build 3) with the CLI package
   aligned to the same version.
 - Include Mac panel polish and blocked-state hover wake from the rc.1 line.
+- Position **v0.4.0-rc.2** as the public Preview front door: README install
+  paths use `jumao@rc` and the v0.4.0-rc.2 GitHub release; older tags such as
+  v0.3.1 are historical only, not the recommended entry.
 
 ## 0.4.0-rc.1 - Release Candidate
 

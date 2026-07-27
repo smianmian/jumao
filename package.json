@@ -1,7 +1,7 @@
 {
   "name": "jumao",
   "version": "0.4.0-rc.2",
-  "description": "Agent-ready project governance CLI for AI coding tools",
+  "description": "Local planning for AI coding agents: idea or change → evidence-backed plan you can hand to Codex, Claude Code, or Cursor",
   "type": "module",
   "bin": {
     "jumao": "bin/jumao.js"
@@ -28,10 +28,14 @@
   },
   "keywords": [
     "ai",
+    "planning",
+    "local",
     "product",
     "playbook",
     "codex",
     "claude",
+    "cursor",
+    "macos",
     "vibe-coding",
     "jumao"
   ],
