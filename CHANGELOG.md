@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0-rc.2 - Release Candidate
 
 ### Added
 
@@ -8,12 +8,19 @@
   (`npm test` / `xcodebuild test`) and only compare the receipt against local
   evidence. Full verify still re-runs tests by default; use this on untrusted
   workspaces or when you only need a static check.
+- Document the planning-runtime module split plan for post-RC maintainability.
 
 ### Security
 
 - Document that default `jumao verify` executes the target project's test
   scripts, and point users to `--no-run-checks` when they do not trust the
   workspace.
+
+### Changed
+
+- Ship Jumao Cat marketing version `0.4.0-rc.2` (build 3) with the CLI package
+  aligned to the same version.
+- Include Mac panel polish and blocked-state hover wake from the rc.1 line.
 
 ## 0.4.0-rc.1 - Release Candidate
 
