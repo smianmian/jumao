@@ -1,130 +1,108 @@
-# 开始使用橘猫
+# 开始使用
 
-**Preview：[v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)** · [English](getting-started.md)
+[English](getting-started.md) · Preview **[v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
 
-本页目标：完成**第一次成功闭环**——安装 → 说清楚 → 出计划 → 交给 AI。
-
-你不必会写代码。你需要：一个想法（或一次改动）、电脑上的一个文件夹、以及能粘贴
-指令的 AI 编程工具。
+写给**不一定会写代码**、但想用 AI 做 App 的人。
 
 ---
 
-## 1. 安装
+## 产品主路径（先记这个）
 
-### 路径 A — Jumao Cat（macOS 应用）
+```text
+  想法
+    → 橘猫理解你
+    → 生成方案 / 任务包
+    → AI 开发（同一文件夹）
+    → 验证，再由你决定上线
+```
 
-适合不想碰终端的人。
+第一天**不必**背命令。用 Mac 时，几乎全程可以用 **Jumao Cat** 应用完成。
 
-1. 打开 [v0.4.0-rc.2 Preview 发布页](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)。
-2. 下载 **`JumaoCat-v0.4.0-rc.2-arm64.zip`**。
-3. 解压。
-4. 把 **`Jumao Cat.app`** 拖进 **「应用程序」**。
-5. 从 **「应用程序」** 打开。
+---
 
-需要：Apple 芯片 Mac、macOS 14+。用 App **不必**单独安装 Node。
+## 路径 A — Jumao Cat（macOS，推荐）
 
-### 路径 B — 命令行
+1. 下载
+   [**Jumao Cat v0.4.0-rc.2 Preview**](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)。
+2. 解压 → 把 `Jumao Cat.app` 放进 **「应用程序」** → 从「应用程序」打开。
+3. 选择文件夹（空文件夹 = 新想法；已有项目 = 一次改动）。
+4. 用普通话回答几道短问题。
+5. 确认橘猫理解正确，等待它整理方案。
+6. 查看计划（先做什么、守住什么、哪些先不能动）。
+7. 点 **「交给 AI Coding Agent」**（说明里会以 Codex、Claude Code、Cursor 等为
+   示例，不绑定单一工具）。
+8. 在该工具里打开**同一个**文件夹并粘贴指令。
+9. Agent 声称做完后，由你决定下一步；对信任的项目可用 CLI 做可选核验。
+
+App 路径**不需要**安装 Node.js。
+
+---
+
+## 路径 B — CLI（开发者 / 非 Mac）
+
+### 安装
 
 ```bash
 npm install -g jumao@rc
-jumao --help
 ```
 
-请用 **`jumao@rc`**，对应 Preview 线（0.4.0-rc.2）。  
-不要把更旧的版本当成新工作的默认入口。
+请用 **`jumao@rc`**，对应 Preview **0.4.0-rc.2**。
 
----
-
-## 2. 准备文件夹
-
-| 目标 | 文件夹 |
-|------|--------|
-| 全新想法 | 建一个空文件夹（例如桌面上的 `我的第一个App`） |
-| 改已有项目 | 用那个项目的根目录 |
-
-规划时橘猫默认只读你的源码；记录写在 `.jumao/`，计划常在 `tasks/`。
-
----
-
-## 3. 用 App 第一次跑通
-
-1. 点菜单栏里的橘猫（或打开主窗口）。
-2. 选择你的文件夹。
-3. 用日常语言回答短问题：  
-   - **新项目：** 做什么？能干什么？先在哪用？可选：这版**先不做什么**  
-   - **已有项目：** 这次想改成什么样？
-4. 确认橘猫的理解摘要是否正确。
-5. 等待本地整理完成（App 里会显示进度）。
-6. 打开开发计划，扫一眼：  
-   - 先做什么  
-   - 必须守住什么  
-   - 哪些要等你决定才能做  
-7. 点 **「交给 Codex」**（或复制给 Claude Code / Cursor 的说明）。
-8. 在 AI 工具里：  
-   - 打开**同一个**文件夹  
-   - 粘贴说明  
-   - 只按这份计划实现  
-
-AI 说做完后，对你信任的项目可以再回来做核对（见下方 CLI）。
-
----
-
-## 4. 用命令行第一次跑通
+### 开发者主流程
 
 ```bash
-cd /你的/项目路径
+jumao new "我的第一个App" --dir ./my-first-app
+cd ./my-first-app
 
-# 可选：在终端里回答问题
 jumao interview .
+jumao check --strict .
+jumao audit . --write
+jumao pack --target codex .
+# 或：--target claude | --target cursor
+```
 
-# 生成 / 更新本地计划
-jumao plan .
+| 步骤 | 含义 |
+|------|------|
+| `new` | 建文件夹 + 起步产品文件。 |
+| `interview` | 用普通话记下目标与边界。 |
+| `check --strict` | 关键文件在且非空。 |
+| `audit --write` | 写代码前的缺口 / 风险说明。 |
+| `pack` | 给 **AI Coding Agent** 的任务包（Codex 只是一种 `--target`）。 |
 
-# AI 干完后（仅信任的项目）
+然后在 Agent 里打开同一文件夹并粘贴任务包。
+
+Agent 做完后（仅信任的项目）：
+
+```bash
 jumao verify .
-# 或不跑项目测试：
 jumao verify . --no-run-checks
 ```
 
-打开 `tasks/jumao-agent-plan.md`（具体路径以输出为准），在 AI 编程工具里以该
-文件夹为工作区并粘贴交接说明。
+### 高级诊断（可选）
+
+```bash
+jumao doctor .
+jumao doctor . --write
+```
+
+**`doctor`** 用于更深入的交互式体检，**不是**主流程必经步骤。打包前的标准缺口
+报告请用 **`audit`**。
 
 ---
 
-## 5. 怎样算「第一次用完了」
+## 第一次成功清单
 
-橘猫这边的第一趟任务完成，当你：
+- [ ] 已装 App **或** `jumao@rc`  
+- [ ] 已选 / 已建文件夹  
+- [ ] 橘猫已理解你的想法（App 问答或 `interview`）  
+- [ ] 已有计划或任务包  
+- [ ] 已在同一文件夹把包贴给 AI Coding Agent  
 
-- [ ] 有一个橘猫认识的文件夹  
-- [ ] 确认过普通人能懂的理解摘要  
-- [ ] 有一份你自己能读懂的计划  
-- [ ] 已在**同一文件夹**把交接说明贴进 AI 编程工具  
-
-不必一次做完整款 App。一次只推进一小片更稳。
-
----
-
-## 6. 常见问题
-
-**橘猫会写我的 App 代码吗？**  
-不会。写代码的是 AI 编程工具。橘猫准备计划和边界。
-
-**需要 OpenAI 之类的 API Key 吗？**  
-规划不需要。你的编程工具可能需要自己的账号。
-
-**会上传我的项目吗？**  
-规划在本地。不要对不信任的项目跑完整的 `jumao verify`（可能执行对方测试脚本）。
-
-**我只有 Windows / Linux**  
-用 CLI（`jumao@rc`）。本 Preview 的菜单栏 App 仅 macOS。
-
-**我看到了 v0.3.1**  
-那是历史版本。当前产品请用 **v0.4.0-rc.2 Preview**。
+第一天不必上架完整商店。
 
 ---
 
 ## 接着读
 
 - [橘猫如何工作](concepts/how-jumao-works.zh-CN.md)  
-- [使用指南](guide.zh-CN.md)  
-- [主 README](../README.zh-CN.md)  
+- [README](../README.zh-CN.md)  

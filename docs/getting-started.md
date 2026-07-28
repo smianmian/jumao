@@ -1,137 +1,110 @@
-# Getting started with Jumao
+# Getting started
 
-**Preview: [v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)** · [中文](getting-started.zh-CN.md)
+[中文](getting-started.zh-CN.md) · Preview **[v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
 
-This page is for a **first successful run**: install → describe → plan → hand to AI.
-
-You do not need to be a programmer. You need an idea (or a change you want), a
-folder on your computer, and an AI coding tool you can paste instructions into.
+For people who **may not write code**, but want AI to help build an app.
 
 ---
 
-## 1. Install
+## The product path (learn this first)
 
-### Path A — Jumao Cat (macOS app)
+```text
+  Idea
+    → Jumao understands you
+    → Plan / task package
+    → AI coding agent develops (same folder)
+    → Verify, then you decide launch
+```
 
-Best if you prefer buttons and a menu bar cat.
+You do **not** need to memorize commands on day one. On a Mac you can do almost
+all of this with the **Jumao Cat** app.
 
-1. Open the [v0.4.0-rc.2 Preview release](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2).
-2. Download **`JumaoCat-v0.4.0-rc.2-arm64.zip`**.
-3. Unzip it.
-4. Drag **`Jumao Cat.app`** into **Applications**.
-5. Open it from **Applications**.
+---
 
-Needs: Mac with Apple silicon, macOS 14+. No separate Node install for the app.
+## Path A — Jumao Cat (macOS, recommended)
 
-### Path B — CLI
+1. Download
+   [**Jumao Cat v0.4.0-rc.2 Preview**](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2).
+2. Unzip → move `Jumao Cat.app` to **Applications** → open from Applications.
+3. Choose a folder (empty = new idea; existing project = a change).
+4. Answer a few plain-language questions.
+5. Confirm Jumao understood you; let it prepare the plan.
+6. Review the plan (first steps, protections, anything blocked).
+7. Click **Hand to AI Coding Agent** (instructions can mention Codex, Claude
+   Code, Cursor, etc. as examples).
+8. In that tool, open the **same** folder and paste the instruction.
+9. When the agent claims finished, you decide next steps; optional verify is
+   available via CLI on projects you trust.
 
-Best if you already use a terminal.
+No Node.js install is required for the app path.
+
+---
+
+## Path B — CLI (developers / non-Mac)
+
+### Install
 
 ```bash
 npm install -g jumao@rc
-jumao --help
 ```
 
-Use **`jumao@rc`** so you get the Preview line (0.4.0-rc.2).  
-Do not treat older tags as the default entry for new work.
+Use **`jumao@rc`** for Preview **0.4.0-rc.2**.
 
----
-
-## 2. Prepare a folder
-
-| Goal | Folder |
-|------|--------|
-| Brand-new idea | Create an empty folder (e.g. Desktop → `my-first-app`) |
-| Change an existing project | Use that project’s root folder |
-
-Jumao will read what it needs from that folder (read-only while planning) and
-write planning notes under `.jumao/` plus a plan under `tasks/` when ready.
-
----
-
-## 3. First run with the app
-
-1. Click the cat in the menu bar (or open the main window).
-2. Choose your folder.
-3. Answer the short questions in everyday language:
-   - **New project:** What is it? What should it do? Where do you use it first?  
-     Optional: what must this version **not** do?
-   - **Existing project:** What should this change become?
-4. Confirm that Jumao’s summary matches what you meant.
-5. Wait for local planning to finish (progress appears in the app).
-6. Open the development plan and skim:
-   - first steps  
-   - things that must stay protected  
-   - anything blocked until you decide  
-7. Click **Hand to Codex** (or copy the instruction for Claude Code / Cursor).
-8. In that AI tool:
-   - open the **same** folder  
-   - paste the instruction  
-   - let it work only on that plan  
-
-When the AI says it is finished, you can come back later and use verification
-tools (see below) on projects you trust.
-
----
-
-## 4. First run with the CLI
+### Main developer flow
 
 ```bash
-cd /path/to/your-folder
+jumao new "My first app" --dir ./my-first-app
+cd ./my-first-app
 
-# Optional: answer questions in the terminal
 jumao interview .
+jumao check --strict .
+jumao audit . --write
+jumao pack --target codex .
+# or: --target claude | --target cursor
+```
 
-# Produce / refresh the local plan
-jumao plan .
+| Step | Meaning |
+|------|---------|
+| `new` | Create folder + starter product files. |
+| `interview` | Save plain-language answers. |
+| `check --strict` | Required product files exist and are not empty. |
+| `audit --write` | Gap / risk notes before coding. |
+| `pack` | Task packet for your **AI coding agent** (Codex is one `--target`). |
 
-# After your coding agent finishes (trusted projects only)
+Then open the same folder in the agent and paste the packet.
+
+After the agent finishes (trusted projects only):
+
+```bash
 jumao verify .
-# or, without running the project's tests:
 jumao verify . --no-run-checks
 ```
 
-Open `tasks/jumao-agent-plan.md` (path may be shown in the plan output) and paste
-the handoff into your AI coding agent with that folder as the workspace.
+### Advanced diagnostics (optional)
+
+```bash
+jumao doctor .
+jumao doctor . --write
+```
+
+Use **`doctor`** when you want an interactive deeper checkup. It is **not** part
+of the main pack path; the standard pre-pack report is **`audit`**.
 
 ---
 
-## 5. What “done” looks like for a first session
+## Checklist: first success
 
-You are done with **Jumao’s first job** when:
+- [ ] App installed **or** `jumao@rc` installed  
+- [ ] Folder chosen / created  
+- [ ] Jumao understood your idea (app questions or `interview`)  
+- [ ] Plan or task packet exists  
+- [ ] Same folder opened in an AI coding agent and packet pasted  
 
-- [ ] You have a folder Jumao knows about  
-- [ ] You confirmed the plain-language understanding  
-- [ ] A plan exists you can read in normal language  
-- [ ] You pasted the handoff into an AI coding agent on the **same** folder  
-
-You are **not** required to finish the whole app in one sitting. Jumao is for
-one clear slice at a time.
+You do not need a full store listing on day one.
 
 ---
 
-## 6. Common questions
+## Next
 
-**Does Jumao write my app code?**  
-No. The AI coding agent does. Jumao prepares the plan and boundaries.
-
-**Does it need an OpenAI / cloud API key?**  
-Not for planning. Your coding agent may need its own account separately.
-
-**Will it upload my project?**  
-Planning is local. Do not run full `jumao verify` on untrusted projects if you
-do not want their test scripts executed.
-
-**I only have Windows / Linux**  
-Use the CLI (`jumao@rc`). The menu bar app is macOS-only in this Preview.
-
-**I found an old v0.3.1 download**  
-That is historical. Prefer **v0.4.0-rc.2 Preview** for the current product.
-
----
-
-## Next reading
-
-- [How Jumao works](concepts/how-jumao-works.md) — control layer vs coding agent  
-- [Guide](guide.md) — optional product templates  
-- [Main README](../README.md)  
+- [How Jumao works](concepts/how-jumao-works.md)  
+- [README](../README.md)  

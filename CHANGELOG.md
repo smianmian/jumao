@@ -3,45 +3,64 @@
 ## 0.4.0-rc.2 - Public Preview
 
 **Who should install this:** everyone starting Jumao today. This is the public
-Preview front door for the v0.4 product line (not a side experiment). Older
-tags such as v0.3.1 remain historical only.
+Preview front door for the v0.4 product line. Older tags such as v0.3.1 are
+historical only.
 
 **Install**
 
-- macOS: [Jumao Cat v0.4.0-rc.2 Preview](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
 - CLI: `npm install -g jumao@rc` → `0.4.0-rc.2`
+- macOS: [Jumao Cat v0.4.0-rc.2 Preview](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
 
-**In plain language**
+**User path first:**  
+idea → Jumao understands → plan / pack → AI coding agent develops → verify → you launch.
 
-- Turn an idea or a project change into a plan you can hand to an AI coding agent.
-- Prefer the macOS app if you do not live in a terminal; use `jumao@rc` for CLI.
-- After the agent works, optional `jumao verify` checks completion claims (trusted projects only).
+**Developer CLI path:**  
+`jumao new` → `interview` → `check --strict` → `audit` → `pack --target …`  
+(`doctor` is advanced diagnostics, not the main path.)
 
-### Added
+### New capabilities (product)
 
-- `jumao verify --no-run-checks`: skip re-running project tests
-  (`npm test` / `xcodebuild test`) and only compare the receipt against local
-  evidence. Full verify still re-runs tests by default; use this on untrusted
-  workspaces or when you only need a static check.
-- Open-source first-run docs: `docs/getting-started.md` and
-  `docs/concepts/how-jumao-works.md` (with Chinese mirrors).
-- Document the planning-runtime module split plan for post-RC maintainability
-  (`docs/PLANNING_RUNTIME_SPLIT.md`, maintainer-oriented).
+- Public Preview positioning: idea → control layer → AI coding agent → optional verify.
+- Focused plain-language intake (new and existing projects).
+- Completion receipt contract for agents + independent `jumao verify`.
+- `jumao verify --no-run-checks` for untrusted workspaces (no project test execution).
+- Open-source first-run docs: getting started + how Jumao works (EN/中文).
 
-### Security
+### CLI
 
-- Document that default `jumao verify` executes the target project's test
-  scripts, and point users to `--no-run-checks` when they do not trust the
-  workspace.
+- Install via **`jumao@rc`** for this Preview line.
+- Documented developer flow: `new`, `interview`, `check --strict`, `audit`,
+  `pack --target codex|claude|cursor`.
+- `jumao doctor` documented as **advanced diagnostics** only.
+- Planning: `jumao plan` with `--json`, `--events-jsonl`, `--force`.
+- After agent work: `jumao verify` / `--no-run-checks`.
 
-### Changed
+### Jumao Cat (macOS)
 
-- Ship Jumao Cat marketing version `0.4.0-rc.2` (build 3) with the CLI package
-  aligned to the same version.
-- Include Mac panel polish and blocked-state hover wake from the rc.1 line.
-- README and guides lead with user-facing install (`jumao@rc` + this GitHub
-  release) and the idea → plan → AI coding agent path; architecture detail is
-  off the first screen.
+- Marketing version **0.4.0-rc.2** (build 3), arm64, Developer ID + notarized builds on the release.
+- Folder pick, plain questions, local planning UI, **Hand to AI Coding Agent**
+  (Codex / Claude / Cursor as examples, not a single-vendor lock-in).
+- Panel polish and blocked-state hover wake (from the rc.1 line).
+
+### Safety boundaries
+
+- No external AI API calls for Jumao planning.
+- Project source read-only by default during inspect / plan.
+- No automatic publish, charge, or production actions.
+- Full verify may re-run project tests — trusted projects only; prefer
+  `--no-run-checks` otherwise.
+
+### AI agent execution support
+
+- Task packs for multiple agents (`jumao pack --target codex|claude|cursor`).
+- Agent-ready plan handoff (`tasks/jumao-agent-plan.md` / app **Hand to AI Coding Agent**).
+- Completion receipt + verify so agent self-reports can be checked against evidence.
+
+### Docs / open source entry
+
+- README leads with the idea → ship path for non-coders; CLI five-step is under
+  developer usage; architecture jargon stays in Concepts.
+- Maintainer note: `docs/PLANNING_RUNTIME_SPLIT.md` (not user-facing).
 
 ## 0.4.0-rc.1 - Release Candidate
 

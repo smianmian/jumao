@@ -19,8 +19,8 @@ For most people, start with the app:
 2. Pick a new folder or an existing project.
 3. Answer the short plain-language questions.
 4. Confirm understanding and let local planning run.
-5. Hand the plan to Codex / Claude Code / Cursor and paste the instruction in
-   the **same** project folder.
+5. Hand the plan to an AI coding agent (e.g. Codex, Claude Code, Cursor) and
+   paste the instruction in the **same** project folder.
 
 See the main [README](../README.md) for install links and the full app flow.
 

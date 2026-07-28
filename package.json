@@ -1,7 +1,7 @@
 {
   "name": "jumao",
   "version": "0.4.0-rc.2",
-  "description": "Turn an app idea into a clear plan for AI coding tools — local, no cloud AI API for planning (Codex, Claude Code, Cursor)",
+  "description": "Help non-coders ship app ideas with AI: local decision and delivery control before Codex, Claude Code, or Cursor writes code",
   "type": "module",
   "bin": {
     "jumao": "bin/jumao.js"

@@ -17,7 +17,7 @@
 2. 选择新文件夹或已有项目。
 3. 回答几道普通语言的问题。
 4. 确认理解后，让本地规划跑完。
-5. 把计划交给 Codex / Claude Code / Cursor，在**同一个**项目文件夹里粘贴指令。
+5. 把计划交给 AI Coding Agent（如 Codex、Claude Code、Cursor），在**同一个**项目文件夹里粘贴指令。
 
 安装链接和完整 App 流程见主 [README](../README.zh-CN.md)。
 

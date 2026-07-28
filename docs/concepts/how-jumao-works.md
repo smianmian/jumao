@@ -1,118 +1,112 @@
 # How Jumao works
 
-[中文](how-jumao-works.zh-CN.md) · back to [Getting started](../getting-started.md)
+[中文](how-jumao-works.zh-CN.md) · [Getting started](../getting-started.md)
 
-This page is for people who want the **product model**, not a code tour.
-Internal pipeline names are explained only where they help trust the tool.
+This page is **not** the homepage. It explains the control-layer model after you
+know the product path:
 
----
-
-## Two layers of the same story
-
-### For everyone
-
-You can ship an app idea with AI even if you do not write code daily.
-
-Jumao is the calm step before coding:
-
-1. You say what you want in plain language.  
-2. Jumao checks what it can see in your project folder.  
-3. You get a plan you can read.  
-4. An AI coding agent implements that plan in the same folder.
-
-### For developers
-
-Jumao is a **decision and delivery control layer** in front of an AI coding agent.
-
-| Layer | Role |
-|-------|------|
-| **You** | Goals, taste, go/no-go on real users, money, publish |
-| **Jumao** | Scope, boundaries, evidence, handoff, optional verify |
-| **AI coding agent** | Edit files, run tools, implement tasks |
-| **Your machine / stores** | Where code lives; App Store / deploy still need you |
-
-Jumao does **not** replace Codex, Claude Code, or Cursor. It makes their job
-smaller and checkable.
+**Idea → Jumao understands → plan / pack → AI coding agent develops → verify → you launch.**
 
 ---
 
-## What Jumao does on your machine
+## Two ways to say the same product
+
+**Everyday:** Jumao helps people who do not write code use AI to take an app
+from idea toward something real — by fixing the plan before the AI codes.
+
+**Developer:** Jumao is the **decision and delivery control layer** for AI
+coding agents. The agent still edits the repo; Jumao shapes goals, scope,
+evidence, audit, and the pack the agent should follow.
 
 ```text
-  Answers (plain language)
-  + optional project scan (read-only)
-           │
-           ▼
-  Local planning (no cloud AI API for this step)
-           │
-           ▼
-  Plan + notes under .jumao/ and tasks/
-           │
-           ▼
-  You hand the plan to an AI coding agent
-           │
-           ▼
-  Optional: verify the agent’s completion story
+  You (goals, go/no-go on real world)
+       │
+       ▼
+  Jumao (decide + pack + optional verify)
+       │
+       ▼
+  AI coding agent (implement — e.g. Codex, Claude Code, Cursor)
+       │
+       ▼
+  Your machine / stores (you still publish)
 ```
 
-Important properties:
-
-- **Local by default** — planning does not require Jumao cloud or model keys.  
-- **Read-only source by default** while inspecting and planning.  
-- **Explicit handoff** — usually `tasks/jumao-agent-plan.md` plus a short
-  pasteable instruction.  
-- **No silent publish** — release, pay, production data stay human-gated.
+Agents are not limited to one vendor. Pack targets (`codex`, `claude`, `cursor`)
+are formats; the product action is **hand to AI coding agent**.
 
 ---
 
-## What “planning” means here
+## Core ideas
 
-When Jumao “plans,” it is not one chatbot guessing your product.
+### Goal
 
-It runs a **fixed local checklist of professional concerns** (product, privacy,
-release risk, and so on), grouped so you can see what applied, what was skipped,
-and what is blocked waiting for a human decision.
+What this version must achieve for a real person — and what “done” looks like.
 
-You may see counts like “8 groups / 44 roles.” Think of them as **named review
-lenses**, not 44 separate AIs coding in parallel.
+### Evidence
 
-Statuses you might see on a role:
+Proof that something is true or finished: product files, tests, logs,
+screenshots, or a completion receipt. Claims without evidence are not completion.
 
-| Status | Plain meaning |
-|--------|----------------|
-| completed | This concern looked relevant and produced useful notes |
-| skipped | No trigger / no evidence this project needs it now |
-| blocked | Something only you can decide is missing |
-| failed | That check or write step could not finish |
+### Scope
 
----
+What is **in** this version and what is **out**. Explicit “do not build yet”
+limits stop the agent from expanding early.
 
-## After the AI codes: completion and verify
+### Audit
 
-Good handoffs ask the coding agent to leave a **completion receipt** (what
-finished, what blocked, what was validated, whether it touched the real world).
+Structured gap / risk review before coding (`jumao audit`). Writes plain-language
+notes (often under `governance/`) so the pack is safer.
 
-`jumao verify` can re-read that receipt and compare it with:
+**`jumao doctor`** is an **advanced, interactive diagnosis** path — useful when
+you want a guided checkup, not a required step in the main flow.
 
-- changes it can see (e.g. via git), and  
-- optionally re-running the project’s own tests.
+### Pack
 
-That is why full verify should only run on **projects you trust** — tests are
-code. Use `--no-run-checks` when you only want static checks.
+A **task packet** (`jumao pack --target …`) the coding agent consumes: boundaries,
+gates, and next safe work. Main bridge from Jumao into the agent.
 
----
+### Execution boundary
 
-## What Jumao is not
+What the agent may do **now** (usually prepare and validate in a local folder)
+versus what stays blocked until a human confirms (production, real payments,
+store submission, irreversible live data).
 
-- Not a replacement for learning product judgment  
-- Not a guarantee the AI will obey (you still review)  
-- Not an App Store publisher or payment processor  
-- Not a hosted multiplayer “AI company” product in this Preview  
+Planning and packing stay **local** and do not require a Jumao cloud AI API.
 
 ---
 
-## Where to go next
+## CLI map (developer path)
 
-- First run: [Getting started](../getting-started.md)  
-- Install and overview: [README](../../README.md)  
-- Optional templates: [Guide](../guide.md)  
+| Step | Command | Control-layer job |
+|------|---------|-------------------|
+| Create home | `jumao new` | Workspace + starter files |
+| Capture intent | `jumao interview` | Goals and scope as answers |
+| Gate files | `jumao check --strict` | Required artifacts present |
+| Audit | `jumao audit --write` | Gaps before coding |
+| Handoff | `jumao pack --target …` | Packet for AI coding agent |
+| (Optional) Plan UI/runtime | `jumao plan` / Jumao Cat | Local planning + readable plan |
+| (Optional) Deep checkup | `jumao doctor` | Advanced diagnostics |
+| (After agent) | `jumao verify` | Check completion claims |
+
+---
+
+## What stays outside Jumao
+
+- Writing product UI/business code (the coding agent)  
+- Your judgment on taste and priorities  
+- Store / deploy accounts and legal entity choices  
+
+---
+
+## Safety
+
+- Source read-only by default during inspect / plan  
+- Full `jumao verify` may run project tests — trusted trees only  
+- Human confirmation for real users, money, review, production  
+
+---
+
+## Related
+
+- [Getting started](../getting-started.md)  
+- [README](../../README.md)  
