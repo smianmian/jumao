@@ -2,118 +2,135 @@
 
 [English](README.md)
 
-**当前公开 Preview：[v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
+**Preview · [v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
 
-Jumao Cat（橘猫）会把一个产品想法——或已有项目的一次改动——整理成有真实证据、
-可以交给 AI 编程工具（Codex、Claude Code、Cursor 等）的开发计划。
+## 橘猫是什么？
 
-AI 写代码很快，却容易跑出范围、假装完成。橘猫先在**本地**做规划：普通人能懂的
-问答、只读项目证据、确定性的专业检查流水线。它**不会**替你写业务源码、不调用
-外部 AI API，也不会替你发布。
+你不一定会写代码，也可以靠 AI 把 App 想法做出来。
 
-<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="Jumao Cat 项目选择和规划面板" width="280">
+**橘猫（Jumao Cat）**帮你把「想做什么」——或「已有项目这次要改成什么样」——整理成
+一份说得清、有依据、能交给 AI 编程工具的开发计划。然后再把计划交给 Codex、
+Claude Code、Cursor 等工具去写代码。
 
-## 安装（Preview v0.4.0-rc.2）
+AI 擅长敲代码，不擅长守边界：容易越做越大、漏掉「这版先不做」、也缺少完成证据。
+橘猫是**写代码之前**的一步：先把想法理清、看一眼项目、写出 AI 能跟着走的计划。
 
-### 方式 A — Jumao Cat for macOS（多数人推荐）
+橘猫在**你自己的电脑上**运行。规划时不调用云端 AI 接口，不会偷偷改你的产品代码，
+也不会替你上架发布。
+
+<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="橘猫规划面板" width="280">
+
+## 为什么需要它
+
+| 没有橘猫 | 有橘猫 |
+|----------|--------|
+| 「帮我做个 App」→ AI 自己加功能 | 先用几句普通人的话说明白 |
+| 聊着聊着范围越变越大 | 边界和「这版先不做」写清楚 |
+| AI 说做完了却对不上 | 有计划，做完还可核对 |
+| 每次都要重新讲项目 | 尽量用项目里已有的信息 |
+
+## 安装（v0.4.0-rc.2 Preview）
+
+### macOS 应用（不会终端的人优先）
 
 [**下载 Jumao Cat v0.4.0-rc.2 Preview**](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
 
-- macOS 14 或更高，Apple 芯片（arm64）
-- Developer ID 签名 + Apple 公证
-- 不需要系统 Node.js、Homebrew、npm 或全局安装 Jumao
+1. 下载 `JumaoCat-v0.4.0-rc.2-arm64.zip`
+2. 解压 → 把 `Jumao Cat.app` 拖进 **「应用程序」**
+3. 从 **「应用程序」** 打开（不要从压缩包窗口直接开）
 
-下载 `JumaoCat-v0.4.0-rc.2-arm64.zip`，解压后把 `Jumao Cat.app` 拖到「应用程序」，
-再从「应用程序」打开。
+要求：macOS 14+、Apple 芯片（arm64）。已签名并公证。用 App **不必**先装 Node.js。
 
-### 方式 B — Node CLI
+### 终端（CLI）
 
 ```bash
 npm install -g jumao@rc
-jumao plan /你的/项目路径
 ```
 
-这会安装当前 Preview 线（通过 `rc` dist-tag，对应 `0.4.0-rc.2`）。
+安装的是当前 Preview 线（`rc` 标签 → `0.4.0-rc.2`）。
 
-> 更早的版本（例如 **v0.3.1**）仍可在 Releases 里查看，仅作历史对照。
-> **不推荐**新用户再装旧版作为入口。
+更早的版本（如 v0.3.1）仍在 Releases 里，**只作历史对照**。新用户请从
+**v0.4.0-rc.2** 开始，不要再装旧线当入口。
 
-## 从想法到 AI 编程工具
+## 第一次用：大约五分钟
 
-1. **说清楚** — 新项目：做什么、能干什么、先在哪用（可选：这版先不做什么）。
-   已有项目：这次要改成什么样。
-2. **本地规划** — 橘猫跑 Agent Planning Runtime（规则 + 证据，不调模型 API），
-   每个专业角色都有真实结果状态。
-3. **交出去** — 打开 `tasks/jumao-agent-plan.md`（或在 App 里点「交给 Codex」），
-   在编程工具里打开同一项目文件夹并粘贴指令。
-4. **核对** — AI 干完应留下完成回执；对信任的项目可用 `jumao verify` 独立核验。
+1. **打开橘猫**，选一个文件夹  
+   - 空文件夹 = 新想法  
+   - 已有代码 = 「改这个项目」
+2. **用普通话说清楚**  
+   - 新项目：做什么、能干什么、先在哪用？  
+   - 可选：这版**先不做什么**  
+   - 已有项目：这次想改成什么样？
+3. **确认**橘猫理解对了。它会在本地整理开发计划。
+4. **看计划**：先做什么、要守住什么、哪些先不能动。
+5. **交给 AI 编程工具**  
+   - App 里点「交给 Codex」（或复制给 Claude / Cursor 的说明）  
+   - 在工具里打开**同一个**文件夹，粘贴说明  
+6. **让 AI 在该文件夹里实现**。做完后可用橘猫核对完成说明（终端：
+   `jumao verify`，只对你信任的项目）。
 
-## Jumao Cat 的普通使用流程
+更细的步骤见 **[开始使用](docs/getting-started.zh-CN.md)**。
 
-1. 选择新项目文件夹，或已有代码项目。
-2. 新项目回答 3 道普通问题，外加一道可跳过的「这版先不做什么」。
-3. 已有项目只描述「这次想改成什么样」；橘猫读取可见项目证据，不再重复已知事实。
-4. 确认理解正确后，App 自动跑本地规划运行时。
-5. 查看 8 个小组、44 个专业角色的结果（完成 / 跳过 / 阻塞 / 失败）。
-6. 查看生成的、可交给编程工具的开发计划。
-7. 点「交给 Codex」（或复制给 Claude Code / Cursor 的指令），在工具里打开同一
-   文件夹并粘贴。
+<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="新项目的普通问题" width="640">
 
-<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="Jumao Cat 新项目三道普通问题" width="640">
+## 从想法到 AI 开发
 
-未完成的问答草稿和最近一次规划可以恢复；项目或需求变了可以重新整理。
+```text
+  你的想法 / 这次改动
+         │
+         ▼
+  橘猫（本地计划 + 边界）
+         │
+         ▼
+  一份你能打开阅读的计划
+         │
+         ▼
+  AI 编程工具（Codex / Claude / Cursor）
+         │
+         ▼
+  代码 + 可选的完成核对
+```
 
-## Agent Planning Runtime 是什么
+对开发者来说：橘猫是 AI Coding Agent 前面的**决策与交付控制层**——范围、禁区、
+怎样算完成、要保护什么。真正写代码的仍是 AI 工具；上线、收费、真实用户相关动作
+仍由你确认。
 
-Agent Planning Runtime v1 是**本地确定性规则流水线**，不调用外部 AI API。
+机制说明（给想看清原理的人）：  
+**[橘猫如何工作](docs/concepts/how-jumao-works.zh-CN.md)**。
 
-44 个 Agent 是分在 8 个小组里、可审计的专业检查角色，不是 44 个大模型在并行写
-代码。每个角色都有真实状态：`completed` / `skipped` / `blocked` / `failed`。
+## 安全一句话
 
-结果来自你的回答、只读扫描和项目里的证据。「可能受影响的文件」是保守匹配，
-不是完整依赖图。
+规划默认在本地、默认只读你的源码。记录写在 `.jumao/`。交给 AI 的主文件通常是
+`tasks/jumao-agent-plan.md`。橘猫不收费、不替你发布、不为你调 AI API。
 
-## 文件和安全边界
-
-- 扫描和规划默认只读项目源码。
-- 运行记录、manifest、证据和 latest run 写在 `.jumao/`。
-- 主要交接文件：`tasks/jumao-agent-plan.md`。
-- 不调用外部 AI API，不自动加业务代码，不发布、不收费，也不替人做发布决定。
-
-## CLI 补充
+## 给开发者（CLI）
 
 ```bash
 npm install -g jumao@rc
 
 jumao plan /你的/项目路径
 jumao plan /你的/项目路径 --json
-jumao plan /你的/项目路径 --events-jsonl
 jumao plan /你的/项目路径 --force
 jumao verify /你的/项目路径
-jumao verify /你的/项目路径 --no-run-checks
+jumao verify /你的/项目路径 --no-run-checks   # 不执行项目测试
 ```
 
-默认 `jumao verify` 会在项目里重跑测试（`npm test` / `xcodebuild test`），用来抓
-「回执说测过了其实没有」。**只对你信任的项目做完整核验。** 不执行测试时用
+`jumao verify` 默认可能重跑项目测试，只对你信任的代码使用；静态核对用
 `--no-run-checks`。
 
-`jumao interview` 默认只问聚焦问题（完整问卷加 `--full`）。`jumao doctor` 不带
-参数是中文选择题。`new`、`inspect`、`check`、`audit`、`pack`、`status` 等命令
-仍然可用。
+另有：`interview`、`doctor`、`new`、`inspect`、`check`、`audit`、`pack`、
+`status` 等命令。
 
 ## 文档
 
-**先看这些**
-
-- [使用指南](docs/guide.zh-CN.md) — 第一次怎么走
-- [更新记录](CHANGELOG.md) — 本 Preview 改了什么
-
-**再深入**
-
-- [Agent 说明](docs/agents.zh-CN.md)
-- [贡献方式](CONTRIBUTING.zh-CN.md)
-- [发布检查清单](docs/publish-checklist.zh-CN.md)
+| 给谁 | 文档 |
+|------|------|
+| 第一次用 | [开始使用](docs/getting-started.zh-CN.md) |
+| 产品理解 | [橘猫如何工作](docs/concepts/how-jumao-works.zh-CN.md) |
+| 更多模板说明 | [使用指南](docs/guide.zh-CN.md) |
+| 本 Preview 变更 | [更新记录](CHANGELOG.md) |
+| 参与贡献 | [贡献方式](CONTRIBUTING.zh-CN.md) |
 
 ## 许可证
 
-MIT — 见 [LICENSE](LICENSE)。
+MIT — [LICENSE](LICENSE)。

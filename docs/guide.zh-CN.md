@@ -4,6 +4,9 @@
 
 橘猫帮你在让 AI 写代码**之前**，先把产品想清楚。
 
+**第一次来？** 请先看 [开始使用](getting-started.zh-CN.md)，再看
+[橘猫如何工作](concepts/how-jumao-works.zh-CN.md)。本页是可选深入（模板与防跑偏）。
+
 ## 推荐路径：Jumao Cat（macOS）
 
 多数人请从 App 开始：

@@ -1,6 +1,21 @@
 # Changelog
 
-## 0.4.0-rc.2 - Release Candidate (public Preview)
+## 0.4.0-rc.2 - Public Preview
+
+**Who should install this:** everyone starting Jumao today. This is the public
+Preview front door for the v0.4 product line (not a side experiment). Older
+tags such as v0.3.1 remain historical only.
+
+**Install**
+
+- macOS: [Jumao Cat v0.4.0-rc.2 Preview](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
+- CLI: `npm install -g jumao@rc` → `0.4.0-rc.2`
+
+**In plain language**
+
+- Turn an idea or a project change into a plan you can hand to an AI coding agent.
+- Prefer the macOS app if you do not live in a terminal; use `jumao@rc` for CLI.
+- After the agent works, optional `jumao verify` checks completion claims (trusted projects only).
 
 ### Added
 
@@ -8,7 +23,10 @@
   (`npm test` / `xcodebuild test`) and only compare the receipt against local
   evidence. Full verify still re-runs tests by default; use this on untrusted
   workspaces or when you only need a static check.
-- Document the planning-runtime module split plan for post-RC maintainability.
+- Open-source first-run docs: `docs/getting-started.md` and
+  `docs/concepts/how-jumao-works.md` (with Chinese mirrors).
+- Document the planning-runtime module split plan for post-RC maintainability
+  (`docs/PLANNING_RUNTIME_SPLIT.md`, maintainer-oriented).
 
 ### Security
 
@@ -21,9 +39,9 @@
 - Ship Jumao Cat marketing version `0.4.0-rc.2` (build 3) with the CLI package
   aligned to the same version.
 - Include Mac panel polish and blocked-state hover wake from the rc.1 line.
-- Position **v0.4.0-rc.2** as the public Preview front door: README install
-  paths use `jumao@rc` and the v0.4.0-rc.2 GitHub release; older tags such as
-  v0.3.1 are historical only, not the recommended entry.
+- README and guides lead with user-facing install (`jumao@rc` + this GitHub
+  release) and the idea → plan → AI coding agent path; architecture detail is
+  off the first screen.
 
 ## 0.4.0-rc.1 - Release Candidate
 

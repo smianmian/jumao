@@ -1,7 +1,7 @@
 {
   "name": "jumao",
   "version": "0.4.0-rc.2",
-  "description": "Local planning for AI coding agents: idea or change → evidence-backed plan you can hand to Codex, Claude Code, or Cursor",
+  "description": "Turn an app idea into a clear plan for AI coding tools — local, no cloud AI API for planning (Codex, Claude Code, Cursor)",
   "type": "module",
   "bin": {
     "jumao": "bin/jumao.js"

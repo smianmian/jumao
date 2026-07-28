@@ -2,132 +2,141 @@
 
 [简体中文](README.zh-CN.md)
 
-**Current public Preview: [v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
+**Preview · [v0.4.0-rc.2](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)**
 
-Jumao Cat turns a product idea — or one change to an existing project — into an
-evidence-backed development plan you can hand to an AI coding agent (Codex,
-Claude Code, Cursor, and similar tools).
+## What is Jumao?
 
-AI coding tools are fast at writing code and slow at staying inside the right
-scope. Jumao plans **locally** first: plain-language intake, read-only project
-evidence, and a deterministic review pipeline. It does **not** write application
-source code, call external AI APIs, or publish for you.
+You do not need to write code yourself to ship an app idea with AI.
 
-<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="Jumao Cat project selection and planning panel" width="280">
+**Jumao Cat** helps you turn a product idea — or one change to an existing project —
+into a clear, evidence-backed plan. You then hand that plan to an AI coding tool
+(Codex, Claude Code, Cursor, and similar) so it builds what you actually meant.
 
-## Install (Preview v0.4.0-rc.2)
+AI is great at typing code. It is weaker at staying on scope, saying what this
+version will **not** do, and proving work is finished. Jumao is the step **before**
+coding: sort the idea, check the project, write a plan the AI can follow.
 
-### Option A — Jumao Cat for macOS (recommended for most people)
+Jumao runs **on your Mac / machine**. It does not call cloud AI APIs for planning,
+does not silently rewrite your product code, and does not publish the app for you.
+
+<img src="docs/images/jumao-cat/jumao-cat-overview.png" alt="Jumao Cat planning panel" width="280">
+
+## Why people use it
+
+| Without Jumao | With Jumao |
+|---------------|------------|
+| “Build me an app” → AI invents features | You answer a few plain questions first |
+| Scope grows every chat | Boundaries and “do not build this yet” are explicit |
+| “Done” with no proof | Plan + optional completion check after the AI works |
+| You re-explain the project every time | Jumao reuses what it can see in the project folder |
+
+## Install (v0.4.0-rc.2 Preview)
+
+### macOS app (recommended if you are not living in a terminal)
 
 [**Download Jumao Cat v0.4.0-rc.2 Preview**](https://github.com/smianmian/jumao/releases/tag/v0.4.0-rc.2)
 
-- macOS 14 or later, Apple silicon (arm64)
-- Developer ID signed and Apple notarized
-- No system Node.js, Homebrew, npm, or global Jumao required
+1. Download `JumaoCat-v0.4.0-rc.2-arm64.zip`
+2. Unzip → drag `Jumao Cat.app` into **Applications**
+3. Open it from **Applications** (not from the ZIP window)
 
-Download `JumaoCat-v0.4.0-rc.2-arm64.zip`, unzip, move `Jumao Cat.app` to
-Applications, then open it from Applications.
+Requirements: macOS 14+, Apple silicon (arm64). Signed and notarized. No Node.js
+install needed for the app.
 
-### Option B — Node CLI
+### Terminal (CLI)
 
 ```bash
 npm install -g jumao@rc
-jumao plan /path/to/project
 ```
 
-This installs the current Preview line (`0.4.0-rc.2` via the `rc` dist-tag).
+That installs this Preview line (`0.4.0-rc.2` via the `rc` tag).
 
-> Older releases such as **v0.3.1** remain available for history and comparison.
-> They are **not** the recommended install for new users.
+Older releases (for example v0.3.1) stay on GitHub for history only. **New users
+should start on v0.4.0-rc.2**, not the old line.
 
-## From idea to AI coding agent
+## First use in five minutes
 
-1. **Describe** — new project: what to build, what it should do, where to use it
-   first (optional: what this version must not do). Existing project: what this
-   change should become.
-2. **Plan** — Jumao runs a local Agent Planning Runtime (rules + evidence, no
-   model API). You get a real status per professional review role.
-3. **Hand off** — open `tasks/jumao-agent-plan.md` (or use **Hand to Codex** in
-   the app), open the same folder in your coding agent, paste the instruction.
-4. **Check** — after the agent works, it should leave a completion receipt;
-   `jumao verify` can independently check claims against evidence (on trusted
-   projects).
+1. **Open Jumao Cat** and choose a folder  
+   - Empty folder = new idea  
+   - Existing code folder = “change this project”
+2. **Answer a few ordinary questions**  
+   - New: what is it, what should it do, where do you use it first?  
+   - Optional: what this version must **not** do  
+   - Existing project: what should this change become?
+3. **Confirm** Jumao understood you. It then prepares a development plan locally.
+4. **Review** the plan (what to do first, what to protect, what is blocked).
+5. **Hand to your AI coding tool**  
+   - In the app: **Hand to Codex** (or copy the instruction for Claude / Cursor)  
+   - Open the **same** folder in that tool and paste the instruction  
+6. **Let the AI implement** inside that folder. When it finishes, you can ask Jumao
+   to check the completion story (CLI: `jumao verify` on projects you trust).
 
-## The normal Jumao Cat flow
+More detail: **[Getting started](docs/getting-started.md)**.
 
-1. Choose a new-project folder or an existing code project.
-2. For a new project, answer three plain-language questions — plus one optional
-   “what not to do this version” question.
-3. For an existing project, describe only the change. Jumao inspects visible
-   project evidence instead of re-asking known facts.
-4. Confirm understanding. The app runs the local planning runtime.
-5. Review results from 8 groups and 44 professional roles (`completed` /
-   `skipped` / `blocked` / `failed`).
-6. Review the generated, agent-ready development plan.
-7. Click **Hand to Codex** (or copy the instruction for Claude Code / Cursor),
-   open the same project folder in the agent, and paste.
+<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="Simple questions for a new project" width="640">
 
-<img src="docs/images/jumao-cat/jumao-cat-new-project.png" alt="Jumao Cat focused new-project intake" width="640">
+## From idea to AI development
 
-Jumao Cat restores unfinished intake drafts and the latest planning run. Rerun
-planning when the project or request changes.
+```text
+  Your idea / change
+         │
+         ▼
+  Jumao (local plan + boundaries)
+         │
+         ▼
+  Plan file you can open and read
+         │
+         ▼
+  AI coding agent (Codex / Claude / Cursor)
+         │
+         ▼
+  Code + optional completion check
+```
 
-## What the Agent Planning Runtime is
+Jumao is the **decision and delivery control layer** in front of the AI coding
+agent: what is in scope, what is out, what “done” means, and what to protect.
+The agent still writes the code; you still decide release, payment, and real-user
+actions.
 
-Agent Planning Runtime v1 is a **local deterministic rules pipeline**. It does
-not call an external AI API.
+How that works under the hood (for builders):  
+**[How Jumao works](docs/concepts/how-jumao-works.md)**.
 
-The 44 Agents are auditable professional review roles in 8 groups — not 44
-independent large models coding in parallel. Each role gets a real runtime
-result: `completed`, `skipped`, `blocked`, or `failed`.
+## Safety in one line
 
-Results come from your answers, read-only project inspection, and evidence in
-the selected project. Affected-file hints are conservative evidence matching,
-not a full dependency graph.
+Planning is local and read-only on your source by default. Notes go under
+`.jumao/`. The plan you hand off is usually `tasks/jumao-agent-plan.md`. Jumao
+does not charge users, publish apps, or call AI APIs for you.
 
-## Files and safety
+## For developers (CLI)
 
-- Project source is read-only by default during inspection and planning.
-- Runs, manifests, evidence, and latest-run state go under `.jumao/`.
-- Main handoff document: `tasks/jumao-agent-plan.md`.
-- No external AI APIs, no automatic application coding, no publish, charge, or
-  release decisions on your behalf.
-
-## CLI notes
+Same product, terminal workflow:
 
 ```bash
 npm install -g jumao@rc
 
 jumao plan /path/to/project
 jumao plan /path/to/project --json
-jumao plan /path/to/project --events-jsonl
 jumao plan /path/to/project --force
 jumao verify /path/to/project
-jumao verify /path/to/project --no-run-checks
+jumao verify /path/to/project --no-run-checks   # no project test execution
 ```
 
-By default, `jumao verify` re-runs the project's own tests (`npm test` and/or
-`xcodebuild test`) so false “tests passed” claims can be caught. **Only use full
-verify on projects you trust.** Use `--no-run-checks` for static receipt + file
-evidence only.
+`jumao verify` may re-run the project’s own tests. Use it only on code you trust;
+prefer `--no-run-checks` for a static look at receipts and files.
 
-`jumao interview` defaults to the focused questions (`--full` for the long form).
-`jumao doctor` without args runs an interactive Chinese checkup. Commands such
-as `new`, `inspect`, `check`, `audit`, `pack`, and `status` remain available.
+Also available: `interview`, `doctor`, `new`, `inspect`, `check`, `audit`,
+`pack`, `status`.
 
 ## Documentation
 
-**Start here**
-
-- [Guide](docs/guide.md) — first-run path and product files
-- [Changelog](CHANGELOG.md) — what changed in this Preview
-
-**Go deeper**
-
-- [Agent guide (zh-CN)](docs/agents.zh-CN.md)
-- [Contributing](CONTRIBUTING.md)
-- [Publishing checklist](docs/publish-checklist.md)
+| Audience | Doc |
+|----------|-----|
+| First run | [Getting started](docs/getting-started.md) |
+| Product idea | [How Jumao works](docs/concepts/how-jumao-works.md) |
+| Extra product templates | [Guide](docs/guide.md) |
+| This Preview’s changes | [Changelog](CHANGELOG.md) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — [LICENSE](LICENSE).

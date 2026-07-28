@@ -5,6 +5,10 @@
 Jumao helps you sort out the product **before** you ask an AI coding agent to
 write code.
 
+**First time here?** Start with [Getting started](getting-started.md), then
+[How Jumao works](concepts/how-jumao-works.md). This page is optional depth
+(templates and drift checks).
+
 ## Recommended path: Jumao Cat (macOS)
 
 For most people, start with the app:
